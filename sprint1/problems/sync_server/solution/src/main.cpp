@@ -97,14 +97,12 @@ StringResponse HandleRequest(StringRequest&& req)
     // Здесь можно обработать запрос и сформировать ответ, но пока всегда отвечаем: Hello
     std::string_view target = req.target();
 
-    std::string response_str = "<strong>Hello";
+    std::string response_str = "Hello";
 
     if (target.size() > 1)
     {
         response_str = response_str + ", " + std::string((target.begin() + 1), target.end());
     }
-
-    response_str = response_str + "</strong>";
 
     return text_response(http::status::ok, { response_str });
 }
