@@ -87,6 +87,13 @@ StringResponse HandleRequest(StringRequest&& req)
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
 
+    std::string_view req_type = req.method_string();
+
+    if (req_type != "GET"sv && req_type != "HEAD")
+    {
+        return text_response(http::status::method_not_allowed, { "Invalid method" });
+    }
+
     // Здесь можно обработать запрос и сформировать ответ, но пока всегда отвечаем: Hello
     std::string_view target = req.target();
 
