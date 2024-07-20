@@ -3,6 +3,7 @@
 #include <sdkddkver.h>
 #endif
 
+#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
@@ -18,8 +19,9 @@ using OrderHandler = std::function<void(Result<HotDog> hot_dog)>;
 class Order : public std::enable_shared_from_this<Order>
 {
 public:
-    Order(net::io_context& io, std::shared_ptr<Sausage> sosig, std::shared_ptr<Bread> dough, std::shared_ptr<GasCooker> diablo, OrderHandler handler)
+    Order(net::io_context& io, int id, std::shared_ptr<Sausage> sosig, std::shared_ptr<Bread> dough, std::shared_ptr<GasCooker> diablo, OrderHandler handler)
         : io_{ io },
+        id_(id),
         sausage_(sosig),
         bun_(dough),
         cooker_(diablo),
@@ -41,57 +43,47 @@ private:
 
     void GrillSausage()
     {
-        sausage_->StartFry(*cooker_, [self = shared_from_this()]()
+        sausage_timer_.expires_after(HotDog::MIN_SAUSAGE_COOK_DURATION);
+
+        sausage_->StartFry(*cooker_, net::bind_executor(strand_, [self = shared_from_this()]()
             {
-                self->sausage_timer_.async_wait([self](sys::error_code)
+                self->sausage_timer_.async_wait([self](sys::error_code ec)
                     {
-                        self->OnGrilled();
+                        self->OnGrilled(ec);
                     });
-            });
+            }));
     }
 
-    void OnGrilled()
+    void OnGrilled(sys::error_code ec)
     {
         sausage_->StopFry();
-        CheckReadiness();
+        is_grilled_ = true;
+        CheckReadiness(ec);
     }
 
     void BakeBun()
     {
+        bun_timer_.expires_after(HotDog::MIN_BREAD_COOK_DURATION);
         bun_->StartBake(*cooker_, [self = shared_from_this()]()
             {
-                self->bun_timer_.async_wait([self](sys::error_code)
+                self->bun_timer_.async_wait([self](sys::error_code ec)
                     {
-                        self->OnBaked();
+                        self->OnBaked(ec);
                     });
             });
     }
 
-    void OnBaked()
+    void OnBaked(sys::error_code ec)
     {
         bun_->StopBaking();
-        CheckReadiness();
+        is_baked_ = true;
+        CheckReadiness(ec); 
     }
 
-    void CheckReadiness()
+    void CheckReadiness(sys::error_code ec)
     {
-        if (delivered_)
-        {
-            return;
-        }
-
-        if (sausage_->IsCooked() && bun_->IsCooked())
-        {
-            Deliver({});
-        }
-    }
-
-    void Deliver(sys::error_code ec)
-    {
-        // Защита заказа от повторной доставки
-        delivered_ = true;
-
-        handler_(HotDog(++next_id_, sausage_, bun_));
+        if(is_grilled_ && is_baked_)
+        handler_(Result(std::move(HotDog(id_, sausage_, bun_))));
     }
 
     std::shared_ptr<Sausage> sausage_;
@@ -106,7 +98,9 @@ private:
     net::steady_timer sausage_timer_{ io_, HotDog::MIN_SAUSAGE_COOK_DURATION };
     net::steady_timer bun_timer_{ io_, HotDog::MIN_SAUSAGE_COOK_DURATION };
     int next_id_ = 0;
-    bool delivered_ = false;
+
+    int id_;
+    bool is_grilled_ = false, is_baked_ = false;
 };
 
 using HotDogHandler = std::function<void(Result<HotDog> hot_dog)>;
@@ -118,9 +112,9 @@ public:
         : io_{ io } {
     }
 
-    void OrderHotDog(HotDogHandler&& handler) 
+    void OrderHotDog(int id, HotDogHandler handler) 
     {
-        std::make_shared<Order>(io_, store_.GetSausage(), store_.GetBread(), gas_cooker_, std::move(handler))->Execute();
+        std::make_shared<Order>(io_, id, store_.GetSausage(), store_.GetBread(), gas_cooker_, std::move(handler))->Execute();
     }
 
 private:
