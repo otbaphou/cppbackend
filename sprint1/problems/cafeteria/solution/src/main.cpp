@@ -113,14 +113,14 @@ namespace {
         std::unordered_set<int> bread_ids;
 
         for (auto& hotdog : hotdogs) 
-        {
-            //std::cout << "DOGGIE! " 
-            //<<
-            //    "Dog ID: " << hotdog.GetId() << '\n'
-            //<< 
-            //    "Wiener ID: " << hotdog.GetSausage().GetId() << "\n"
-            //<<
-            //    "Dough ID: " << hotdog.GetBread().GetId() << "\n";
+        {/*
+            std::cout << "DOGGIE! " 
+            <<
+                "Dog ID: " << hotdog.GetId() << '\n'
+            << 
+                "Wiener ID: " << hotdog.GetSausage().GetId() << "\n"
+            <<
+                "Dough ID: " << hotdog.GetBread().GetId() << "\n";*/
 
             // У хот-дога должен быть уникальный id
             {
