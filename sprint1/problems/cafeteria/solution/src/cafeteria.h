@@ -25,18 +25,21 @@ public:
         sausage_(sosig),
         bun_(dough),
         cooker_(diablo),
-        strand_(net::make_strand(io)),
-        handler_{ std::move(handler) } {}
+        handler_{ std::move(handler) } {
+
+        std::cout << "PASSED BREAD WITH ID: " << dough->GetId() + 1 << '\n';
+        std::cout << "RECEIVED BREAD WITH ID: " << bun_->GetId() + 1 << '\n';
+
+        std::cout << "PASSED SOSIG WITH ID: " << sosig->GetId() + 1 << '\n';
+        std::cout << "RECEIVED BREAD WITH ID: " << sausage_->GetId() + 1 << '\n';
+    }
     
 
     // Запускает асинхронное выполнение заказа
     void Execute()
     {
-        net::dispatch(strand_, [self = shared_from_this()]()
-            {
-                self->GrillSausage();
-                self->BakeBun();
-            });
+        GrillSausage();
+        BakeBun();
     }
 
 private:
@@ -64,6 +67,7 @@ private:
     void BakeBun()
     {
         bun_timer_.expires_after(HotDog::MIN_BREAD_COOK_DURATION);
+
         bun_->StartBake(*cooker_, [self = shared_from_this()]()
             {
                 self->bun_timer_.async_wait([self](sys::error_code ec)
@@ -82,6 +86,13 @@ private:
 
     void CheckReadiness(sys::error_code ec)
     {
+        if (ec)
+        {
+            std::osyncstream os{ std::cout };
+            os << ec.what() << " ERROR! ";
+            return;
+        }
+
         if(is_grilled_ && is_baked_)
         handler_(Result(std::move(HotDog(id_, sausage_, bun_))));
     }
@@ -92,12 +103,11 @@ private:
     std::shared_ptr<GasCooker> cooker_;
 
     net::io_context& io_;
-    net::strand <net::io_context::executor_type> strand_;
+    net::strand <net::io_context::executor_type> strand_{ net::make_strand(io_) };
     std::function<void(Result<HotDog> hot_dog)> handler_;
 
     net::steady_timer sausage_timer_{ io_, HotDog::MIN_SAUSAGE_COOK_DURATION };
-    net::steady_timer bun_timer_{ io_, HotDog::MIN_SAUSAGE_COOK_DURATION };
-    int next_id_ = 0;
+    net::steady_timer bun_timer_{ io_, HotDog::MIN_BREAD_COOK_DURATION };
 
     int id_;
     bool is_grilled_ = false, is_baked_ = false;
