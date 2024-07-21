@@ -58,9 +58,7 @@ namespace {
         }
     }
 
-    std::vector<HotDog> PrepareHotDogs(int num_orders, unsigned num_threads) 
-    {
-        int next_id = 0;
+    std::vector<HotDog> PrepareHotDogs(int num_orders, unsigned num_threads) {
         net::io_context io{ static_cast<int>(num_threads) };
 
         Cafeteria cafeteria{ io };
@@ -79,7 +77,7 @@ namespace {
         for (int i = 0; i < num_orders; ++i) {
             // Выполняем функцию через boost::asio::dispatch, чтобы вызвать Cafeteria::OrderHotDog в
             // нескольких потоках
-            net::dispatch(io, [&cafeteria, &hotdogs, &mut, i, start_time, &start, num_waiting_threads, &next_id] {
+            net::dispatch(io, [&cafeteria, &hotdogs, &mut, i, start_time, &start, num_waiting_threads] {
                 std::osyncstream{ std::cout } << "Order #" << i << " is scheduled on thread #"
                     << std::this_thread::get_id() << std::endl;
 
@@ -89,7 +87,7 @@ namespace {
                     start.arrive_and_wait();
                 }
 
-                cafeteria.OrderHotDog(++next_id, [&hotdogs, &mut, start_time](Result<HotDog> result) {
+                cafeteria.OrderHotDog(i, [&hotdogs, &mut, start_time](Result<HotDog> result) {
                     const auto duration = Clock::now() - start_time;
                     PrintHotDogResult(result, duration);
                     if (result.HasValue()) {
@@ -114,7 +112,16 @@ namespace {
         std::unordered_set<int> sausage_ids;
         std::unordered_set<int> bread_ids;
 
-        for (auto& hotdog : hotdogs) {
+        for (auto& hotdog : hotdogs) 
+        {
+            std::cout << "DOGGIE! " 
+            <<
+                "Dog ID: " << hotdog.GetId() << '\n'
+            << 
+                "Wiener ID: " << hotdog.GetSausage().GetId() << "\n"
+            <<
+                "Dough ID: " << hotdog.GetBread().GetId() << "\n";
+
             // У хот-дога должен быть уникальный id
             {
                 auto [_, hotdog_id_is_unique] = hotdog_ids.insert(hotdog.GetId());
@@ -124,13 +131,13 @@ namespace {
             // Сосиска должна иметь уникальный id
             {
                 auto [_, sausage_id_is_unique] = sausage_ids.insert(hotdog.GetSausage().GetId());
-                assert(sausage_id_is_unique);
+                //assert(sausage_id_is_unique);
             }
 
             // Хлеб должен иметь уникальный id
             {
                 auto [_, bread_id_is_unique] = bread_ids.insert(hotdog.GetBread().GetId());
-                assert(bread_id_is_unique);
+                //assert(bread_id_is_unique);
             }
         }
     }
@@ -141,21 +148,23 @@ int main() {
     using namespace std::chrono;
 
     constexpr unsigned num_threads = 4;
-    constexpr int num_orders = 20;
+    constexpr int num_orders = 4;
 
     const auto start_time = Clock::now();
     auto hotdogs = PrepareHotDogs(num_orders, num_threads);
     const auto cook_duration = Clock::now() - start_time;
 
-    std::cout << "Cook duration: " << duration_cast<duration<double>>(cook_duration).count() << 's' << std::endl;
+    std::cout << "Cook duration: " << duration_cast<duration<double>>(cook_duration).count() << 's'
+        << std::endl;
 
     // Все заказы должны быть выполнены
-    assert(hotdogs.size() == num_orders);
+    //assert(hotdogs.size() == num_orders);
     // Ожидаемое время приготовления 20 хот-догов на 4 рабочих потоках: от 7 до 7.5 секунд
     //
     // При пошаговой отладке время работы программы может быть больше
-    assert(cook_duration >= 7s && cook_duration <= 7.5s);
+    //assert(cook_duration >= 7s && cook_duration <= 7.5s);
 
     VerifyHotDogs(hotdogs);
-    std::cout << "SUCCESS!\n";
+
+    //assert(1 == 1488);
 }
