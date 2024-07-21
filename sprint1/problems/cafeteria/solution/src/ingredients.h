@@ -158,11 +158,15 @@ private:
 // Склад ингредиентов (возвращает ингредиенты с уникальным id)
 class Store {
 public:
-    std::shared_ptr<Bread> GetBread() {
+    std::shared_ptr<Bread> GetBread() 
+    {
+        //std::cout << "CRAFTED BREAD WITH ID: " << next_id_ + 1 << '\n';
         return std::make_shared<Bread>(++next_id_);
     }
 
-    std::shared_ptr<Sausage> GetSausage() {
+    std::shared_ptr<Sausage> GetSausage() 
+    {
+        //std::cout << "CRAFTED SOSIG WITH ID: " << next_id_ + 1 << '\n';
         return std::make_shared<Sausage>(++next_id_);
     }
 
