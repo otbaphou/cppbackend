@@ -114,13 +114,13 @@ namespace {
 
         for (auto& hotdog : hotdogs) 
         {
-            std::cout << "DOGGIE! " 
-            <<
-                "Dog ID: " << hotdog.GetId() << '\n'
-            << 
-                "Wiener ID: " << hotdog.GetSausage().GetId() << "\n"
-            <<
-                "Dough ID: " << hotdog.GetBread().GetId() << "\n";
+            //std::cout << "DOGGIE! " 
+            //<<
+            //    "Dog ID: " << hotdog.GetId() << '\n'
+            //<< 
+            //    "Wiener ID: " << hotdog.GetSausage().GetId() << "\n"
+            //<<
+            //    "Dough ID: " << hotdog.GetBread().GetId() << "\n";
 
             // У хот-дога должен быть уникальный id
             {
@@ -131,13 +131,13 @@ namespace {
             // Сосиска должна иметь уникальный id
             {
                 auto [_, sausage_id_is_unique] = sausage_ids.insert(hotdog.GetSausage().GetId());
-                //assert(sausage_id_is_unique);
+                assert(sausage_id_is_unique);
             }
 
             // Хлеб должен иметь уникальный id
             {
                 auto [_, bread_id_is_unique] = bread_ids.insert(hotdog.GetBread().GetId());
-                //assert(bread_id_is_unique);
+                assert(bread_id_is_unique);
             }
         }
     }
@@ -148,7 +148,7 @@ int main() {
     using namespace std::chrono;
 
     constexpr unsigned num_threads = 4;
-    constexpr int num_orders = 4;
+    constexpr int num_orders = 20;
 
     const auto start_time = Clock::now();
     auto hotdogs = PrepareHotDogs(num_orders, num_threads);
@@ -158,13 +158,11 @@ int main() {
         << std::endl;
 
     // Все заказы должны быть выполнены
-    //assert(hotdogs.size() == num_orders);
+    assert(hotdogs.size() == num_orders);
     // Ожидаемое время приготовления 20 хот-догов на 4 рабочих потоках: от 7 до 7.5 секунд
     //
     // При пошаговой отладке время работы программы может быть больше
-    //assert(cook_duration >= 7s && cook_duration <= 7.5s);
+    assert(cook_duration >= 7s && cook_duration <= 7.5s);
 
     VerifyHotDogs(hotdogs);
-
-    //assert(1 == 1488);
 }
