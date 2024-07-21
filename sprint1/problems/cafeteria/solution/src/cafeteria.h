@@ -27,11 +27,11 @@ public:
         cooker_(diablo),
         handler_{ std::move(handler) } {
 
-        std::cout << "PASSED BREAD WITH ID: " << dough->GetId() + 1 << '\n';
-        std::cout << "RECEIVED BREAD WITH ID: " << bun_->GetId() + 1 << '\n';
+        //std::cout << "PASSED BREAD WITH ID: " << dough->GetId() << '\n';
+        //std::cout << "RECEIVED BREAD WITH ID: " << bun_->GetId() << '\n';
 
-        std::cout << "PASSED SOSIG WITH ID: " << sosig->GetId() + 1 << '\n';
-        std::cout << "RECEIVED BREAD WITH ID: " << sausage_->GetId() + 1 << '\n';
+        //std::cout << "PASSED SOSIG WITH ID: " << sosig->GetId() << '\n';
+        //std::cout << "RECEIVED SOSIG WITH ID: " << sausage_->GetId() << '\n';
     }
     
 
