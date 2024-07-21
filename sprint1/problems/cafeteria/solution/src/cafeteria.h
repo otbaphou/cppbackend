@@ -38,18 +38,18 @@ public:
     // Запускает асинхронное выполнение заказа
     void Execute()
     {
-        GrillSausage();
-        BakeBun();
+
+                GrillSausage();
+                BakeBun();
     }
 
 private:
 
     void GrillSausage()
     {
-        sausage_timer_.expires_after(HotDog::MIN_SAUSAGE_COOK_DURATION);
-
         sausage_->StartFry(*cooker_, net::bind_executor(strand_, [self = shared_from_this()]()
             {
+                self->sausage_timer_.expires_after(HotDog::MIN_SAUSAGE_COOK_DURATION);
                 self->sausage_timer_.async_wait([self](sys::error_code ec)
                     {
                         self->OnGrilled(ec);
@@ -66,10 +66,11 @@ private:
 
     void BakeBun()
     {
-        bun_timer_.expires_after(HotDog::MIN_BREAD_COOK_DURATION);
 
         bun_->StartBake(*cooker_, [self = shared_from_this()]()
             {
+                self->bun_timer_.expires_after(HotDog::MIN_BREAD_COOK_DURATION);
+
                 self->bun_timer_.async_wait([self](sys::error_code ec)
                     {
                         self->OnBaked(ec);
@@ -106,10 +107,10 @@ private:
     net::strand <net::io_context::executor_type> strand_{ net::make_strand(io_) };
     std::function<void(Result<HotDog> hot_dog)> handler_;
 
-    net::steady_timer sausage_timer_{ io_, HotDog::MIN_SAUSAGE_COOK_DURATION };
-    net::steady_timer bun_timer_{ io_, HotDog::MIN_BREAD_COOK_DURATION };
+    net::steady_timer sausage_timer_{ io_ };
+    net::steady_timer bun_timer_{ io_ };
 
-    int id_;
+    int id_ = 1;
     bool is_grilled_ = false, is_baked_ = false;
 };
 
