@@ -107,7 +107,7 @@ int main()
 	constexpr net::ip::port_type port = 8080;
 	http_server::ServeHttp(ioc, { address, port }, [](auto&& req, auto&& sender) 
 	{
-		// sender(HandleRequest(std::forward<decltype(req)>(req)));
+		sender(HandleRequest(std::forward<decltype(req)>(req)));
 	});
 
 	// Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
