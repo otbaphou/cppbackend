@@ -169,7 +169,7 @@ namespace http_handler
 
 						json::object elem;
 
-						elem.emplace("code", "mapNotFound");
+						elem.emplace("code", "map_not_found");
 						elem.emplace("message", "Map not found");
 
 						response.push_back(elem);
@@ -183,7 +183,7 @@ namespace http_handler
 
 			json::object elem;
 
-			elem.emplace("code", "badRequest");
+			elem.emplace("code", "bad_request");
 			elem.emplace("message", "Bad request");
 
 			response.push_back(elem);
