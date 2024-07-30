@@ -50,7 +50,7 @@ namespace http_handler
 
 			if (std::string_view(target.begin(), target.begin() + 5) == "/api/"sv)
 			{
-				if (target == "/api/v1/maps"sv)
+				if (target == "/api/v1/maps"sv || target == "/api/v1/maps/"sv)
 				{
 					//Sends Off JSON Dictionary With Maps
 					
@@ -67,114 +67,117 @@ namespace http_handler
 					return text_response(http::status::ok, { json::serialize(response) });
 				}
 
-				if (std::string_view(target.begin(), target.begin() + 13) == "/api/v1/maps/"sv)
+				if (size >= 13)
 				{
-					using Id = util::Tagged<std::string, model::Map>;
-					Id id{ std::string(target.begin() + 13, target.end()) };
-
-					const model::Map* maptr = game.FindMap(id);
-					
-					if (maptr != nullptr)
+					if (std::string_view(target.begin(), target.begin() + 13) == "/api/v1/maps/"sv)
 					{
-						//JSON object with map data
-						json::object elem;
+						using Id = util::Tagged<std::string, model::Map>;
+						Id id{ std::string(target.begin() + 13, target.end()) };
 
-						//Initializing object using map id and name
-						elem.emplace("id", *maptr->GetId());
-						elem.emplace("name", maptr->GetName());
+						const model::Map* maptr = game.FindMap(id);
 
-						//Road container
-						json::array roads;
-
-						for (const model::Road& road_data : maptr->GetRoads())
+						if (maptr != nullptr)
 						{
-							//Temporary road object
-							json::object road;
+							//JSON object with map data
+							json::object elem;
 
-							model::Point start = road_data.GetStart();
-							model::Point end = road_data.GetEnd();
+							//Initializing object using map id and name
+							elem.emplace("id", *maptr->GetId());
+							elem.emplace("name", maptr->GetName());
 
-							road.emplace("x0", start.x);
-							road.emplace("y0", start.y);
+							//Road container
+							json::array roads;
 
-							if (road_data.IsHorizontal())
+							for (const model::Road& road_data : maptr->GetRoads())
 							{
-								road.emplace("x1", end.x);
+								//Temporary road object
+								json::object road;
+
+								model::Point start = road_data.GetStart();
+								model::Point end = road_data.GetEnd();
+
+								road.emplace("x0", start.x);
+								road.emplace("y0", start.y);
+
+								if (road_data.IsHorizontal())
+								{
+									road.emplace("x1", end.x);
+								}
+								else
+								{
+									road.emplace("y1", end.y);
+								}
+
+								//Pushing road to the road container
+								roads.push_back(road);
 							}
-							else
+
+							//Inserting road data to the map object
+							elem.emplace("roads", roads);
+
+							//Building container
+							json::array buildings;
+
+							for (const model::Building& building_data : maptr->GetBuildings())
 							{
-								road.emplace("y1", end.y);
+								//Temporary building object
+								json::object building;
+
+								model::Rectangle dimensions = building_data.GetBounds();
+
+								building.emplace("x", dimensions.position.x);
+								building.emplace("y", dimensions.position.y);
+								building.emplace("w", dimensions.size.width);
+								building.emplace("h", dimensions.size.height);
+
+								//Pushing building to the building container
+								buildings.push_back(building);
 							}
 
-							//Pushing road to the road container
-							roads.push_back(road);
+							//Inserting building data to the map object
+							elem.emplace("buildings", buildings);
+
+							//Office container
+							json::array offices;
+
+							for (const model::Office& office_data : maptr->GetOffices())
+							{
+								//Temporary office object
+								json::object office;
+
+								office.emplace("id", *office_data.GetId());
+
+								model::Point pos = office_data.GetPosition();
+								office.emplace("x", pos.x);
+								office.emplace("y", pos.y);
+
+								model::Offset offset = office_data.GetOffset();
+								office.emplace("offsetX", offset.dx);
+								office.emplace("offsetY", offset.dy);
+
+								//Pushing office to the building container
+								offices.push_back(office);
+							}
+
+							//Inserting office data to the map object
+							elem.emplace("offices", offices);
+
+							//Printing elem instead of response :o
+							return text_response(http::status::ok, { json::serialize(elem) });
 						}
-
-						//Inserting road data to the map object
-						elem.emplace("roads", roads);
-
-						//Building container
-						json::array buildings;
-
-						for (const model::Building& building_data : maptr->GetBuildings())
+						else
 						{
-							//Temporary building object
-							json::object building;
+							//Throwing error if requested map isn't found
 
-							model::Rectangle dimensions = building_data.GetBounds();
+							json::object elem;
 
-							building.emplace("x", dimensions.position.x);
-							building.emplace("y", dimensions.position.y);
-							building.emplace("w", dimensions.size.width);
-							building.emplace("h", dimensions.size.height);
+							elem.emplace("code", "mapNotFound");
+							elem.emplace("message", "Map not found");
 
-							//Pushing building to the building container
-							buildings.push_back(building);
+							response.push_back(elem);
+
+							return text_response(http::status::not_found, { json::serialize(response) });
 						}
-
-						//Inserting building data to the map object
-						elem.emplace("buildings", buildings);
-
-						//Office container
-						json::array offices;
-
-						for (const model::Office& office_data : maptr->GetOffices())
-						{
-							//Temporary office object
-							json::object office;
-
-							office.emplace("id", *office_data.GetId());
-
-							model::Point pos = office_data.GetPosition();
-							office.emplace("x", pos.x);
-							office.emplace("y", pos.y);
-
-							model::Offset offset = office_data.GetOffset();
-							office.emplace("offsetX", offset.dx);
-							office.emplace("offsetY", offset.dy);
-
-							//Pushing office to the building container
-							offices.push_back(office);
-						}
-
-						//Inserting office data to the map object
-						elem.emplace("offices", offices);
-
-						//Printing elem instead of response :o
-						return text_response(http::status::ok, { json::serialize(elem) });
-					}
-					else
-					{
-						//Throwing error if requested map isn't found
-
-						json::object elem;
-
-						elem.emplace("code", "map_not_found");
-						elem.emplace("message", "Map not found");
-
-						response.push_back(elem);
-
-						return text_response(http::status::not_found, { json::serialize(response) });
 					}
 				}
 
@@ -183,7 +186,7 @@ namespace http_handler
 
 			json::object elem;
 
-			elem.emplace("code", "bad_request");
+			elem.emplace("code", "badRequest");
 			elem.emplace("message", "Bad request");
 
 			response.push_back(elem);
