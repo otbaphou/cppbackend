@@ -161,7 +161,7 @@ namespace http_handler
 						elem.emplace("offices", offices);
 
 						//Printing elem instead of response :o
-						return text_response(http::status::not_found, { json::serialize(elem) });
+						return text_response(http::status::ok, { json::serialize(elem) });
 					}
 					else
 					{
