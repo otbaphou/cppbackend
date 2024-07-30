@@ -174,9 +174,7 @@ namespace http_handler
 							elem.emplace("code", "mapNotFound");
 							elem.emplace("message", "Map not found");
 
-							response.push_back(elem);
-
-							return text_response(http::status::not_found, { json::serialize(response) });
+							return text_response(http::status::not_found, { json::serialize(elem) });
 						}
 					}
 				}
@@ -189,9 +187,7 @@ namespace http_handler
 			elem.emplace("code", "badRequest");
 			elem.emplace("message", "Bad request");
 
-			response.push_back(elem);
-
-			return text_response(http::status::bad_request, { json::serialize(response) });
+			return text_response(http::status::bad_request, { json::serialize(elem) });
 		}
 
 		std::string response_str = "Why Are We Here?";
