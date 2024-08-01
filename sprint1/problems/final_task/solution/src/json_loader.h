@@ -8,6 +8,8 @@
 
 namespace json_loader 
 {
+	namespace json = boost::json;
+
 	void ParseRoads(model::Map& map, json::object& parent_object);
 	void ParseBuildings(model::Map& map, json::object& parent_object);
 	void ParseOffices(model::Map& map, json::object& parent_object);
