@@ -23,7 +23,8 @@ namespace http_handler
 	};
 
 	// Создаёт StringResponse с заданными параметрами
-	StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version, bool keep_alive, std::string_view content_type = ContentType::APPLICATION_JSON);
+	StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version, 
+	bool keep_alive, std::string_view content_type = ContentType::APPLICATION_JSON);
 
 	StringResponse HandleRequest(auto&& req, model::Game& game)
 	{
