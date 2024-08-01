@@ -2,6 +2,7 @@
 #include "tagged.h"
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 namespace json_loader
 {
@@ -87,7 +88,7 @@ namespace json_loader
 		if (!file.is_open())
 		{
 			std::cerr << "Error loading file: " << json_path.string() << std::endl;
-			throw std::exception("Loading Error! Game data file couldn't be opened..");
+			throw std::invalid_argument("Loading Error! Game data file couldn't be opened..");
 		}
 
 		std::ostringstream tmp;
