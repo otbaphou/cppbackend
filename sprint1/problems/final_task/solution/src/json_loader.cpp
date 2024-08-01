@@ -2,7 +2,6 @@
 #include "tagged.h"
 #include <fstream>
 #include <iostream>
-#include <boost/json.hpp>
 
 namespace json_loader
 {
