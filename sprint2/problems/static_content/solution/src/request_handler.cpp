@@ -2,7 +2,8 @@
 
 namespace http_handler 
 {
-	StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version, bool keep_alive, std::string_view content_type)
+	StringResponse MakeStringResponse(http::status status, std::string_view body, 
+		unsigned http_version, bool keep_alive, std::string_view content_type)
 	{
 		StringResponse response(status, http_version);
 		response.set(http::field::content_type, content_type);
@@ -12,7 +13,8 @@ namespace http_handler
 		return response;
 	}
 
-	FileResponse MakeResponse(http::status status, http::file_body::value_type& body, unsigned http_version, bool keep_alive, std::string_view content_type)
+	FileResponse MakeResponse(http::status status, http::file_body::value_type& body, 
+		unsigned http_version, bool keep_alive, std::string_view content_type)
 	{
 		FileResponse response;
 		response.version(http_version);
@@ -49,16 +51,16 @@ namespace http_handler
 			model::Point start = road_data.GetStart();
 			model::Point end = road_data.GetEnd();
 
-			road.emplace("x0", start.x);
-			road.emplace("y0", start.y);
+			road.emplace(X0_COORDINATE, start.x);
+			road.emplace(Y0_COORDINATE, start.y);
 
 			if (road_data.IsHorizontal())
 			{
-				road.emplace("x1", end.x);
+				road.emplace(X1_COORDINATE, end.x);
 			}
 			else
 			{
-				road.emplace("y1", end.y);
+				road.emplace(Y1_COORDINATE, end.y);
 			}
 
 			//Pushing road to the road container
@@ -75,10 +77,10 @@ namespace http_handler
 
 			model::Rectangle dimensions = building_data.GetBounds();
 
-			building.emplace("x", dimensions.position.x);
-			building.emplace("y", dimensions.position.y);
-			building.emplace("w", dimensions.size.width);
-			building.emplace("h", dimensions.size.height);
+			building.emplace(X_COORDINATE, dimensions.position.x);
+			building.emplace(Y_COORDINATE, dimensions.position.y);
+			building.emplace(WIDTH, dimensions.size.width);
+			building.emplace(HEIGHT, dimensions.size.height);
 
 			//Pushing building to the building container
 			target_container.push_back(std::move(building));
@@ -95,12 +97,12 @@ namespace http_handler
 			office.emplace("id", *office_data.GetId());
 
 			model::Point pos = office_data.GetPosition();
-			office.emplace("x", pos.x);
-			office.emplace("y", pos.y);
+			office.emplace(X_COORDINATE, pos.x);
+			office.emplace(Y_COORDINATE, pos.y);
 
 			model::Offset offset = office_data.GetOffset();
-			office.emplace("offsetX", offset.dx);
-			office.emplace("offsetY", offset.dy);
+			office.emplace(X_OFFSET, offset.dx);
+			office.emplace(Y_OFFSET, offset.dy);
 
 			//Pushing office to the building container
 			target_container.push_back(std::move(office));

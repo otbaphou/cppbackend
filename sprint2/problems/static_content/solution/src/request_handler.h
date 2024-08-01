@@ -50,8 +50,11 @@ namespace http_handler
 	};
 
 	//Creates a response using given parameters
-	StringResponse MakeStringResponse(http::status status, std::string_view body, unsigned http_version, bool keep_alive, std::string_view content_type);
-	FileResponse MakeResponse(http::status status, http::file_body::value_type& body, unsigned http_version, bool keep_alive, std::string_view content_type);
+	StringResponse MakeStringResponse(http::status status, std::string_view body, 
+		unsigned http_version, bool keep_alive, std::string_view content_type);
+
+	FileResponse MakeResponse(http::status status, http::file_body::value_type& body, 
+		unsigned http_version, bool keep_alive, std::string_view content_type);
 
 	//Data Packets
 	void PackMaps(json::array& target_container, model::Game& game);
@@ -163,12 +166,12 @@ namespace http_handler
 
 				//Throwing error when URL starts with /api/ but doesn't correlate to any of the commands
 
-				json::object elem;
+				json::object response;
 
-				elem.emplace("code", "badRequest");
-				elem.emplace("message", "Bad request");
+				response.emplace("code", "badRequest");
+				response.emplace("message", "Bad request");
 
-				send(text_response(http::status::bad_request, { json::serialize(elem) }, ContentType::APPLICATION_JSON));
+				send(text_response(http::status::bad_request, { json::serialize(response) }, ContentType::APPLICATION_JSON));
 				return;
 			}				
 

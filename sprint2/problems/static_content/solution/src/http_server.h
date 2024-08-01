@@ -120,6 +120,11 @@ namespace http_server
 		{
 			beast::error_code ec;
 			stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
+
+			if (ec)
+			{
+				return ReportError(ec, "close"sv);
+			}
 		}
 
 		// Обработку запроса делегируем подклассу
