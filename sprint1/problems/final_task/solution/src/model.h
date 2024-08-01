@@ -5,9 +5,23 @@
 
 #include "tagged.h"
 
+const std::string X_COORDINATE = "x";
+const std::string Y_COORDINATE = "y";
+
+
+const std::string X_OFFSET = "offsetX";
+const std::string Y_OFFSET = "offsetY";
+
+const std::string X0_COORDINATE = "x0";
+const std::string Y0_COORDINATE = "y0";
+const std::string X1_COORDINATE = "x1";
+const std::string Y1_COORDINATE = "y1";
+
+const std::string WIDTH = "w";
+const std::string HEIGHT = "h";
+
 namespace model
 {
-
 	using Dimension = int;
 	using Coord = Dimension;
 
