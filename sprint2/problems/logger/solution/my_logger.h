@@ -11,7 +11,6 @@
 #include <filesystem>
 #include <mutex>
 #include <thread>
-#include <format>
 
 using namespace std::literals;
 
@@ -31,15 +30,21 @@ class Logger
 
     auto GetTimeStamp() const
     {
-        return std::format("{:%Y-%m-%d}", std::localtime);
+        const auto now = GetTime();
+        const auto t_c = std::chrono::system_clock::to_time_t(now);
+        return std::put_time(std::localtime(&t_c), "%F %T");
     }
 
     // Для имени файла возьмите дату с форматом "%Y_%m_%d"
     std::string GetFileTimeStamp() const
     {
-        const auto now = GetTime();
-        const auto t_c = std::chrono::system_clock::to_time_t(now);
-        return std::format("{:%Y-%m-%d}", t_c);
+        const std::chrono::time_point now{ std::chrono::system_clock::now() };
+        const std::chrono::year_month_day ymd{ std::chrono::floor<std::chrono::days>(now) };
+
+        std::stringstream date; 
+        date << ymd;
+
+        return date.str();
     }
 
     Logger() = default;
@@ -62,7 +67,6 @@ public:
         raw_path += ".log";
 
         std::filesystem::path log_path{ raw_path };
-        std::cout << log_path.string() << '\n';
         std::ofstream log_file_{ log_path, std::ios::app };
 
         log_file_ << GetTimeStamp() << ": "sv;
