@@ -30,9 +30,7 @@ class Logger
 
     auto GetTimeStamp() const
     {
-        const auto now = GetTime();
-        const auto t_c = std::chrono::system_clock::to_time_t(now);
-        return std::put_time(std::localtime(&t_c), "%F %T");
+        return std::format("{:%Y-%m-%d}", std::localtime);
     }
 
     // Для имени файла возьмите дату с форматом "%Y_%m_%d"
