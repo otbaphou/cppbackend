@@ -38,8 +38,9 @@ class Logger
     // Для имени файла возьмите дату с форматом "%Y_%m_%d"
     std::string GetFileTimeStamp() const
     {
-        auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
-        return std::format("{:%Y-%m-%d}", time);
+        const auto now = GetTime();
+        const auto t_c = std::chrono::system_clock::to_time_t(now);
+        return std::format("{:%Y-%m-%d}", t_c);
     }
 
     Logger() = default;
