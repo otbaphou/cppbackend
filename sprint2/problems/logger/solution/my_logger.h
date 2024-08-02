@@ -62,7 +62,7 @@ public:
 
     void SetPath()
     {
-        std::string raw_path = "/var/log/";
+        std::string raw_path = "/var/log/sample_log_";
         raw_path += current_date;
         raw_path += ".log";
 
