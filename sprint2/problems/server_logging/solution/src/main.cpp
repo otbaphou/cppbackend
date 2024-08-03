@@ -97,10 +97,10 @@ int main(int argc, const char* argv[])
 		});
 
 		// Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-		std::cout << "Server has started..."sv << std::endl;
+		//std::cout << ""sv << std::endl;
 		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()}};
 
-		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "server started"sv;
+		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "Server has started..."sv;
 
 		// 6. Запускаем обработку асинхронных операций
 		RunWorkers(std::max(1u, num_threads), [&ioc] 
