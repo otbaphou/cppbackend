@@ -50,16 +50,16 @@ void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& s
 
 void InitBoostLogFilter()
 {
-	/*logging::add_console_log(
+	logging::add_console_log(
 		std::cout,
 		keywords::format = &MyFormatter
-	);*/
+	);
 
-		logging::add_file_log(
+	/*logging::add_file_log(
 		keywords::file_name = "game_server.log",
 		keywords::format = &MyFormatter,
 		keywords::open_mode = std::ios_base::app | std::ios_base::out
-	);
+	);*/
 }
 
 int main(int argc, const char* argv[]) 
