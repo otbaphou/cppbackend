@@ -10,7 +10,7 @@ namespace http_server
         //Logging net errors
         json::object logger_data{ {"code", ec.value()}, {"text", ec.message()}, {"where", what} };
 
-        BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
+        BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 
         //Looking back, maybe I should've set severity lvl to "error", who knows..
     }

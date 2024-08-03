@@ -32,7 +32,6 @@ namespace keywords = logging::keywords;
 namespace json = boost::json;
 namespace pt = boost::posix_time;
 
-//Once again, I don't know where else to place this stuff below. This file seemed suitable though..
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", pt::ptime)
 BOOST_LOG_ATTRIBUTE_KEYWORD(additional_data, "AdditionalData", json::object)
 
@@ -134,7 +133,7 @@ namespace http_server
 			{
 				return ReportError(ec, "read"sv);
 			}
-			HandleRequest(std::move(request_));
+			HandleRequest(std::move(request_), stream_.socket().remote_endpoint().address().to_string());
 		}
 
 		void Close()
@@ -149,7 +148,7 @@ namespace http_server
 		}
 
 		// Обработку запроса делегируем подклассу
-		virtual void HandleRequest(HttpRequest&& request) = 0;
+		virtual void HandleRequest(HttpRequest&& request, const std::string& address) = 0;
 
 	};
 
@@ -159,10 +158,10 @@ namespace http_server
 
 	public:
 		template <typename Handler>
-		Session(tcp::socket&& socket, Handler&& request_handler, const tcp::endpoint& endpoint)
+		Session(tcp::socket&& socket, Handler&& request_handler)
 			: SessionBase(std::move(socket))
 			, request_handler_(std::forward<Handler>(request_handler))
-			, endpoint_(endpoint){}
+		{}
 
 	private:
 
@@ -171,19 +170,23 @@ namespace http_server
 			return this->shared_from_this();
 		}
 
-		void HandleRequest(HttpRequest&& request) override
+		void HandleRequest(HttpRequest&& request, const std::string& address) override
 		{
+			HttpRequest tmp{ std::move(request) };
+			json::object logger_data{ {"ip", address}, {"URI", tmp.target() }, {"method", tmp.method_string()} };
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "request received"sv;
+
 			// Захватываем умный указатель на текущий объект Session в лямбде,
 			// чтобы продлить время жизни сессии до вызова лямбды.
 			// Используется generic-лямбда функция, способная принять response произвольного типа
-			request_handler_(std::move(request), [self = this->shared_from_this()](auto&& response)
+			request_handler_(std::move(tmp), [self = this->shared_from_this()](auto&& response)
 				{
 					self->Write(std::move(response));
 				});
 		}
 
 		RequestHandler request_handler_;
-		const tcp::endpoint& endpoint_;
 	};
 
 	template <typename RequestHandler>
@@ -196,7 +199,6 @@ namespace http_server
 			// Обработчики асинхронных операций acceptor_ будут вызываться в своём strand
 			, acceptor_(net::make_strand(ioc))
 			, request_handler_(std::forward<Handler>(request_handler))
-			, endpoint_(endpoint)
 		{
 			// Открываем acceptor, используя протокол (IPv4 или IPv6), указанный в endpoint
 			acceptor_.open(endpoint.protocol());
@@ -253,18 +255,17 @@ namespace http_server
 
 		void AsyncRunSession(tcp::socket&& socket)
 		{
-			std::make_shared<Session<RequestHandler>>(std::move(socket), request_handler_, endpoint_)->Run();
+			std::make_shared<Session<RequestHandler>>(std::move(socket), request_handler_)->Run();
 		}
 
 		net::io_context& ioc_;
 		// acceptor будет вызывать свои функции-обработчики последовательно внутри strand
 		tcp::acceptor acceptor_;
 		RequestHandler request_handler_;
-		const tcp::endpoint& endpoint_;
 	};
 
 	template <typename RequestHandler>
-	void ServeHttp(net::io_context& ioc, const tcp::endpoint& endpoint, RequestHandler&& handler)
+	void ServeHttp(net::io_context& ioc, const net::ip::tcp::endpoint& endpoint, RequestHandler&& handler)
 	{
 		// При помощи decay_t исключим ссылки из типа RequestHandler,
 		// чтобы Listener хранил RequestHandler по значению
