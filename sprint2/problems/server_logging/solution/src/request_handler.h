@@ -239,7 +239,7 @@ namespace http_handler
 		if (ec) // Optional handling of possible errors.
 		{
 			//Adding custom error logging in here too, hoping it won't mess up the tests and break everything
-			json::object logger_data{ {"code", -31253}, {"exception", ec.what()}};
+			json::object logger_data{ {"code", -31253}, {"exception", ec.message()}};
 
 			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 		}
@@ -259,7 +259,7 @@ namespace http_handler
 
 			if (sys::error_code ec; file.open(requested_path.string().c_str(), beast::file_mode::read, ec), ec)
 			{
-				json::object logger_data{ {"code", -31254}, {"exception", ec.what()} };
+				json::object logger_data{ {"code", -31254}, {"exception", ec.message()} };
 
 				BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 				return;
@@ -272,7 +272,7 @@ namespace http_handler
 		//Something else???
 		if (ec)
 		{
-			json::object logger_data{ {"code", -31255}, {"exception", ec.what()} };
+			json::object logger_data{ {"code", -31255}, {"exception", ec.message()} };
 
 			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 		}
