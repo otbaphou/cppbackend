@@ -86,6 +86,149 @@ namespace http_handler
 	}
 
 	template <typename Send>
+	void HandleRequestFile(Send&& send, model::Game& game, fs::path& requested_path, const auto& text_response, const auto& file_response)
+	{
+		if (!fs::exists(requested_path))
+		{
+			send(text_response(http::status::not_found, { "You got the wrong door, buddy." }, ContentType::TEXT_TXT));
+			return;
+		}
+
+		//###Extension checks###
+		std::error_code ec;
+
+		//File is a directory?
+		if (fs::is_directory(requested_path, ec))
+		{
+			requested_path = requested_path / fs::path{ "index.html" };
+		}
+
+		if (ec) // Optional handling of possible errors.
+		{
+			//Adding custom error logging in here too, hoping it won't mess up the tests and break everything
+			json::object logger_data{ {"code", -31253}, {"exception", ec.message()} };
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
+		}
+
+		//File is a.. file?!
+		if (fs::is_regular_file(requested_path, ec))
+		{
+			std::string extension = requested_path.extension().string();
+
+			//Stupid check
+			for (char& c : extension)
+			{
+				c = tolower(c);
+			}
+
+			http::file_body::value_type file;
+
+			if (sys::error_code ec; file.open(requested_path.string().c_str(), beast::file_mode::read, ec), ec)
+			{
+				json::object logger_data{ {"code", -31254}, {"exception", ec.message()} };
+
+				BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
+				return;
+			}
+
+			send(file_response(http::status::ok, { file }, GetContentType(extension)));
+			return;
+		}
+
+		//Something else???
+		if (ec)
+		{
+			json::object logger_data{ {"code", -31255}, {"exception", ec.message()} };
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
+		}
+
+		send(text_response(http::status::ok, { "Why Are We Here?" }, ContentType::TEXT_HTML));
+		return;
+	}
+
+	template <typename Send>
+	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response)
+	{
+		if (target == "/api/v1/maps"sv || target == "/api/v1/maps/"sv)
+		{
+			json::array response;
+
+			//Inserting Map Data Into JSON Array
+			PackMaps(response, game);
+
+			send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+			return;
+		}
+
+		if (target.size() >= 13)
+		{
+			if (std::string_view(target.begin(), target.begin() + 13) == "/api/v1/maps/"sv)
+			{
+				using Id = util::Tagged<std::string, model::Map>;
+				Id id{ std::string(target.begin() + 13, target.end()) };
+
+				const model::Map* maptr = game.FindMap(id);
+
+				if (maptr != nullptr)
+				{
+					//JSON object with map data
+					json::object response;
+
+					//Initializing object using map id and name
+					response.emplace("id", *maptr->GetId());
+					response.emplace("name", maptr->GetName());
+
+					//Inserting Roads
+					json::array roads;
+					PackRoads(roads, maptr);
+
+					response.emplace("roads", std::move(roads));
+
+					//Inserting Buildings
+					json::array buildings;
+					PackBuildings(buildings, maptr);
+
+					response.emplace("buildings", std::move(buildings));
+
+					//Inserting Offices
+					json::array offices;
+					PackOffices(offices, maptr);
+
+					response.emplace("offices", std::move(offices));
+
+					//Printing response
+					send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+					return;
+				}
+				else
+				{
+					//Throwing error if requested map isn't found
+
+					json::object response;
+
+					response.emplace("code", "mapNotFound");
+					response.emplace("message", "Map not found");
+
+					send(text_response(http::status::not_found, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+					return;
+				}
+			}
+		}
+
+		//Throwing error when URL starts with /api/ but doesn't correlate to any of the commands
+
+		json::object response;
+
+		response.emplace("code", "badRequest");
+		response.emplace("message", "Bad request");
+
+		send(text_response(http::status::bad_request, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+		return;
+	}
+
+	template <typename Send>
 	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send)
 	{
 		using std::chrono::duration_cast;
@@ -122,98 +265,19 @@ namespace http_handler
 		}
 
 		std::string_view target = req.target();
-		//TODO: PLACE ENDPOINT
-		//Logging request
-		//json::object logger_data{ {"ip", "endpoint"}, {"URI", target}, {"method", req_type} };
-
-		//BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "request received"sv;
 
 		size_t size = target.size();
 
+		//Checking if current request is an API request, then handling it
 		if (size >= 4)
 		{
 			if (std::string_view(target.begin(), target.begin() + 5) == "/api/"sv || std::string_view(target.begin(), target.begin() + 4) == "/api"sv)
 			{
-				if (target == "/api/v1/maps"sv || target == "/api/v1/maps/"sv)
-				{
-					json::array response;
-
-					//Inserting Map Data Into JSON Array
-					PackMaps(response, game);
-
-					send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
-					return;
-				}
-
-				if (size >= 13)
-				{
-					if (std::string_view(target.begin(), target.begin() + 13) == "/api/v1/maps/"sv)
-					{
-						using Id = util::Tagged<std::string, model::Map>;
-						Id id{ std::string(target.begin() + 13, target.end()) };
-
-						const model::Map* maptr = game.FindMap(id);
-
-						if (maptr != nullptr)
-						{
-							//JSON object with map data
-							json::object response;
-
-							//Initializing object using map id and name
-							response.emplace("id", *maptr->GetId());
-							response.emplace("name", maptr->GetName());
-
-							//Inserting Roads
-							json::array roads;
-							PackRoads(roads, maptr);
-
-							response.emplace("roads", std::move(roads));
-
-							//Inserting Buildings
-							json::array buildings;
-							PackBuildings(buildings, maptr);
-
-							response.emplace("buildings", std::move(buildings));
-
-							//Inserting Offices
-							json::array offices;
-							PackOffices(offices, maptr);
-
-							response.emplace("offices", std::move(offices));
-
-							//Printing response
-							send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
-							return;
-						}
-						else
-						{
-							//Throwing error if requested map isn't found
-
-							json::object response;
-
-							response.emplace("code", "mapNotFound");
-							response.emplace("message", "Map not found");
-
-							send(text_response(http::status::not_found, { json::serialize(response) }, ContentType::APPLICATION_JSON));
-							return;
-						}
-					}
-				}
-
-				//Throwing error when URL starts with /api/ but doesn't correlate to any of the commands
-
-				json::object response;
-
-				response.emplace("code", "badRequest");
-				response.emplace("message", "Bad request");
-
-				send(text_response(http::status::bad_request, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+				HandleRequestAPI(send, game, target, text_response);
 				return;
-			}				
-
+			}		
 		}
 
-		//Add new stuff here :)
 		std::string_view target_but_without_the_slash{ target.begin() + 1, target.end()};
 
 		fs::path requested_path = static_path / target_but_without_the_slash;
@@ -225,65 +289,9 @@ namespace http_handler
 			return;
 		}
 
-		if (!fs::exists(requested_path))
-		{
-			send(text_response(http::status::not_found, { "You got the wrong door, buddy." }, ContentType::TEXT_TXT));
-			return;
-		}
-
-		//###Extension checks###
-		std::error_code ec;
-
-		//File is a directory?
-		if (fs::is_directory(requested_path, ec))
-		{
-			requested_path = requested_path / fs::path{ "index.html" };
-		}
-
-		if (ec) // Optional handling of possible errors.
-		{
-			//Adding custom error logging in here too, hoping it won't mess up the tests and break everything
-			json::object logger_data{ {"code", -31253}, {"exception", ec.message()}};
-
-			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
-		}
-
-		//File is a.. file?!
-		if (fs::is_regular_file(requested_path, ec))
-		{
-			std::string extension = requested_path.extension().string();
-			
-			//Stupid check
-			for (char& c : extension)
-			{
-				c = tolower(c);
-			}
-
-			http::file_body::value_type file;
-
-			if (sys::error_code ec; file.open(requested_path.string().c_str(), beast::file_mode::read, ec), ec)
-			{
-				json::object logger_data{ {"code", -31254}, {"exception", ec.message()} };
-
-				BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
-				return;
-			}
-
-			send(file_response(http::status::ok, { file }, GetContentType(extension)));
-			return;
-		}
-
-		//Something else???
-		if (ec)
-		{
-			json::object logger_data{ {"code", -31255}, {"exception", ec.message()} };
-
-			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
-		}
-
-		send(text_response(http::status::ok, { "Why Are We Here?" }, ContentType::TEXT_HTML));
-		return;
-
+		//Handle file if it's within bounds and is safe (totally)
+		HandleRequestFile(send, game, requested_path, text_response, file_response);
+		return; //In case I ever decide to add something to the code and forget to add return;
 	}
 	class RequestHandler
 	{
