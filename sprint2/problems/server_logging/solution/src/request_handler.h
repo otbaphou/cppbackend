@@ -68,17 +68,44 @@ namespace http_handler
 
 	// Returns content type by raw extension string_view
 	std::string_view GetContentType(std::string_view extension);
+	void LogResponse(auto time, int code, std::string_view content_type)
+	{
+		//Logging request
+		json::object logger_data{ {"response_time", time}, {"code", code} };
+		if (content_type.empty())
+		{
+			logger_data.emplace( "content_type", "null" );
+		}
+		else
+		{
+			std::string type{ content_type }; // :(
+			logger_data.emplace( "content_type", type);
+		}
+
+		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "response sent"sv;
+	}
 
 	template <typename Send>
-	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send)
+	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send, const boost::asio::ip::tcp::endpoint& endpoint)
 	{
-		const auto text_response = [&req](http::status status, std::string_view body, std::string_view content_type = ContentType::APPLICATION_JSON)
+		using std::chrono::duration_cast;
+		using std::chrono::milliseconds;
+
+		std::chrono::system_clock::time_point request_start = std::chrono::system_clock::now();
+
+		const auto text_response = [&req, request_start](http::status status, std::string_view body, std::string_view content_type = ContentType::APPLICATION_JSON)
 			{
+				std::chrono::system_clock::time_point request_end = std::chrono::system_clock::now();
+				LogResponse(duration_cast<milliseconds>(request_end - request_start).count(), static_cast<int>(status), content_type);
+
 				return MakeStringResponse(status, body, req.version(), req.keep_alive(), content_type);
 			};
 
-		const auto file_response = [&req](http::status status, http::file_body::value_type& body, std::string_view content_type = ContentType::APPLICATION_JSON)
+		const auto file_response = [&req, request_start](http::status status, http::file_body::value_type& body, std::string_view content_type = ContentType::APPLICATION_JSON)
 			{
+				std::chrono::system_clock::time_point request_end = std::chrono::system_clock::now();
+				LogResponse(duration_cast<milliseconds>(request_end - request_start).count(), static_cast<int>(status), content_type);
+
 				return MakeResponse(status, body, req.version(), req.keep_alive(), content_type);
 			};
 
@@ -91,6 +118,11 @@ namespace http_handler
 		}
 
 		std::string_view target = req.target();
+		
+		//Logging request
+		json::object logger_data{ {"ip", endpoint.address().to_string()}, {"URI", target}, {"method", req_type}};
+
+		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "request received"sv;
 
 		size_t size = target.size();
 
@@ -182,9 +214,6 @@ namespace http_handler
 
 		fs::path requested_path = static_path / target_but_without_the_slash;
 
-		//std::cout << "Static: " << static_path.string() << std::endl;
-		//std::cout << "Requested: " << requested_path.string() << std::endl;
-
 		//Security checks
 		if (!IsSubPath(requested_path, static_path))
 		{
@@ -209,7 +238,10 @@ namespace http_handler
 
 		if (ec) // Optional handling of possible errors.
 		{
-			std::cerr << "Error in is_directory: " << ec.message();
+			//Adding custom error logging in here too, hoping it won't mess up the tests and break everything
+			json::object logger_data{ {"code", -31253}, {"exception", ec.what()}};
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 		}
 
 		//File is a.. file?!
@@ -227,7 +259,9 @@ namespace http_handler
 
 			if (sys::error_code ec; file.open(requested_path.string().c_str(), beast::file_mode::read, ec), ec)
 			{
-				std::cerr << "Failed to open file "sv << requested_path << std::endl;
+				json::object logger_data{ {"code", -31254}, {"exception", ec.what()} };
+
+				BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 				return;
 			}
 
@@ -238,14 +272,15 @@ namespace http_handler
 		//Something else???
 		if (ec)
 		{
-			std::cerr << "Error in is_regular_file: " << ec.message() << std::endl;
+			json::object logger_data{ {"code", -31255}, {"exception", ec.what()} };
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
 		}
 
 		send(text_response(http::status::ok, { "Why Are We Here?" }, ContentType::TEXT_HTML));
 		return;
 
 	}
-
 	class RequestHandler
 	{
 	public:
@@ -258,10 +293,10 @@ namespace http_handler
 		RequestHandler& operator=(const RequestHandler&) = delete;
 
 		template <typename Body, typename Allocator, typename Send>
-		void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send)
+		void operator()(const boost::asio::ip::tcp::endpoint& endpoint, http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send)
 		{
 			// Обработать запрос request и отправить ответ, используя send
-			HandleRequest(req, game_, static_path_, send);
+			HandleRequest(req, game_, static_path_, send, endpoint);
 		}
 
 	private:

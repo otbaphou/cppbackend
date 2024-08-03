@@ -7,7 +7,12 @@ namespace http_server
 {
     void ReportError(beast::error_code ec, std::string_view what)
     {
-        std::cerr << what << ": "sv << ec.message() << std::endl;
+        //Logging net errors
+        json::object logger_data{ {"code", ec.value()}, {"text", ec.message()}, {"where", what} };
+
+        BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error"sv;
+
+        //Looking back, maybe I should've set severity lvl to "error", who knows..
     }
 
     void SessionBase::Run()

@@ -87,7 +87,10 @@ namespace json_loader
 
 		if (!file.is_open())
 		{
-			std::cerr << "Error loading file: " << json_path.string() << std::endl;
+			json::object tmp{ {"error loading file", json_path.string()} };
+			json::object logger_data{ {"code", -31257}, {"exception", tmp} };
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error";
 			throw std::invalid_argument("Loading Error! Game data file couldn't be opened..");
 		}
 

@@ -1,8 +1,5 @@
+#include "http_server.h"
 #include "sdk.h"
-
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
 
 #include <boost/asio/io_context.hpp>
 #include <iostream>
@@ -15,8 +12,6 @@ using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
 namespace http = boost::beast::http;
-
-namespace logging = boost::log;
 
 namespace
 {
@@ -35,6 +30,29 @@ namespace
 	}
 
 }  // namespace
+
+void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& strm)
+{
+	json::object final_obj;
+	//Parsing timestamp and inserting it into the final json::object
+	final_obj.emplace("timestamp", pt::to_iso_extended_string(rec[timestamp].get()));
+
+	//Inserting additional information into the final json::object
+	final_obj.emplace("data", rec[additional_data].get());
+
+	//Inserting message string into the final json::object
+	final_obj.emplace("message", rec[logging::expressions::smessage].get());
+
+	strm << json::serialize(final_obj);
+}
+
+void InitBoostLogFilter()
+{
+	logging::add_console_log(
+		std::cout,
+		keywords::format = &MyFormatter
+	);
+}
 
 int main(int argc, const char* argv[]) 
 {
@@ -62,17 +80,18 @@ int main(int argc, const char* argv[])
 		constexpr net::ip::port_type port = 8080;
 
 		// 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-		
-		http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) 
-		{
-			handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
 
+		InitBoostLogFilter();
+
+		http_server::ServeHttp(ioc, {address, port}, [&handler, address, port](auto&& req, auto&& send)
+		{
+			handler({ address, port }, std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
 		});
-		
 
 		// Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
+		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()}};
 
-		BOOST_LOG_TRIVIAL(info) << "server has started.."sv;
+		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "server started"sv;
 
 		// 6. Запускаем обработку асинхронных операций
 		RunWorkers(std::max(1u, num_threads), [&ioc] 
@@ -83,7 +102,16 @@ int main(int argc, const char* argv[])
 
 	catch (const std::exception& ex) 
 	{
-		std::cerr << ex.what() << std::endl;
+		//Logging server exit with errors
+		json::object logger_data{ {"code", EXIT_FAILURE}, {"exception", ex.what()}};
+
+		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "server exited"sv;
+
 		return EXIT_FAILURE;
 	}
+
+	//Logging server exit without errors
+	json::object logger_data{ {"code", 0} };
+
+	BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::second_clock::local_time()) << logging::add_value(additional_data, logger_data) << "server exited"sv;
 }

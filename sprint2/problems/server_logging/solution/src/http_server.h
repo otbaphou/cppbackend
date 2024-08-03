@@ -1,4 +1,15 @@
 #pragma once
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/date_time.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
+
+#include <boost/json.hpp>
+
 #include "sdk.h"
 // boost.beast будет использовать std::string_view вместо boost::string_view
 #define BOOST_BEAST_USE_STD_STRING_VIEW
@@ -14,6 +25,16 @@
 #include <thread>
 #include <vector>
 #include <variant>
+
+namespace logging = boost::log;
+namespace keywords = logging::keywords;
+
+namespace json = boost::json;
+namespace pt = boost::posix_time;
+
+//Once again, I don't know where else to place this stuff below. This file seemed suitable though..
+BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", pt::ptime)
+BOOST_LOG_ATTRIBUTE_KEYWORD(additional_data, "AdditionalData", json::object)
 
 namespace http_server
 {
@@ -138,9 +159,10 @@ namespace http_server
 
 	public:
 		template <typename Handler>
-		Session(tcp::socket&& socket, Handler&& request_handler)
+		Session(tcp::socket&& socket, Handler&& request_handler, const tcp::endpoint& endpoint)
 			: SessionBase(std::move(socket))
-			, request_handler_(std::forward<Handler>(request_handler)) {}
+			, request_handler_(std::forward<Handler>(request_handler))
+			, endpoint_(endpoint){}
 
 	private:
 
@@ -161,6 +183,7 @@ namespace http_server
 		}
 
 		RequestHandler request_handler_;
+		const tcp::endpoint& endpoint_;
 	};
 
 	template <typename RequestHandler>
@@ -173,6 +196,7 @@ namespace http_server
 			// Обработчики асинхронных операций acceptor_ будут вызываться в своём strand
 			, acceptor_(net::make_strand(ioc))
 			, request_handler_(std::forward<Handler>(request_handler))
+			, endpoint_(endpoint)
 		{
 			// Открываем acceptor, используя протокол (IPv4 или IPv6), указанный в endpoint
 			acceptor_.open(endpoint.protocol());
@@ -229,13 +253,14 @@ namespace http_server
 
 		void AsyncRunSession(tcp::socket&& socket)
 		{
-			std::make_shared<Session<RequestHandler>>(std::move(socket), request_handler_)->Run();
+			std::make_shared<Session<RequestHandler>>(std::move(socket), request_handler_, endpoint_)->Run();
 		}
 
 		net::io_context& ioc_;
 		// acceptor будет вызывать свои функции-обработчики последовательно внутри strand
 		tcp::acceptor acceptor_;
 		RequestHandler request_handler_;
+		const tcp::endpoint& endpoint_;
 	};
 
 	template <typename RequestHandler>
