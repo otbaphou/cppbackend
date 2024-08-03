@@ -52,7 +52,8 @@ void InitBoostLogFilter()
 {
 	logging::add_console_log(
 		std::cout,
-		keywords::format = &MyFormatter
+		keywords::format = &MyFormatter,
+            	keywords::auto_flush = true
 	);
 
 	/*logging::add_file_log(
