@@ -50,9 +50,15 @@ void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& s
 
 void InitBoostLogFilter()
 {
-	logging::add_console_log(
+	/*logging::add_console_log(
 		std::cout,
 		keywords::format = &MyFormatter
+	);*/
+
+		logging::add_file_log(
+		keywords::file_name = "game_server.log",
+		keywords::format = &MyFormatter,
+		keywords::open_mode = std::ios_base::app | std::ios_base::out
 	);
 }
 
@@ -91,6 +97,7 @@ int main(int argc, const char* argv[])
 		});
 
 		// Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
+		std::cout << "Server has started..."sv << std::endl;
 		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()}};
 
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "server started"sv;
