@@ -161,7 +161,7 @@ namespace http_handler
 				{
 					response.emplace("code", "invalidArgument");
 					response.emplace("message", "Failed to parse tick request JSON");
-					response_status = http::status::bad_request;
+					response_status = http::status::service_unavailable;
 				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
@@ -173,6 +173,7 @@ namespace http_handler
 			send(str_response);
 			return;
 		}
+
 		if (target == "/api/v1/game/join"sv || target == "/api/v1/game/join/"sv)
 		{
 			json::object response;
