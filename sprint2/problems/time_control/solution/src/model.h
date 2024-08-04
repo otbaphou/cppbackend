@@ -622,12 +622,12 @@ namespace model
 
 		void Move(double ms)
 		{
-			double distance = ms / 1000;
+			double distance = ms / 1000; // .14
 
 			Coordinates new_pos;
 
-			new_pos.x = position_.x + (velocity_.x * distance);
-			new_pos.y = position_.y + (velocity_.y * distance);
+			new_pos.x = position_.x + (velocity_.x * distance); // -3 * .14 = -.42
+			new_pos.y = position_.y + (velocity_.y * distance); // 0
 
 			bool is_vertical = new_pos.x == position_.x;
 
@@ -866,6 +866,14 @@ namespace model
 			return map_id_to_players_.at(map_id);
 		}
 
+		void MoveAll(double ms)
+		{
+			for (Dog& dog : dogs_)
+			{
+				dog.Move(ms);
+			}
+		}
+
 	private:
 
 		std::unordered_map<std::string, Player*> token_to_player_;
@@ -916,13 +924,7 @@ namespace model
 
 		void ServerTick(int milliseconds)
 		{
-			for(Map& map : maps_)
-			{
-				for (Player* player : player_manager_.GetPlayerList(*map.GetId()))
-				{
-					player->Move(milliseconds);
-				}
-			}
+			player_manager_.MoveAll(milliseconds);
 		}
 
 	private:
