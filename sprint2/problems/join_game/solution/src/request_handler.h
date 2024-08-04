@@ -152,6 +152,8 @@ namespace http_handler
 	template <typename Send>
 	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request)
 	{
+		std::string_view req_type = request.method_string();
+
 		if (target == "/api/v1/maps"sv || target == "/api/v1/maps/"sv)
 		{
 			if (req_type != "GET"sv && req_type != "HEAD"sv)
@@ -252,6 +254,13 @@ namespace http_handler
 
 		if (target == "/api/v1/game/players"sv || target == "/api/v1/game/players/"sv)
 		{
+			bool allow_get_head = false;
+
+			json::object response;
+			http::status response_status;
+
+			std::string token;
+
 			if (request.method_string() != "GET"sv && request.method_string() != "HEAD"sv)
 			{
 				response.emplace("code", "invalidMethod");
@@ -262,10 +271,6 @@ namespace http_handler
 			}
 			else
 			{
-				json::object response;
-				http::status response_status;
-
-				std::string token;
 				try
 				{
 					auto auth = request.find(http::field::authorization);
@@ -279,7 +284,6 @@ namespace http_handler
 					response_status = http::status::unauthorized;
 				}
 
-				bool allow_get_head = false;
 
 				model::Player* player_ptr = game.FindPlayerByToken(token);
 				if (token.empty())
