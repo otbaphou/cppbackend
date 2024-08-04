@@ -2,9 +2,15 @@
 
 #include <stdexcept>
 
-std::string GenerateToken()
+int GetRandomNumber(int range)
 {
 	std::srand(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count()));
+
+	return rand() % range;
+}
+
+std::string GenerateToken()
+{
 
 	char hexChar[] =
 	{
@@ -17,11 +23,12 @@ std::string GenerateToken()
 
 	for (int i = 0; i < 32; i++)
 	{
-		token += hexChar[rand() % 16];
+		token += hexChar[GetRandomNumber(16)];
 	}
 
 	return token;
 }
+
 
 namespace model
 {

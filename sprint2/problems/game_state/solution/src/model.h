@@ -21,7 +21,7 @@ const std::string Y1_COORDINATE = "y1";
 
 const std::string WIDTH = "w";
 const std::string HEIGHT = "h";
-
+int GetRandomNumber(int range);
 std::string GenerateToken();
 
 namespace model
@@ -211,6 +211,8 @@ namespace model
 	class Dog
 	{
 	public:
+		Dog(Coordinates coords)
+		:position_(coords){}
 
 		Coordinates GetPos()
 		{
@@ -323,7 +325,7 @@ namespace model
 		//This function creates a player and returns a token
 		std::string MakePlayer(std::string username, const Map* map)
 		{
-			Player player{ BirthDog(), players_.size(), username, map };
+			Player player{ BirthDog(map), players_.size(), username, map };
 			players_.push_back(std::move(player));
 
 			Player* ptr = &players_.back();
@@ -363,9 +365,50 @@ namespace model
 			return nullptr;
 		}
 
-		Dog* BirthDog()
+		Dog* BirthDog(const Map* map)
 		{
-			Dog pup;
+			//Finding the suitable road for the puppy to be born
+			const std::vector<Road>& roads = map->GetRoads();
+			const Road& road = roads.at(GetRandomNumber(roads.size()));
+
+			//Now we find the exact spot on that road
+			Coordinates spot;
+
+			Point start = road.GetStart();
+			Point end = road.GetEnd();
+
+			if (road.IsVertical())
+			{
+				spot.x = start.x;
+				
+				int offset = GetRandomNumber(std::abs(start.y - end.y));
+
+				if (start.y < end.y)
+				{
+					spot.y = start.y + offset;
+				}
+				else
+				{
+					spot.y = end.y + offset;
+				}
+			}
+			else
+			{
+				spot.y = start.y;
+
+				int offset = GetRandomNumber(std::abs(start.x - end.x));
+
+				if (start.x < end.x)
+				{
+					spot.x = start.x + offset;
+				}
+				else
+				{
+					spot.x = end.x + offset;
+				}
+			}
+
+			Dog pup{ spot };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
 		}
