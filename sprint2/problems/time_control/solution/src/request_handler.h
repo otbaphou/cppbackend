@@ -193,22 +193,10 @@ namespace http_handler
 				try
 				{
 					auto value = json::parse(request.body());
-					int ms = 0;
+					int ms = value.as_object().at("timeDelta").as_int64();
 
-					if (value.as_object().contains("timeDelta"))
-					{
-						ms = value.as_object().at("timeDelta").as_int64();
-
-						game.ServerTick(ms);
-						response_status = http::status::ok;
-					}
-					else
-					{
-						response.emplace("code", "invalidArgument");
-						response.emplace("message", "Failed to parse tick request JSON");
-
-						response_status = http::status::bad_request;
-					}
+					game.ServerTick(ms);
+					response_status = http::status::ok;
 				}
 				catch (...)
 				{
