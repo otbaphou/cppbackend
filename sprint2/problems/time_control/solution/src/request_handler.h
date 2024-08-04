@@ -590,15 +590,19 @@ namespace http_handler
 										case 'U':
 											player->SetVel(0, -1);
 											player->SetDir(model::Direction::NORTH);
+											break;
 										case 'D':
 											player->SetVel(0, 1);
 											player->SetDir(model::Direction::SOUTH);
+											break;
 										case 'L':
 											player->SetVel(-1, 0);
 											player->SetDir(model::Direction::WEST);
+											break;
 										case 'R':
 											player->SetVel(1, 0);
 											player->SetDir(model::Direction::EAST);
+											break;
 										default:
 											failed = true;
 											break;
