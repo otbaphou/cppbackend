@@ -355,7 +355,7 @@ namespace model
 			return player_manager_.FindPlayerByToken(token);
 		}
 
-		const std::deque<Player*>& GetPlayerList(std::string map_id) const
+		const std::deque<Player*> GetPlayerList(std::string map_id) const
 		{
 			return player_manager_.GetPlayerList(map_id);
 		}

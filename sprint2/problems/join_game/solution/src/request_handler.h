@@ -177,31 +177,28 @@ namespace http_handler
 			http::status response_status;
 
 			bool allow_post = false;
-
-			try
+			if (request.method_string() != "POST"sv)
 			{
-				auto value = json::parse(request.body());
-				std::string username{ value.as_object().at("userName").as_string() };
-				std::string map_id{ value.as_object().at("mapId").as_string() };
+				response.emplace("code", "invalidArgument");
+				response.emplace("message", "Only POST method is expected");
 
-				std::cout << "USERNAME: " << username << " MAP ID: " << map_id << std::endl;
-
-
-				using Id = util::Tagged<std::string, model::Map>;
-				Id id{ map_id };
-
-				const model::Map* maptr = game.FindMap(id);
-				//Method not allowed if method isn't POST
-				if (request.method_string() != "POST"sv)
+				response_status = http::status::method_not_allowed;
+			}
+			else
+			{
+				try
 				{
-					response.emplace("code", "invalidArgument");
-					response.emplace("message", "Only POST method is expected");
+					auto value = json::parse(request.body());
+					std::string username{ value.as_object().at("userName").as_string() };
+					std::string map_id{ value.as_object().at("mapId").as_string() };
 
-					response_status = http::status::method_not_allowed;
-				}
-				else
-				{
-					//Bad request error if player name is invalid
+					using Id = util::Tagged<std::string, model::Map>;
+					Id id{ map_id };
+
+					const model::Map* maptr = game.FindMap(id);
+					//Method not allowed if method isn't POST
+
+						//Bad request error if player name is invalid
 					if (username.empty())
 					{
 						response.emplace("code", "invalidArgument");
@@ -231,14 +228,15 @@ namespace http_handler
 							response_status = http::status::ok;
 						}
 					}
-				}
-			}
-			catch (...)
-			{
-				response.emplace("code", "invalidArgument");
-				response.emplace("message", "Join game request parse error");
 
-				response_status = http::status::bad_request;
+				}
+				catch (...)
+				{
+					response.emplace("code", "invalidArgument");
+					response.emplace("message", "Join game request parse error");
+
+					response_status = http::status::bad_request;
+				}
 			}
 
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
@@ -274,7 +272,9 @@ namespace http_handler
 				try
 				{
 					auto auth = request.find(http::field::authorization);
-					token = std::string(auth->value());
+					std::string auth_str = std::string(auth->value());
+					assert(auth_str.size() == 39);
+					token = auth_str.substr(7, 32);
 				}
 				catch (...)
 				{
