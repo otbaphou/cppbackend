@@ -32,7 +32,6 @@ namespace
 }  // namespace
 
 //Once again, I don't know where else to place this stuff below. This file seemed suitable though..
-
 void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& strm)
 {
 	json::object final_obj;
@@ -95,7 +94,7 @@ int main(int argc, const char* argv[])
 		http_server::ServeHttp(ioc, { address, port }, [&handler](auto&& req, auto&& send)
 			{
 				handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
-			});
+			}); 
 
 		// Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
 		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()} };

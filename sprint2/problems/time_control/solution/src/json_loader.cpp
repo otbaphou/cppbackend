@@ -122,9 +122,12 @@ namespace json_loader
 			//Initializing map
 			model::Map map(id, std::string(map_data.at("name").as_string()));
 
+			double dog_speed = -1;
+
 			if (value.as_object().contains("dogSpeed"))
 			{
-				map.SetDogSpeed(value.as_object().at("dogSpeed").as_double());
+				dog_speed = value.as_object().at("dogSpeed").as_double();
+				map.SetDogSpeed(dog_speed);
 			}
 
 			//Reading JSON-object containing roads from map_data and adding them to the map
@@ -134,7 +137,14 @@ namespace json_loader
 			ParseOffices(map, map_data);
 
 			//Adding the map to the game
-			game.AddMap(map);
+			if (dog_speed != -1)
+			{
+				game.AddMap(map, dog_speed);
+			}
+			else
+			{
+				game.AddMap(map);
+			}
 		}
 
 		return game;
