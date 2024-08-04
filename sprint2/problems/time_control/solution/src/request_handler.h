@@ -122,6 +122,7 @@ namespace http_handler
 	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request)
 	{
 		std::string_view req_type = request.method_string();
+
 		if (target == "/api/v1/maps"sv || target == "/api/v1/maps/"sv)
 		{
 			if (req_type != "GET"sv && req_type != "HEAD"sv)
@@ -135,12 +136,14 @@ namespace http_handler
 			send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
 			return;
 		}
+
 		if (target == "/api/v1/game/tick"sv || target == "/api/v1/game/tick/"sv)
 		{
 			json::object response;
 			http::status response_status;
 			bool allow_post = false;
-			if (request.method_string() != "POST"sv)
+
+			if (req_type != "POST"sv)
 			{
 				response.emplace("code", "invalidMethod");
 				response.emplace("message", "Only POST method is expected");
@@ -153,7 +156,7 @@ namespace http_handler
 				try
 				{
 					auto value = json::parse(request.body());
-					ms = static_cast<int>(value.as_object().at("timeDelta").as_double());
+					ms = value.as_object().at("timeDelta").as_int64();
 
 					response_status = http::status::ok;
 				}
@@ -161,7 +164,7 @@ namespace http_handler
 				{
 					response.emplace("code", "invalidArgument");
 					response.emplace("message", "Failed to parse tick request JSON");
-					response_status = http::status::service_unavailable;
+					response_status = http::status::bad_request;
 				}
 
 				game.ServerTick(ms);
@@ -181,7 +184,7 @@ namespace http_handler
 			json::object response;
 			http::status response_status;
 			bool allow_post = false;
-			if (request.method_string() != "POST"sv)
+			if (req_type != "POST"sv)
 			{
 				response.emplace("code", "invalidMethod");
 				response.emplace("message", "Only POST method is expected");
@@ -247,7 +250,7 @@ namespace http_handler
 			json::object response;
 			http::status response_status;
 			std::string token;
-			if (request.method_string() != "GET"sv && request.method_string() != "HEAD"sv)
+			if (req_type != "GET"sv && req_type != "HEAD"sv)
 			{
 				response.emplace("code", "invalidMethod");
 				response.emplace("message", "Invalid method");
@@ -313,7 +316,7 @@ namespace http_handler
 			json::object response;
 			http::status response_status;
 			std::string token;
-			if (request.method_string() != "GET"sv && request.method_string() != "HEAD"sv)
+			if (req_type != "GET"sv && req_type != "HEAD"sv)
 			{
 				response.emplace("code", "invalidMethod");
 				response.emplace("message", "Invalid method");
@@ -411,7 +414,7 @@ namespace http_handler
 				response.emplace("message", "Invalid content type");
 				response_status = http::status::bad_request;
 			}
-			if (request.method_string() != "POST"sv)
+			if (req_type != "POST"sv)
 			{
 				response.emplace("code", "invalidMethod");
 				response.emplace("message", "Invalid method");
