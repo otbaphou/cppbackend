@@ -277,6 +277,7 @@ namespace http_handler
 					std::string auth_str = std::string(auth->value());
 					assert(auth_str.size() == 39);
 					token = auth_str.substr(7, 32);
+					assert(token.size() == 32);
 				}
 				catch (...)
 				{
@@ -286,28 +287,30 @@ namespace http_handler
 					response_status = http::status::unauthorized;
 				}
 
-
-				model::Player* player_ptr = game.FindPlayerByToken(token);
-
-				if (player_ptr == nullptr)
+				if(!token.empty())
 				{
-					response.emplace("code", "unknownToken");
-					response.emplace("message", "Player token has not been found");
+					model::Player* player_ptr = game.FindPlayerByToken(token);
 
-					response_status = http::status::unauthorized;
-				}
-				else
-				{
-					for (model::Player* player : game.GetPlayerList(*(player_ptr->GetCurrentMap()->GetId())))
+					if (player_ptr == nullptr)
 					{
-						json::object entry;
+						response.emplace("code", "unknownToken");
+						response.emplace("message", "Player token has not been found");
 
-						entry.emplace("name", player->GetName());
-
-						response.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
+						response_status = http::status::unauthorized;
 					}
+					else
+					{
+						for (model::Player* player : game.GetPlayerList(*(player_ptr->GetCurrentMap()->GetId())))
+						{
+							json::object entry;
 
-					response_status = http::status::ok;
+							entry.emplace("name", player->GetName());
+
+							response.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
+						}
+
+						response_status = http::status::ok;
+					}
 				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
@@ -347,6 +350,7 @@ namespace http_handler
 					std::string auth_str = std::string(auth->value());
 					assert(auth_str.size() == 39);
 					token = auth_str.substr(7, 32);
+					assert(token.size() == 32);
 				}
 				catch (...)
 				{
@@ -356,48 +360,50 @@ namespace http_handler
 					response_status = http::status::unauthorized;
 				}
 
-
-				model::Player* player_ptr = game.FindPlayerByToken(token);
-
-				if (player_ptr == nullptr)
+				if (!token.empty())
 				{
-					response.emplace("code", "unknownToken");
-					response.emplace("message", "Player token has not been found");
+					model::Player* player_ptr = game.FindPlayerByToken(token);
 
-					response_status = http::status::unauthorized;
-				}
-				else
-				{
-					json::object final_obj;
-
-					for (model::Player* player : game.GetPlayerList(*(player_ptr->GetCurrentMap()->GetId())))
+					if (player_ptr == nullptr)
 					{
-						json::object entry;
+						response.emplace("code", "unknownToken");
+						response.emplace("message", "Player token has not been found");
 
-						model::Coordinates pos = player->GetPos();
-
-						json::array pos_arr;
-						pos_arr.push_back(pos.x);
-						pos_arr.push_back(pos.y);
-
-						entry.emplace("pos", pos_arr);
-
-						model::Velocity vel = player->GetVel();
-
-						json::array vel_arr;
-						vel_arr.push_back(vel.x);
-						vel_arr.push_back(vel.y);
-
-						entry.emplace("speed", vel_arr);
-
-						entry.emplace("dir", player->GetDir());
-
-						final_obj.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
+						response_status = http::status::unauthorized;
 					}
+					else
+					{
+						json::object final_obj;
 
-					response.emplace("players", final_obj);
+						for (model::Player* player : game.GetPlayerList(*(player_ptr->GetCurrentMap()->GetId())))
+						{
+							json::object entry;
 
-					response_status = http::status::ok;
+							model::Coordinates pos = player->GetPos();
+
+							json::array pos_arr;
+							pos_arr.push_back(pos.x);
+							pos_arr.push_back(pos.y);
+
+							entry.emplace("pos", pos_arr);
+
+							model::Velocity vel = player->GetVel();
+
+							json::array vel_arr;
+							vel_arr.push_back(vel.x);
+							vel_arr.push_back(vel.y);
+
+							entry.emplace("speed", vel_arr);
+
+							entry.emplace("dir", std::string(player->GetDir()));
+
+							final_obj.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
+						}
+
+						response.emplace("players", final_obj);
+
+						response_status = http::status::ok;
+					}
 				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
