@@ -183,6 +183,7 @@ namespace http_handler
 				response.emplace("message", "Only POST method is expected");
 
 				response_status = http::status::method_not_allowed;
+				allow_post = true;
 			}
 			else
 			{
