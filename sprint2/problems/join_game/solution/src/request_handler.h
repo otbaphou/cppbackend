@@ -177,9 +177,10 @@ namespace http_handler
 			http::status response_status;
 
 			bool allow_post = false;
+
 			if (request.method_string() != "POST"sv)
 			{
-				response.emplace("code", "invalidArgument");
+				response.emplace("code", "invalidMethod");
 				response.emplace("message", "Only POST method is expected");
 
 				response_status = http::status::method_not_allowed;
