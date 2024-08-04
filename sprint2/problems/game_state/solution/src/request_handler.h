@@ -395,7 +395,7 @@ namespace http_handler
 
 							entry.emplace("speed", vel_arr);
 
-							entry.emplace("dir", std::string(player->GetDir()));
+							entry.emplace("dir", std::string{ player->GetDir() });
 
 							final_obj.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
 						}
