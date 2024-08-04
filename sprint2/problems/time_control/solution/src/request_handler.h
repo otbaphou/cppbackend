@@ -190,13 +190,23 @@ namespace http_handler
 			}
 			else
 			{
+				bool failed = false;
 				try
 				{
 					auto value = json::parse(request.body());
-					int ms = value.as_object().at("timeDelta").as_int64();
 
-					game.ServerTick(ms);
-					response_status = http::status::ok;
+					if (!value.as_object().contains("timeDelta"))
+					{
+						failed = true;
+					}
+
+					int64_t ms;
+
+					if (!failed)
+					{
+						ms = value.as_object().at("timeDelta").as_int64();
+						game.ServerTick(ms);
+					}
 				}
 				catch (...)
 				{
@@ -204,6 +214,18 @@ namespace http_handler
 					response.emplace("message", "Failed to parse tick request JSON");
 
 					response_status = http::status::bad_request;
+				}								
+				
+				if (failed)
+				{
+					response.emplace("code", "invalidArgument");
+					response.emplace("message", "Failed to parse tick request JSON");
+
+					response_status = http::status::bad_request;
+				}
+				else
+				{
+					response_status = http::status::ok;
 				}
 			}
 
@@ -581,6 +603,7 @@ namespace http_handler
 									if (user_input.empty())
 									{
 										player->SetVel(0, 0);
+										response_status = http::status::ok;
 									}
 									else
 									{
@@ -590,25 +613,31 @@ namespace http_handler
 										case 'U':
 											player->SetVel(0, -1);
 											player->SetDir(model::Direction::NORTH);
+											response_status = http::status::ok;
 											break;
 										case 'D':
 											player->SetVel(0, 1);
 											player->SetDir(model::Direction::SOUTH);
+											response_status = http::status::ok;
 											break;
 										case 'L':
 											player->SetVel(-1, 0);
 											player->SetDir(model::Direction::WEST);
+											response_status = http::status::ok;
 											break;
 										case 'R':
 											player->SetVel(1, 0);
 											player->SetDir(model::Direction::EAST);
+											response_status = http::status::ok;
 											break;
 										default:
-											failed = true;
+											response.emplace("code", "invalidArgument");
+											response.emplace("message", "Failed to parse action");
+
+											response_status = http::status::bad_request;
 											break;
 										}
 									}
-									response_status = http::status::ok;
 								}
 							}
 							else
