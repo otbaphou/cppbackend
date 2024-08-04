@@ -149,12 +149,12 @@ namespace http_handler
 			}
 			else
 			{
+				int ms;
 				try
 				{
 					auto value = json::parse(request.body());
-					int ms = static_cast<int>(value.as_object().at("timeDelta").as_double());
+					ms = static_cast<int>(value.as_object().at("timeDelta").as_double());
 
-					game.ServerTick(ms);
 					response_status = http::status::ok;
 				}
 				catch (...)
@@ -163,6 +163,8 @@ namespace http_handler
 					response.emplace("message", "Failed to parse tick request JSON");
 					response_status = http::status::service_unavailable;
 				}
+
+				game.ServerTick(ms);
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
