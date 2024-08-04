@@ -123,10 +123,10 @@ jobs:
 ##          cd cpp-backend-tests-practicum/scripts/sprint2
 ##          ./join_game/run.sh
 
-##      - name: run tests sprint2 game_state
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint2
-##          ./game_state/run.sh
+      - name: run tests sprint2 game_state
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint2
+          ./game_state/run.sh
 
       - name: run tests sprint2 move_players
         run: |
