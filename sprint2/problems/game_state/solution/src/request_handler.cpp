@@ -1,4 +1,14 @@
-﻿#include "request_handler.h"
+#include "request_handler.h"
+
+bool IsValidToken(std::string token)
+{
+	if (token.size() != 32)
+	{
+		return false;
+	}
+
+	return true;
+}
 
 namespace http_handler 
 {
