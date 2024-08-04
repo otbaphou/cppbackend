@@ -154,25 +154,13 @@ namespace http_handler
 			}
 			else
 			{
+				int ms = 0;
 				try
 				{
 					auto value = json::parse(request.body());
-					int ticks = 0;
-					ticks = value.as_object().at("timeDelta").as_int64();
+					ms = value.as_object().at("timeDelta").as_int64();
 
-					//Method not allowed if method isn't POST
-						//Bad request error if player name is invalid
-					if (ticks == 0)
-					{
-						response.emplace("code", "invalidArgument");
-						response.emplace("message", "Failed to parse tick request JSON");
-						response_status = http::status::bad_request;
-					}
-					else
-					{
-						game.ServerTick(ticks);
-						response_status = http::status::ok;
-					}
+					response_status = http::status::ok;
 				}
 				catch (...)
 				{
@@ -180,8 +168,20 @@ namespace http_handler
 					response.emplace("message", "Failed to parse tick request JSON");
 					response_status = http::status::bad_request;
 				}
-			}
 
+				if (ms == 0)
+				{
+					response.emplace("code", "invalidArgument");
+					response.emplace("message", "Failed to parse tick request JSON");
+					response_status = http::status::bad_request;
+				}
+				else
+				{
+					game.ServerTick(ms);
+
+					response_status = http::status::ok;
+				}
+			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
 			if (allow_post)
