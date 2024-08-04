@@ -8,15 +8,7 @@
 #include <iostream>
 #include <variant>
 
-bool IsValidToken(std::string token)
-{
-	if (token.size() != 32)
-	{
-		return false;
-	}
-
-	return true;
-}
+bool IsValidToken(std::string token);
 
 namespace http_handler
 {
