@@ -17,7 +17,7 @@ namespace
 {
 	// Запускает функцию fn на n потоках, включая текущий
 	template <typename Fn>
-	void RunWorkers(unsigned n, const Fn& fn) 
+	void RunWorkers(unsigned n, const Fn& fn)
 	{
 		n = std::max(1u, n);
 		std::vector<std::jthread> workers;
@@ -32,7 +32,6 @@ namespace
 }  // namespace
 
 //Once again, I don't know where else to place this stuff below. This file seemed suitable though..
-
 void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& strm)
 {
 	json::object final_obj;
@@ -53,7 +52,7 @@ void InitBoostLogFilter()
 	logging::add_console_log(
 		std::cout,
 		keywords::format = &MyFormatter,
-            	keywords::auto_flush = true
+		keywords::auto_flush = true
 	);
 
 	/*logging::add_file_log(
@@ -63,15 +62,15 @@ void InitBoostLogFilter()
 	);*/
 }
 
-int main(int argc, const char* argv[]) 
+int main(int argc, const char* argv[])
 {
-	if (argc != 3) 
+	if (argc != 3)
 	{
 		std::cerr << "Usage: game_server <game-config-json> <static-files>"sv << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	try 
+	try
 	{
 		// 1. Загружаем карту из файла и построить модель игры
 		model::Game game = json_loader::LoadGame(argv[1]);
@@ -92,27 +91,27 @@ int main(int argc, const char* argv[])
 
 		InitBoostLogFilter();
 
-		http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send)
-		{
-			handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
-		});
+		http_server::ServeHttp(ioc, { address, port }, [&handler](auto&& req, auto&& send)
+			{
+				handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+			}); 
 
 		// Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()}};
+		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()} };
 
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "Server has started..."sv;
 
 		// 6. Запускаем обработку асинхронных операций
-		RunWorkers(std::max(1u, num_threads), [&ioc] 
+		RunWorkers(std::max(1u, num_threads), [&ioc]
 			{
-			ioc.run();
+				ioc.run();
 			});
 	}
 
-	catch (const std::exception& ex) 
+	catch (const std::exception& ex)
 	{
 		//Logging server exit with errors
-		json::object logger_data{ {"code", EXIT_FAILURE}, {"exception", ex.what()}};
+		json::object logger_data{ {"code", EXIT_FAILURE}, {"exception", ex.what()} };
 
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "server exited"sv;
 

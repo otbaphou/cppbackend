@@ -37,6 +37,7 @@ namespace json_loader
 			}
 
 		}
+		map.CalcRoads();
 	}
 
 
@@ -88,7 +89,7 @@ namespace json_loader
 		if (!file.is_open())
 		{
 			json::object tmp{ {"error loading file", json_path.string()} };
-			json::object logger_data{ {"code", -31257}, {"exception", tmp} };
+			json::object logger_data{ {"code", "fileLoadingError"}, {"exception", tmp} };
 
 			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "error";
 			throw std::invalid_argument("Loading Error! Game data file couldn't be opened..");
@@ -101,6 +102,11 @@ namespace json_loader
 		std::string json_str = tmp.str();
 
 		auto value = json::parse(json_str);
+
+		if (value.as_object().contains("defaultDogSpeed"))
+		{
+			game.SetGlobalDogSpeed(value.as_object().at("defaultDogSpeed").as_double());
+		}
 
 		json::array maps = value.as_object().at("maps").as_array();
 
@@ -116,6 +122,13 @@ namespace json_loader
 			//Initializing map
 			model::Map map(id, std::string(map_data.at("name").as_string()));
 
+			double dog_speed = -1;
+
+			if (map_data.contains("dogSpeed"))
+			{
+				dog_speed = map_data.at("dogSpeed").as_double();
+			}
+
 			//Reading JSON-object containing roads from map_data and adding them to the map
 			ParseRoads(map, map_data);
 			//Doing the same with buildings and offices
@@ -123,7 +136,8 @@ namespace json_loader
 			ParseOffices(map, map_data);
 
 			//Adding the map to the game
-			game.AddMap(map);
+			game.AddMap(map, dog_speed);
+
 		}
 
 		return game;

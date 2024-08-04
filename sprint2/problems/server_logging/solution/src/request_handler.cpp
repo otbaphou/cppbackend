@@ -1,5 +1,15 @@
 ﻿#include "request_handler.h"
 
+bool IsValidToken(std::string token)
+{
+	if (token.size() != 32)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 namespace http_handler 
 {
 	StringResponse MakeStringResponse(http::status status, std::string_view body, 
@@ -7,6 +17,7 @@ namespace http_handler
 	{
 		StringResponse response(status, http_version);
 		response.set(http::field::content_type, content_type);
+		response.set(http::field::cache_control, "no-cache");
 		response.body() = body;
 		response.content_length(body.size());
 		response.keep_alive(keep_alive);
