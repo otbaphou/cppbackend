@@ -176,6 +176,8 @@ namespace http_handler
 				else
 				{
 					game.ServerTick(ms);
+
+					response_status = http::status::ok;
 				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
