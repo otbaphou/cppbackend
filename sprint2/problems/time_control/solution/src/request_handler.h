@@ -615,7 +615,7 @@ namespace http_handler
 				return;
 			}
 		}
-		if (req_type != "GET"sv && req_type != "HEAD"sv && req_type != "POST"sv)
+		if (req_type != "GET"sv && req_type != "HEAD"sv)
 		{
 			send(text_response(http::status::method_not_allowed, { "Invalid method" }, ContentType::APPLICATION_JSON));
 			return;
