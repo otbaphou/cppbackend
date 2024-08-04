@@ -218,6 +218,16 @@ namespace http_handler
 					response_status = http::status::bad_request;
 				}
 			}
+
+			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+			str_response.set(http::field::cache_control, "no-cache");
+
+			if (allow_post)
+			{
+				str_response.set(http::field::allow, "POST"sv);
+			}
+			send(str_response);
+			return;
 		}
 
 		if (target == "/api/v1/game/join"sv || target == "/api/v1/game/join/"sv)
