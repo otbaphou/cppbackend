@@ -175,7 +175,7 @@ namespace http_handler
 				}
 				else
 				{
-					game.ServerTick(ms);
+					//game.ServerTick(ms);
 
 					response_status = http::status::ok;
 				}
