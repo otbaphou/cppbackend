@@ -314,6 +314,14 @@ namespace http_handler
 						response_status = http::status::ok;
 					}
 				}
+				else
+				{
+					//For some reason it doesn't work without it..
+					response.emplace("code", "invalidToken");
+					response.emplace("message", "Authorization header is required");
+
+					response_status = http::status::unauthorized;
+				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
@@ -406,6 +414,14 @@ namespace http_handler
 
 						response_status = http::status::ok;
 					}
+				}
+				else
+				{
+					//For some reason it doesn't work without it..
+					response.emplace("code", "invalidToken");
+					response.emplace("message", "Authorization header is required");
+
+					response_status = http::status::unauthorized;
 				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
