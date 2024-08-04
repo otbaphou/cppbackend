@@ -622,7 +622,7 @@ namespace model
 
 		void Move(double ms)
 		{
-			double distance = ms / 1000;
+			double distance = ms; // 1000;
 
 			Coordinates new_pos;
 

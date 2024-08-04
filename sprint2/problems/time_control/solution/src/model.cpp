@@ -64,7 +64,10 @@ namespace model
 				{
 					map.SetDogSpeed(global_dog_speed_);
 				}
-
+				else
+				{
+					map.SetDogSpeed(dog_speed);
+				}
 				maps_.emplace_back(std::move(map));
 			}
 			catch (...) 
