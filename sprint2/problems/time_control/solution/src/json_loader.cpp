@@ -124,9 +124,9 @@ namespace json_loader
 
 			double dog_speed = -1;
 
-			if (value.as_object().contains("dogSpeed"))
+			if (map_data.contains("dogSpeed"))
 			{
-				dog_speed = value.as_object().at("dogSpeed").as_double();
+				dog_speed = map_data.at("dogSpeed").as_double();
 			}
 
 			//Reading JSON-object containing roads from map_data and adding them to the map
