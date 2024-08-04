@@ -152,7 +152,7 @@ namespace http_handler
 			}
 			else
 			{
-				int ms;
+				int ms = 0;
 				try
 				{
 					auto value = json::parse(request.body());
@@ -167,7 +167,16 @@ namespace http_handler
 					response_status = http::status::bad_request;
 				}
 
-				game.ServerTick(ms);
+				if (ms == 0)
+				{
+					response.emplace("code", "invalidArgument");
+					response.emplace("message", "Failed to parse tick request JSON");
+					response_status = http::status::bad_request;
+				}
+				else
+				{
+					game.ServerTick(ms);
+				}
 			}
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
@@ -184,6 +193,7 @@ namespace http_handler
 			json::object response;
 			http::status response_status;
 			bool allow_post = false;
+
 			if (req_type != "POST"sv)
 			{
 				response.emplace("code", "invalidMethod");
@@ -244,6 +254,7 @@ namespace http_handler
 			send(str_response);
 			return;
 		}
+
 		if (target == "/api/v1/game/players"sv || target == "/api/v1/game/players/"sv)
 		{
 			bool allow_get_head = false;
