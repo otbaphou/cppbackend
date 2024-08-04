@@ -133,7 +133,9 @@ namespace http_handler
 			json::array response;
 			//Inserting Map Data Into JSON Array
 			PackMaps(response, game);
-			send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+			StringResponse str_response{ text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+			str_response.set(http::field::cache_control, "no-cache");
+			send(str_response);
 			return;
 		}
 
