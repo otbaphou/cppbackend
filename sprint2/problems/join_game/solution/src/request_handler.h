@@ -154,6 +154,12 @@ namespace http_handler
 	{
 		if (target == "/api/v1/maps"sv || target == "/api/v1/maps/"sv)
 		{
+			if (req_type != "GET"sv && req_type != "HEAD"sv)
+			{
+				send(text_response(http::status::method_not_allowed, { "Invalid method" }, ContentType::APPLICATION_JSON));
+				return;
+			}
+
 			json::array response;
 
 			//Inserting Map Data Into JSON Array
@@ -183,14 +189,13 @@ namespace http_handler
 				Id id{ map_id };
 
 				const model::Map* maptr = game.FindMap(id);
-
-				//Not found error if requested map doesn't exist
-				if (maptr == nullptr)
+				//Method not allowed if method isn't POST
+				if (request.method_string() != "POST"sv)
 				{
-					response.emplace("code", "mapNotFound");
-					response.emplace("message", "Map not found");
+					response.emplace("code", "invalidArgument");
+					response.emplace("message", "Only POST method is expected");
 
-					response_status = http::status::not_found;
+					response_status = http::status::method_not_allowed;
 				}
 				else
 				{
@@ -204,13 +209,13 @@ namespace http_handler
 					}
 					else
 					{
-						//Method not allowed if method isn't POST
-						if (request.method_string() != "POST"sv)
+						//Not found error if requested map doesn't exist
+						if (maptr == nullptr)
 						{
-							response.emplace("code", "invalidArgument");
-							response.emplace("message", "Only POST method is expected");
+							response.emplace("code", "mapNotFound");
+							response.emplace("message", "Map not found");
 
-							response_status = http::status::method_not_allowed;
+							response_status = http::status::not_found;
 						}
 						else
 						{
@@ -247,56 +252,51 @@ namespace http_handler
 
 		if (target == "/api/v1/game/players"sv || target == "/api/v1/game/players/"sv)
 		{
-			json::object response;
-			http::status response_status;
-
-			std::string token;
-			try
+			if (request.method_string() != "GET"sv && request.method_string() != "HEAD"sv)
 			{
-				auto auth = request.find(http::field::authorization);
-				token = std::string(auth->value());
-			}
-			catch (...)
-			{
-				response.emplace("code", "invalidToken");
-				response.emplace("message", "Authorization header is missing");
+				response.emplace("code", "invalidMethod");
+				response.emplace("message", "Invalid method");
 
-				response_status = http::status::unauthorized;
-			}
-
-
-			bool allow_get_head = false;
-
-			if (token.empty())
-			{
-				response.emplace("code", "invalidToken");
-				response.emplace("message", "Authorization header is missing");
-
-				response_status = http::status::unauthorized;
+				response_status = http::status::method_not_allowed;
+				allow_get_head = true;
 			}
 			else
 			{
-				std::cout << "PLAYER TOKEN: " << token << std::endl;
+				json::object response;
+				http::status response_status;
+
+				std::string token;
+				try
+				{
+					auto auth = request.find(http::field::authorization);
+					token = std::string(auth->value());
+				}
+				catch (...)
+				{
+					response.emplace("code", "invalidToken");
+					response.emplace("message", "Authorization header is missing");
+
+					response_status = http::status::unauthorized;
+				}
+
+				bool allow_get_head = false;
 
 				model::Player* player_ptr = game.FindPlayerByToken(token);
-
-				if (player_ptr == nullptr)
+				if (token.empty())
 				{
-					response.emplace("code", "unknownToken");
-					response.emplace("message", "Player token has not been found");
+					response.emplace("code", "invalidToken");
+					response.emplace("message", "Authorization header is missing");
 
 					response_status = http::status::unauthorized;
 				}
 				else
 				{
-					if (request.method_string() != "GET"sv && request.method_string() != "HEAD"sv)
+					if (player_ptr == nullptr)
 					{
-						response.emplace("code", "invalidMethod");
-						response.emplace("message", "Invalid method");
+						response.emplace("code", "unknownToken");
+						response.emplace("message", "Player token has not been found");
 
-						response_status = http::status::method_not_allowed;
-
-						allow_get_head = true;
+						response_status = http::status::unauthorized;
 					}
 					else
 					{
@@ -325,8 +325,15 @@ namespace http_handler
 			return;
 		}
 
+		if (req_type != "GET"sv && req_type != "HEAD"sv)
+		{
+			send(text_response(http::status::method_not_allowed, { "Invalid method" }, ContentType::APPLICATION_JSON));
+			return;
+		}
+
 		if (target.size() >= 13)
 		{
+
 			if (std::string_view(target.begin(), target.begin() + 13) == "/api/v1/maps/"sv)
 			{
 				using Id = util::Tagged<std::string, model::Map>;
@@ -421,12 +428,6 @@ namespace http_handler
 
 		std::string_view req_type = req.method_string();
 
-		if (req_type != "GET"sv && req_type != "HEAD"sv && req_type != "POST"sv)
-		{
-			send(text_response(http::status::method_not_allowed, { "Invalid method" }, ContentType::APPLICATION_JSON));
-			return;
-		}
-
 		std::string_view target = req.target();
 
 		size_t size = target.size();
@@ -439,6 +440,12 @@ namespace http_handler
 				HandleRequestAPI(send, game, target, text_response, req);
 				return;
 			}		
+		}
+
+		if (req_type != "GET"sv && req_type != "HEAD"sv && req_type != "POST"sv)
+		{
+			send(text_response(http::status::method_not_allowed, { "Invalid method" }, ContentType::APPLICATION_JSON));
+			return;
 		}
 
 		std::string_view target_but_without_the_slash{ target.begin() + 1, target.end()};
