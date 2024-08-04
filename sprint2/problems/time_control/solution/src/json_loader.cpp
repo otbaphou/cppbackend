@@ -37,6 +37,7 @@ namespace json_loader
 			}
 
 		}
+		map.CalcRoads();
 	}
 
 

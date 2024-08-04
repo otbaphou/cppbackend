@@ -29,7 +29,6 @@ std::string GenerateToken()
 	return token;
 }
 
-
 namespace model
 {
 	using namespace std::literals;

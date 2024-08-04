@@ -21,7 +21,9 @@ const std::string Y1_COORDINATE = "y1";
 
 const std::string WIDTH = "w";
 const std::string HEIGHT = "h";
+
 int GetRandomNumber(int range);
+
 std::string GenerateToken();
 
 namespace model
@@ -30,8 +32,24 @@ namespace model
 	using Dimension = int;
 	using Coord = Dimension;
 
-	struct Point {
+	struct Point 
+	{
 		Coord x, y;
+
+		bool operator==(const Point& other) const
+		{
+			return (x == other.x && y == other.y);
+		}
+	};
+
+	struct PointHasher
+	{
+		std::size_t operator()(const Point& p) const
+		{
+			using std::size_t;
+
+			return p.x + p.y * p.y;
+		}
 	};
 
 	struct Size {
@@ -184,6 +202,20 @@ namespace model
 			return dog_speed_;
 		}
 
+		void CalcRoads()
+		{
+			for (Road& road : roads_)
+			{
+				point_to_roads_[road.GetStart()].push_back(&road);
+				point_to_roads_[road.GetEnd()].push_back(&road);
+			}
+		}
+
+		std::deque<Road*> GetRoadsAtPoint(Point p) const
+		{
+			return point_to_roads_.at(p);
+		}
+
 		void AddOffice(Office office);
 
 	private:
@@ -193,6 +225,8 @@ namespace model
 		std::string name_;
 		Roads roads_;
 		Buildings buildings_;
+
+		std::unordered_map<Point, std::deque<Road*>, PointHasher> point_to_roads_;
 
 		double dog_speed_;
 
@@ -223,9 +257,13 @@ namespace model
 	class Dog
 	{
 	public:
-		Dog(Coordinates coords, double speed)
+		Dog(Coordinates coords, const Map* map)
 		:position_(coords)
-		, speed_(speed){}
+		, current_map_(map)
+		, speed_(map->GetDogSpeed())
+		{
+			current_road_ = map->GetRoadsAtPoint(map->GetRoads().at(0).GetStart())[0];//Ew
+		}
 
 		void SetVel(double vel_x, double vel_y)
 		{
@@ -253,19 +291,367 @@ namespace model
 			return direction_;
 		}
 
+		std::deque<Road*> GetRoadsByPos(Coordinates pos)
+		{
+			int pos_x = static_cast<int>(pos.x + 0.5);
+			int pos_y = static_cast<int>(pos.y + 0.5);
+
+			return current_map_->GetRoadsAtPoint({ pos_x, pos_y });
+		}
+
+		//Make two methods:
+		//MoveVertically(int dst);
+		//MoveHorizontally(int dst);
+		//
+		//First we check the orientation of the current road
+		// 
+		//If it's parallel to our direction
+		//Check if the distance between the player and edge of the road is bigger or equal to the desired path's distance
+		//If former is less - set the player position to the edge and check for the adjacent roads with the same orientation
+		//If there are none - set the velocity to zero
+		//But if there are - change the current_road of the player and continue moving until you get to the edge or complete the distance
+		//
+		//If it's perpendicular
+		//Set the player's position to the edge of the road
+		//Check for adjacent roads with the orientation the same as ours
+		//If there's none - congratulations, you got lucky
+		//If there are - change the current_road of the player and continue moving until you get to the edge or complete the distance
+		//
+		//I guess I see the pattern now..
+		//The downside is this script doesn't take account of overalapping roads
+		//The solution would be to parse every single step of the road
+		//
+		//Interesting notice:
+		//
+		//You probably wouldn't step on the intersecting roads if you're going parallel to the road
+		//
+
+		void MoveVertical(double distance)
+		{
+			double dist_left;
+
+			Point start = current_road_->GetStart();
+			Point end = current_road_->GetEnd();
+
+			double desired_point = position_.y + distance;
+
+			if (current_road_->IsVertical())
+			{
+				double small_y, big_y;
+
+				if (start.y < end.y)
+				{
+					small_y = start.y;
+					big_y = end.y;
+				}
+				else
+				{
+					small_y = end.y;
+					big_y = start.y;
+				}
+
+				double y1 = small_y - 0.4;
+				if (desired_point < y1)
+				{
+					dist_left = desired_point - y1;
+					position_.y = y1;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsVertical() && road != current_road_)
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.y = 0;
+					}
+					else
+					{
+						MoveVertical(dist_left);
+					}
+
+					return;
+				}
+
+				double y2 = small_y + 0.4;
+				if (desired_point > y2)
+				{
+					dist_left = desired_point - y2;
+					position_.y = y2;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsVertical() && road != current_road_)
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.y = 0;
+					}
+					else
+					{
+						MoveVertical(dist_left);
+					}
+
+					return;
+				}
+			}
+			else
+			{
+				double y1 = start.y - 0.4;
+				if (desired_point < y1)
+				{
+					dist_left = desired_point - y1;
+					position_.y = y1;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsVertical())
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.y = 0;
+					}
+					else
+					{
+						MoveVertical(dist_left);
+					}
+
+					return;
+				}
+
+				double y2 = start.y + 0.4;
+				if (desired_point > y2)
+				{
+					dist_left = desired_point - y2;
+					position_.y = y2;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsVertical())
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.y = 0;
+					}
+					else
+					{
+						MoveVertical(dist_left);
+					}
+
+					return;
+				}
+			}
+
+			dist_left = 0;
+			position_.y = desired_point;
+		}
+
+		void MoveHorizontal(double distance)
+		{
+			double dist_left;
+
+			Point start = current_road_->GetStart();
+			Point end = current_road_->GetEnd();
+
+			double desired_point = position_.x + distance;
+
+			if (current_road_->IsHorizontal())
+			{
+				double small_x, big_x;
+
+				if (start.x < end.x)
+				{
+					small_x = start.x;
+					big_x = end.x;
+				}
+				else
+				{
+					small_x = end.x;
+					big_x = start.x;
+				}
+
+				double x1 = small_x - 0.4;
+				if (desired_point < x1)
+				{
+					dist_left = desired_point - x1;
+					position_.x = x1;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsHorizontal() && road != current_road_)
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.x = 0;
+					}
+					else
+					{
+						MoveHorizontal(dist_left);
+					}
+
+					return;
+				}
+
+				double x2 = small_x + 0.4;
+				if (desired_point > x2)
+				{
+					dist_left = desired_point - x2;
+					position_.x = x2;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsHorizontal() && road != current_road_)
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.x = 0;
+					}
+					else
+					{
+						MoveHorizontal(dist_left);
+					}
+
+					return;
+				}
+			}
+			else
+			{
+				double x1 = start.x - 0.4;
+				if (desired_point < x1)
+				{
+					dist_left = desired_point - x1;
+					position_.x = x1;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsHorizontal())
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.x = 0;
+					}
+					else
+					{
+						MoveHorizontal(dist_left);
+					}
+
+					return;
+				}
+
+				double x2 = start.x + 0.4;
+				if (desired_point > x2)
+				{
+					dist_left = desired_point - x2;
+					position_.x = x2;
+
+					bool found = false;
+
+					for (Road* road : GetRoadsByPos({ position_.x, position_.y }))
+					{
+						if (road->IsHorizontal())
+						{
+							current_road_ = road;
+							found = true;
+						}
+					}
+
+					if (!found)
+					{
+						velocity_.x = 0;
+					}
+					else
+					{
+						MoveHorizontal(dist_left);
+					}
+
+					return;
+				}
+			}
+
+			dist_left = 0;
+			position_.x = desired_point;
+		}
+
 		void Move(double ms)
 		{
-			position_.x += velocity_.x * ms / 1000;
-			position_.y += velocity_.y * ms / 1000;
+			double distance = ms / 1000;
+
+			Coordinates new_pos;
+
+			new_pos.x = position_.x + (velocity_.x * distance);
+			new_pos.y = position_.y + (velocity_.y * distance);
+
+			bool is_vertical = new_pos.x == position_.x;
+
+			if (is_vertical)
+			{
+				MoveVertical(velocity_.y * distance);
+			}
+			else
+			{
+				MoveHorizontal(velocity_.x * distance);
+			}
 		}
 
 	private:
 
-		Coordinates position_; //SET IT TO RANDOM SPOT ON THE MAP LATER
+		Coordinates position_;
+
+		Road* current_road_;
 
 		Velocity velocity_;
 		double speed_;
 		Direction direction_ = Direction::NORTH;
+
+		const Map* current_map_;
 	};
 
 	class GameSession
@@ -460,7 +846,7 @@ namespace model
 			Point p{ roads.at(0).GetStart() };
 			spot.x = p.x;
 			spot.y = p.y;
-			Dog pup{ spot, map->GetDogSpeed() };
+			Dog pup{ spot, map };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
 		}
