@@ -127,7 +127,6 @@ namespace json_loader
 			if (value.as_object().contains("dogSpeed"))
 			{
 				dog_speed = value.as_object().at("dogSpeed").as_double();
-				map.SetDogSpeed(dog_speed);
 			}
 
 			//Reading JSON-object containing roads from map_data and adding them to the map
@@ -137,14 +136,8 @@ namespace json_loader
 			ParseOffices(map, map_data);
 
 			//Adding the map to the game
-			if (dog_speed != -1)
-			{
-				game.AddMap(map, dog_speed);
-			}
-			else
-			{
-				game.AddMap(map);
-			}
+			game.AddMap(map, dog_speed);
+
 		}
 
 		return game;
