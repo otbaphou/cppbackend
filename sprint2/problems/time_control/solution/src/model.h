@@ -647,7 +647,7 @@ namespace model
 
 		Road* current_road_;
 
-		Velocity velocity_;
+		Velocity velocity_{0, 0};
 		double speed_;
 		Direction direction_ = Direction::NORTH;
 
