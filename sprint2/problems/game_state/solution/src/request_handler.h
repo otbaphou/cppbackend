@@ -8,6 +8,16 @@
 #include <iostream>
 #include <variant>
 
+bool IsValidToken(std::string token)
+{
+	if (token.size() != 32)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 namespace http_handler
 {
 	namespace beast = boost::beast;
@@ -287,7 +297,7 @@ namespace http_handler
 					response_status = http::status::unauthorized;
 				}
 
-				if(!token.empty())
+				if(token.size() == 32)
 				{
 					model::Player* player_ptr = game.FindPlayerByToken(token);
 
@@ -360,7 +370,7 @@ namespace http_handler
 					response_status = http::status::unauthorized;
 				}
 
-				if (!token.empty())
+				if (token.size() == 32)
 				{
 					model::Player* player_ptr = game.FindPlayerByToken(token);
 
