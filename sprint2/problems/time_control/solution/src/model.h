@@ -393,20 +393,19 @@ namespace model
 
 				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
 				{
-					Road* ptroad = road.get();
-					if (ptroad != current_road_ && ptroad->IsVertical())
+					if (road.get() != current_road_ && road.get()->IsVertical())
 					{
-						current_road_ = ptroad;
+						current_road_ = road.get();
 						bool found = true;
+
+						MoveVertical(distance);
+						return;
 					}
 				}
 
-				if (found)
+				if (!found)
 				{
-					MoveVertical(distance);
-				}
-				else
-				{
+					velocity_ = { 0,0 };
 					if (desired_point < y1)
 					{
 						position_.y = y1;
@@ -415,7 +414,6 @@ namespace model
 					{
 						position_.y = y2;
 					}
-					velocity_ = { 0,0 };
 					//dist_left = desired_point - x1;
 				}
 			}
@@ -459,20 +457,19 @@ namespace model
 
 				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
 				{
-					Road* ptroad = road.get();
-					if (ptroad != current_road_ && ptroad->IsHorizontal())
+					if (road.get() != current_road_ && road.get()->IsHorizontal())
 					{
 						current_road_ = road.get();
 						bool found = true;
+
+						MoveHorizontal(distance);
+						return;
 					}
 				}
 
-				if (found)
+				if (!found)
 				{
-					MoveHorizontal(distance);
-				}
-				else
-				{
+					velocity_ = { 0,0 };
 					if (desired_point < x1)
 					{
 						position_.x = x1;
@@ -480,9 +477,7 @@ namespace model
 					else
 					{
 						position_.x = x2;
-
 					}
-					velocity_ = { 0,0 };
 					//dist_left = desired_point - x1;
 				}
 			}
