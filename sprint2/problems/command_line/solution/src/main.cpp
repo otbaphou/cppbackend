@@ -216,7 +216,7 @@ int main(int argc, const char* argv[])
 
 		// 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
 		bool rest_api_tick_system = args.tick_period == -1;
-		http_handler::RequestHandler handler{ args.static_dir, game, rest_api_tick_system };
+		http_handler::RequestHandler handler{ args.static_dir, game, rest_api_tick_system};
 
 		const auto address = net::ip::make_address("0.0.0.0");
 		constexpr net::ip::port_type port = 8080;
@@ -240,7 +240,7 @@ int main(int argc, const char* argv[])
 		{
 			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&player_manager_](std::chrono::milliseconds delta)
 				{
-					player_manager_.MoveAll(delta.count());
+					player_manager_.MoveAll(static_cast<double>(delta.count()));
 				}
 			);
 

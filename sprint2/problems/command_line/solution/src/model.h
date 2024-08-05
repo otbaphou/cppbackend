@@ -206,11 +206,60 @@ namespace model
 
 		void CalcRoads()
 		{
+			//std::cout << "PARSING ROADS!\n";
 			for (Road& road : roads_)
 			{
-				point_to_roads_[road.GetStart()].push_back(std::make_shared<Road>(road));
-				point_to_roads_[road.GetEnd()].push_back(std::make_shared<Road>(road));
+				//std::cout << "-road\n";
+				Point start = road.GetStart();
+				Point end = road.GetEnd();
+
+				int small, big;
+
+				if (road.IsHorizontal())
+				{
+					int x1 = start.x, x2 = end.x;
+
+					if (x1 > x2)
+					{
+						small = x2;
+						big = x1;
+					}
+					else
+					{
+						big = x2;
+						small = x1;
+					}
+
+					for (int i = small; i <= big; ++i)
+					{
+						//std::cout << "POINT: {" << i << ", " << start.y << "}\n";
+						point_to_roads_[{i, start.y}].push_back(std::make_shared<Road>(road));
+					}
+					
+				}
+				else
+				{
+					int y1 = start.y, y2 = end.y;
+
+					if (y1 > y2)
+					{
+						small = y2;
+						big = y1;
+					}
+					else
+					{
+						big = y2;
+						small = y1;
+					}
+
+					for (int i = small; i <= big; ++i)
+					{
+						//std::cout << "POINT: {" << start.x << ", " << i << "}\n";
+						point_to_roads_[{start.x, i}].push_back(std::make_shared<Road>(road));
+					}
+				}
 			}
+			//std::cout << "Success!\n";
 		}
 
 		const std::deque<std::shared_ptr<Road>>& GetRoadsAtPoint(Point p) const
@@ -230,7 +279,7 @@ namespace model
 
 		std::unordered_map<Point, std::deque<std::shared_ptr<Road>>, PointHasher> point_to_roads_;
 
-		double dog_speed_;
+		double dog_speed_ = 1;
 
 		OfficeIdToIndex warehouse_id_to_index_;
 		Offices offices_;
@@ -259,22 +308,21 @@ namespace model
 	class Dog
 	{
 	public:
-		Dog(Coordinates coords, const Map* map, std::shared_ptr<Road> ptr)
+		Dog(Coordinates coords, const Map* map)
 			:position_(coords)
 			, current_map_(map)
-			, current_road_(ptr.get())
 			, speed_(map->GetDogSpeed())
 		{
-			//const std::deque<std::shared_ptr<Road>>& roads = GetRoadsByPos(coords);
-			//current_road_ = roads.front().get();
-			//std::cout << "Found " << roads.size() << " roads at X: " << coords.x << " Y: " << coords.y << "\n";
-			//std::cout << "Road isVertical: " << current_road_->IsVertical() << "\n";
+			const std::deque<std::shared_ptr<Road>>& roads = GetRoadsByPos(coords);
+			current_road_ = roads.front().get();
+			std::cout << "Found " << roads.size() << " roads at X: " << coords.x << " Y: " << coords.y << "\n";
+			std::cout << "Road isVertical: " << current_road_->IsVertical() << "\n";
 
-			//Point start = current_road_->GetStart();
-			//Point end = roads[0]->GetEnd();
+			Point start = current_road_->GetStart();
+			Point end = roads[0]->GetEnd();
 
-			//std::cout << "Road start coordinates h: X(" << start.x << "), Y(" << start.y << ")\n";
-			//std::cout << "Road end coordinates h: X(" << end.x << "), Y(" << end.y << ")\n";
+			std::cout << "Road start coordinates h: X(" << start.x << "), Y(" << start.y << ")\n";
+			std::cout << "Road end coordinates h: X(" << end.x << "), Y(" << end.y << ")\n";
 		}
 
 		void SetVel(double vel_x, double vel_y)
@@ -310,33 +358,6 @@ namespace model
 
 			return current_map_->GetRoadsAtPoint({ pos_x, pos_y });
 		}
-
-		//Make two methods:
-		//MoveVertically(int dst);
-		//MoveHorizontally(int dst);
-		//
-		//First we check the orientation of the current road
-		// 
-		//If it's parallel to our direction
-		//Check if the distance between the player and edge of the road is bigger or equal to the desired path's distance
-		//If former is less - set the player position to the edge and check for the adjacent roads with the same orientation
-		//If there are none - set the velocity to zero
-		//But if there are - change the current_road of the player and continue moving until you get to the edge or complete the distance
-		//
-		//If it's perpendicular
-		//Set the player's position to the edge of the road
-		//Check for adjacent roads with the orientation the same as ours
-		//If there's none - congratulations, you got lucky
-		//If there are - change the current_road of the player and continue moving until you get to the edge or complete the distance
-		//
-		//I guess I see the pattern now..
-		//The downside is this script doesn't take account of overalapping roads
-		//The solution would be to parse every single step of the road
-		//
-		//Interesting notice:
-		//
-		//You probably wouldn't step on the intersecting roads if you're going parallel to the road
-		//
 
 		void MoveVertical(double distance)
 		{
@@ -565,11 +586,6 @@ namespace model
 			username_(username)
 		{}
 
-		void SetSession(GameSession* sesh)
-		{
-			session_ = sesh;
-		}
-
 		std::string GetName() const
 		{
 			return username_;
@@ -632,7 +648,7 @@ namespace model
 		const size_t id_;
 
 		Dog* pet_;
-		GameSession* session_;
+		//GameSession* session_;
 	};
 
 	class Players
@@ -738,7 +754,7 @@ namespace model
 				spot.x = p.x;
 				spot.y = p.y;
 			}
-			Dog pup{ spot, map, std::make_shared<Road>(road) };
+			Dog pup{ spot, map };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
 		}
@@ -826,8 +842,6 @@ namespace model
 		}
 
 	private:
-
-		bool randomize_;
 
 		double global_dog_speed_ = 1;
 
