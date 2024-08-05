@@ -65,15 +65,15 @@ jobs:
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./async_server/run.sh
 
-##      - name: run tests sprint1 map_json
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint1
-##          ./map_json/run.sh
+      - name: run tests sprint1 map_json
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint1
+          ./map_json/run.sh
 
-##      - name: run tests sprint1 final_task
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint1
-##          ./final_task/run.sh
+      - name: run tests sprint1 final_task
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint1
+          ./final_task/run.sh
 
       - name: Publish XML reports
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -104,34 +104,34 @@ jobs:
           pip install -U conan==1.59.0
           cp -R /home/forconan/.conan /github/home/.conan
 
-##      - name: run tests sprint2 static_content
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint2
-##          ./static_content/run.sh
+      - name: run tests sprint2 static_content
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint2
+          ./static_content/run.sh
 
-##      - name: run tests sprint2 logger
-##        run: |
-##          ./cpp-backend-tests-practicum/scripts/sprint2/logger/run.sh
+      - name: run tests sprint2 logger
+        run: |
+          ./cpp-backend-tests-practicum/scripts/sprint2/logger/run.sh
 
-##      - name: run tests sprint2 server_logging
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint2
-##          ./server_logging/run.sh
+      - name: run tests sprint2 server_logging
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint2
+          ./server_logging/run.sh
 
-##      - name: run tests sprint2 join_game
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint2
-##          ./join_game/run.sh
+      - name: run tests sprint2 join_game
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint2
+          ./join_game/run.sh
 
-##      - name: run tests sprint2 game_state
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint2
-##          ./game_state/run.sh
+      - name: run tests sprint2 game_state
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint2
+          ./game_state/run.sh
 
-##      - name: run tests sprint2 move_players
-##        run: |
-##          cd cpp-backend-tests-practicum/scripts/sprint2
-##          ./move_players/run.sh
+      - name: run tests sprint2 move_players
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint2
+          ./move_players/run.sh
 
       - name: run tests sprint2 time_control
         run: |
