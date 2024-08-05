@@ -32,7 +32,7 @@ namespace json_loader
 						{static_cast<int>(road_data.at(X0_COORDINATE).as_int64()), static_cast<int>(road_data.at(Y0_COORDINATE).as_int64())},
 						static_cast<int>(road_data.at(Y1_COORDINATE).as_int64())
 					});
-
+				model::Road* road_ptr = &road;
 				map.AddRoad(std::move(road));
 			}
 

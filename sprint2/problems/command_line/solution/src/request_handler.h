@@ -119,7 +119,7 @@ namespace http_handler
 		return;
 	}
 	template <typename Send>
-	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request)
+	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request, bool rest_api_ticks)
 	{
 		std::string_view req_type = request.method_string();
 
@@ -154,30 +154,39 @@ namespace http_handler
 			}
 			else
 			{
-				try
+				if(rest_api_ticks)
 				{
-					auto value = json::parse(request.body());
-					int ticks = 0;
-					ticks = value.as_object().at("timeDelta").as_int64();
+					try
+					{
+						auto value = json::parse(request.body());
+						int ticks = 0;
+						ticks = value.as_object().at("timeDelta").as_int64();
 
-					//Method not allowed if method isn't POST
-						//Bad request error if player name is invalid
-					if (ticks == 0)
+						//Method not allowed if method isn't POST
+							//Bad request error if player name is invalid
+						if (ticks == 0)
+						{
+							response.emplace("code", "invalidArgument");
+							response.emplace("message", "Failed to parse tick request JSON");
+							response_status = http::status::bad_request;
+						}
+						else
+						{
+							game.ServerTick(ticks);
+							response_status = http::status::ok;
+						}
+					}
+					catch (...)
 					{
 						response.emplace("code", "invalidArgument");
 						response.emplace("message", "Failed to parse tick request JSON");
 						response_status = http::status::bad_request;
 					}
-					else
-					{
-						game.ServerTick(ticks);
-						response_status = http::status::ok;
-					}
 				}
-				catch (...)
+				else
 				{
 					response.emplace("code", "invalidArgument");
-					response.emplace("message", "Failed to parse tick request JSON");
+					response.emplace("message", "Invalid endpoint");
 					response_status = http::status::bad_request;
 				}
 			}
@@ -627,7 +636,7 @@ namespace http_handler
 		{
 			if (std::string_view(target.begin(), target.begin() + 5) == "/api/"sv || std::string_view(target.begin(), target.begin() + 4) == "/api"sv)
 			{
-				HandleRequestAPI(send, game, target, text_response, req);
+				HandleRequestAPI(send, game, target, text_response, req, rest_api_ticks);
 				return;
 			}
 		}
