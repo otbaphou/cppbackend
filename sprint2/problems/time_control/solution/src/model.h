@@ -631,14 +631,17 @@ namespace model
 
 			bool is_vertical = new_pos.x == position_.x;
 
-			if (is_vertical)
-			{
-				MoveVertical(velocity_.y * distance);
-			}
-			else
-			{
-				MoveHorizontal(velocity_.x * distance);
-			}
+			position_.x = new_pos.x;
+			position_.y = new_pos.y;
+
+			//if (is_vertical)
+			//{
+			//	MoveVertical(velocity_.y * distance);
+			//}
+			//else
+			//{
+			//	MoveHorizontal(velocity_.x * distance);
+			//}
 		}
 
 	private:
