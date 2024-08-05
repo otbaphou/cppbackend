@@ -206,11 +206,60 @@ namespace model
 
 		void CalcRoads()
 		{
+			//std::cout << "PARSING ROADS!\n";
 			for (Road& road : roads_)
 			{
-				point_to_roads_[road.GetStart()].push_back(std::make_shared<Road>(road));
-				point_to_roads_[road.GetEnd()].push_back(std::make_shared<Road>(road));
+				//std::cout << "-road\n";
+				Point start = road.GetStart();
+				Point end = road.GetEnd();
+
+				int small, big;
+
+				if (road.IsHorizontal())
+				{
+					int x1 = start.x, x2 = end.x;
+
+					if (x1 > x2)
+					{
+						small = x2;
+						big = x1;
+					}
+					else
+					{
+						big = x2;
+						small = x1;
+					}
+
+					for (int i = small; i <= big; ++i)
+					{
+						//std::cout << "POINT: {" << i << ", " << start.y << "}\n";
+						point_to_roads_[{i, start.y}].push_back(std::make_shared<Road>(road));
+					}
+
+				}
+				else
+				{
+					int y1 = start.y, y2 = end.y;
+
+					if (y1 > y2)
+					{
+						small = y2;
+						big = y1;
+					}
+					else
+					{
+						big = y2;
+						small = y1;
+					}
+
+					for (int i = small; i <= big; ++i)
+					{
+						//std::cout << "POINT: {" << start.x << ", " << i << "}\n";
+						point_to_roads_[{start.x, i}].push_back(std::make_shared<Road>(road));
+					}
+				}
 			}
+			//std::cout << "Success!\n";
 		}
 
 		const std::deque<std::shared_ptr<Road>>& GetRoadsAtPoint(Point p) const
@@ -230,7 +279,7 @@ namespace model
 
 		std::unordered_map<Point, std::deque<std::shared_ptr<Road>>, PointHasher> point_to_roads_;
 
-		double dog_speed_;
+		double dog_speed_ = 1;
 
 		OfficeIdToIndex warehouse_id_to_index_;
 		Offices offices_;
@@ -537,11 +586,6 @@ namespace model
 			username_(username)
 		{}
 
-		void SetSession(GameSession* sesh)
-		{
-			session_ = sesh;
-		}
-
 		std::string GetName() const
 		{
 			return username_;
@@ -604,14 +648,12 @@ namespace model
 		const size_t id_;
 
 		Dog* pet_;
-		GameSession* session_;
+		//GameSession* session_;
 	};
 
 	class Players
 	{
 	public:
-		Players(bool randomize)
-			:randomize_(randomize) {}
 
 		//This function creates a player and returns a token
 		std::string MakePlayer(std::string username, const Map* map)
@@ -704,12 +746,10 @@ namespace model
 				}
 			}
 			//Temporary setting dog spot to the start of the first road
-			if (!randomize_)
-			{
-				Point p{ roads.at(0).GetStart() };
-				spot.x = p.x;
-				spot.y = p.y;
-			}
+			Point p{ roads.at(0).GetStart() };
+			spot.x = p.x;
+			spot.y = p.y;
+			
 			Dog pup{ spot, map };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
@@ -739,8 +779,6 @@ namespace model
 		}
 
 	private:
-
-		bool randomize_;
 
 		std::unordered_map<std::string, Player*> token_to_player_;
 		std::unordered_map<std::string, std::deque<Player*>> map_id_to_players_;
@@ -798,8 +836,6 @@ namespace model
 		}
 
 	private:
-
-		bool randomize_;
 
 		double global_dog_speed_ = 1;
 
