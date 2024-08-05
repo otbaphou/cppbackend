@@ -387,6 +387,7 @@ namespace model
 
 			double y1 = small_y - 0.4;
 			double y2 = big_y + 0.4;
+
 			if (desired_point < y1 || desired_point > y2)
 			{
 				bool found = false;
@@ -414,6 +415,7 @@ namespace model
 					{
 						position_.y = y2;
 					}
+					return;
 					//dist_left = desired_point - x1;
 				}
 			}
@@ -478,6 +480,7 @@ namespace model
 					{
 						position_.x = x2;
 					}
+					return;
 					//dist_left = desired_point - x1;
 				}
 			}
