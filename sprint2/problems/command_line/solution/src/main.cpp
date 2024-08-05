@@ -58,75 +58,69 @@ void InitBoostLogFilter()
 		keywords::format = &MyFormatter,
 		keywords::auto_flush = true
 	);
-
-	/*logging::add_file_log(
-		keywords::file_name = "game_server.log",
-		keywords::format = &MyFormatter,
-		keywords::open_mode = std::ios_base::app | std::ios_base::out
-	);*/
 }
 
-//class Ticker : public std::enable_shared_from_this<Ticker> 
-//{
-//public:
-//	using Strand = net::strand<net::io_context::executor_type>;
-//	using Handler = std::function<void(std::chrono::milliseconds delta)>;
-//
-//	// Функция handler будет вызываться внутри strand с интервалом period
-//	Ticker(Strand strand, std::chrono::milliseconds period, Handler handler)
-//		: strand_{ strand }
-//		, period_{ period }
-//		, handler_{ std::move(handler) } {
-//	}
-//
-//	void Start() {
-//		net::dispatch(strand_, [self = shared_from_this()] {
-//			last_tick_ = Clock::now();
-//			self->ScheduleTick();
-//			});
-//	}
-//
-//private:
-//	void ScheduleTick() {
-//		assert(strand_.running_in_this_thread());
-//		timer_.expires_after(period_);
-//		timer_.async_wait([self = shared_from_this()](sys::error_code ec) {
-//			self->OnTick(ec);
-//			});
-//	}
-//
-//	void OnTick(sys::error_code ec) {
-//		using namespace std::chrono;
-//		assert(strand_.running_in_this_thread());
-//
-//		if (!ec) {
-//			auto this_tick = Clock::now();
-//			auto delta = duration_cast<milliseconds>(this_tick - last_tick_);
-//			last_tick_ = this_tick;
-//			try {
-//				handler_(delta);
-//			}
-//			catch (...) {
-//			}
-//			ScheduleTick();
-//		}
-//	}
-//
-//	using Clock = std::chrono::steady_clock;
-//
-//	Strand strand_;
-//	std::chrono::milliseconds period_;
-//	net::steady_timer timer_{ strand_ };
-//	Handler handler_;
-//	std::chrono::steady_clock::time_point last_tick_;
-//};
+class Ticker : public std::enable_shared_from_this<Ticker> 
+{
+public:
+	using Strand = net::strand<net::io_context::executor_type>;
+	using Handler = std::function<void(std::chrono::milliseconds delta)>;
+
+	// Функция handler будет вызываться внутри strand с интервалом period
+	Ticker(Strand strand, std::chrono::milliseconds period, Handler handler)
+		: strand_{ strand }
+		, period_{ period }
+		, handler_{ std::move(handler) } {
+	}
+
+	void Start() {
+		net::dispatch(strand_, [self = shared_from_this()] {
+			self->last_tick_ = Clock::now();
+			self->ScheduleTick();
+			});
+	}
+
+private:
+	void ScheduleTick() {
+		assert(strand_.running_in_this_thread());
+		timer_.expires_after(period_);
+		timer_.async_wait([self = shared_from_this()](sys::error_code ec) {
+			self->OnTick(ec);
+			});
+	}
+
+	void OnTick(sys::error_code ec) {
+		using namespace std::chrono;
+		assert(strand_.running_in_this_thread());
+
+		if (!ec) {
+			auto this_tick = Clock::now();
+			auto delta = duration_cast<milliseconds>(this_tick - last_tick_);
+			last_tick_ = this_tick;
+			try {
+				handler_(delta);
+			}
+			catch (...) {
+			}
+			ScheduleTick();
+		}
+	}
+
+	using Clock = std::chrono::steady_clock;
+
+	Strand strand_;
+	std::chrono::milliseconds period_;
+	net::steady_timer timer_{ strand_ };
+	Handler handler_;
+	std::chrono::steady_clock::time_point last_tick_;
+};
 
 struct Args
 {
 	std::string config_file;
 	std::string static_dir;
-
 	int tick_period;
+	bool randomize = false;
 };
 
 [[nodiscard]] std::optional<Args> ParseCommandLine(int argc, const char* const argv[]) 
@@ -158,18 +152,27 @@ struct Args
 	{
 		throw std::runtime_error("Config file has not been specified"s);
 	}
-	else
-	{
-		std::cout << "CONFIG PATH " << args.config_file << "\n";
-	}
 
 	if (!vm.contains("www-root"s)) 
 	{
 		throw std::runtime_error("Static dir path isn't specified"s);
 	}
+
+	if (!vm.contains("tick-period"s))
+	{
+		args.tick_period = -1;
+	}
 	else
 	{
-		std::cout << "STATIC PATH " << args.static_dir << "\n";;
+		if (args.tick_period <= 0)
+		{
+			throw std::runtime_error("Invalid tick speed!"s);
+		}
+	}
+
+	if (vm.contains("randomize-spawn-points"))
+	{
+		args.randomize = true;
 	}
 
 	return args;
@@ -177,43 +180,33 @@ struct Args
 
 int main(int argc, const char* argv[])
 {
-	std::filesystem::path config_path;
-	std::filesystem::path static_path;
+	Args args;
+
 	try
 	{
-		if (auto args = ParseCommandLine(argc, argv))
+		if (auto tmp_args = ParseCommandLine(argc, argv))
 		{
-			if (args.has_value())
+			if (tmp_args.has_value())
 			{
-				Args val = args.value();
-
-				config_path = val.config_file;
-				static_path = val.static_dir;
+				args = tmp_args.value();
 			}
 			else
 			{
 				return EXIT_FAILURE;
 			}
 		}
-		/* Если копировать файлы не нужно, то попадём сюда */
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
-	/*
-	if (argc != 3)
-	{
-		std::cerr << "Usage: game_server <game-config-json> <static-files>"sv << std::endl;
-		return EXIT_FAILURE;
-	}
-	*/
 
 	try
 	{
 		// 1. Загружаем карту из файла и построить модель игры
-		model::Game game = json_loader::LoadGame(config_path);
+		model::Players player_manager_{args.randomize};
+		model::Game game = json_loader::LoadGame(args.config_file, player_manager_);
 
 		// 2. Инициализируем io_context
 		const unsigned num_threads = std::thread::hardware_concurrency();
@@ -222,7 +215,8 @@ int main(int argc, const char* argv[])
 		// 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
 
 		// 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-		http_handler::RequestHandler handler{ static_path, game };
+		bool rest_api_tick_system = args.tick_period == -1;
+		http_handler::RequestHandler handler{ args.static_dir, game, rest_api_tick_system };
 
 		const auto address = net::ip::make_address("0.0.0.0");
 		constexpr net::ip::port_type port = 8080;
@@ -246,6 +240,19 @@ int main(int argc, const char* argv[])
 			{
 				ioc.run();
 			});
+
+		if (!rest_api_tick_system)
+		{
+			auto api_strand = net::make_strand(ioc);
+
+			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&player_manager_](std::chrono::milliseconds delta)
+				{
+					player_manager_.MoveAll(delta.count());
+				}
+			);
+
+			ticker->Start();
+		}
 	}
 
 	catch (const std::exception& ex)

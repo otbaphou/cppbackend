@@ -598,8 +598,9 @@ namespace http_handler
 		send(text_response(http::status::bad_request, { json::serialize(response) }, ContentType::APPLICATION_JSON));
 		return;
 	}
+
 	template <typename Send>
-	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send)
+	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send, bool rest_api_ticks)
 	{
 		using std::chrono::duration_cast;
 		using std::chrono::microseconds;
@@ -650,7 +651,7 @@ namespace http_handler
 	class RequestHandler
 	{
 	public:
-		explicit RequestHandler(const fs::path& static_path, model::Game& game)
+		explicit RequestHandler(const fs::path& static_path, model::Game& game, bool rest_api_ticks)
 			: static_path_{ static_path },
 			game_{ game }
 		{}
@@ -660,10 +661,11 @@ namespace http_handler
 		void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send)
 		{
 			// Обработать запрос request и отправить ответ, используя send
-			HandleRequest(req, game_, static_path_, send);
+			HandleRequest(req, game_, static_path_, send, rest_api_ticks_);
 		}
 	private:
 		const fs::path static_path_;
 		model::Game& game_;
+		bool rest_api_ticks_;
 	};
 }  // namespace http_handler

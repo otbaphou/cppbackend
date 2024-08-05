@@ -262,7 +262,7 @@ namespace model
 		, current_map_(map)
 		, speed_(map->GetDogSpeed())
 		{
-			current_road_ = map->GetRoadsAtPoint(map->GetRoads().at(0).GetStart())[0];//Ew
+			current_road_ = GetRoadsByPos(coords)[0];
 		}
 
 		void SetVel(double vel_x, double vel_y)
@@ -751,6 +751,8 @@ namespace model
 	class Players
 	{
 	public:
+		Players(bool randomize) 
+		:randomize_(randomize){}
 
 		//This function creates a player and returns a token
 		std::string MakePlayer(std::string username, const Map* map)
@@ -843,9 +845,13 @@ namespace model
 				}
 			}
 			//Temporary setting dog spot to the start of the first road
-			Point p{ roads.at(0).GetStart() };
-			spot.x = p.x;
-			spot.y = p.y;
+			if(!randomize_)
+			{
+				Point p{ roads.at(0).GetStart() };
+				spot.x = p.x;
+				spot.y = p.y;
+			}
+
 			Dog pup{ spot, map };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
@@ -876,6 +882,8 @@ namespace model
 
 	private:
 
+		bool randomize_;
+
 		std::unordered_map<std::string, Player*> token_to_player_;
 		std::unordered_map<std::string, std::deque<Player*>> map_id_to_players_;
 		std::deque<Player> players_;
@@ -885,6 +893,10 @@ namespace model
 	class Game 
 	{
 	public:
+
+		Game(Players& pm)
+		:player_manager_(pm){}
+
 		using Maps = std::vector<Map>;
 
 		void AddMap(Map map, double dog_speed = -1);
@@ -929,6 +941,8 @@ namespace model
 
 	private:
 
+		bool randomize_;
+
 		double global_dog_speed_ = 1;
 
 		using MapIdHasher = util::TaggedHasher<Map::Id>;
@@ -938,7 +952,7 @@ namespace model
 		std::deque<GameSession> sessions_;
 		MapIdToIndex map_id_to_index_;
 
-		Players player_manager_;
+		Players& player_manager_;
 	};
 
 }  // namespace model
