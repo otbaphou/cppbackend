@@ -235,7 +235,7 @@ namespace model
 						//std::cout << "POINT: {" << i << ", " << start.y << "}\n";
 						point_to_roads_[{i, start.y}].push_back(std::make_shared<Road>(road));
 					}
-
+					
 				}
 				else
 				{
@@ -364,8 +364,6 @@ namespace model
 			if (distance == 0)
 				return;
 
-			double dist_left;
-
 			Point start = current_road_->GetStart();
 			Point end = current_road_->GetEnd();
 
@@ -388,56 +386,40 @@ namespace model
 			}
 
 			double y1 = small_y - 0.4;
-			if (desired_point < y1)
-			{
-				position_.y = y1;
-				dist_left = desired_point - y1;
-
-				bool found = false;
-
-				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-				{
-					if (road.get() != current_road_ && road.get()->IsVertical())
-					{
-						current_road_ = road.get();
-						bool found = true;
-					}
-				}
-
-				if (found)
-				{
-					MoveVertical(dist_left);
-				}
-
-				return;
-			}
-
 			double y2 = big_y + 0.4;
-			if (desired_point > y2)
+			if (desired_point < y1 || desired_point > y2)
 			{
-				position_.y = y2;
-				dist_left = desired_point - y2;
-
 				bool found = false;
 
 				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
 				{
-					if (road.get() != current_road_ && road.get()->IsVertical())
+					Road* ptroad = road.get();
+					if (ptroad != current_road_ && ptroad->IsVertical())
 					{
-						current_road_ = road.get();
+						current_road_ = ptroad;
 						bool found = true;
 					}
 				}
 
 				if (found)
 				{
-					MoveVertical(dist_left);
+					MoveVertical(distance);
 				}
-
-				return;
+				else
+				{
+					if (desired_point < y1)
+					{
+						position_.y = y1;
+					}
+					else
+					{
+						position_.y = y2;
+					}
+					velocity_ = { 0,0 };
+					//dist_left = desired_point - x1;
+				}
 			}
 
-			dist_left = 0;
 			position_.y = desired_point;
 			return;
 		}
@@ -446,8 +428,6 @@ namespace model
 		{
 			if (distance == 0)
 				return;
-
-			double dist_left = -1;
 
 			Point start = current_road_->GetStart();
 			Point end = current_road_->GetEnd();
@@ -471,41 +451,16 @@ namespace model
 			}
 
 			double x1 = small_x - 0.4;
-			if (desired_point < x1)
-			{
-				position_.x = x1;
-				dist_left = desired_point - x1;
-
-				bool found = false;
-
-				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-				{
-					if (road.get() != current_road_ && road.get()->IsHorizontal())
-					{
-						current_road_ = road.get();
-						bool found = true;
-					}
-				}
-
-				if (found)
-				{
-					MoveHorizontal(dist_left);
-				}
-
-				return;
-			}
-
 			double x2 = big_x + 0.4;
-			if (desired_point > x2)
-			{
-				position_.x = x2;
-				dist_left = desired_point - x2;
 
+			if (desired_point < x1 || desired_point > x2)
+			{
 				bool found = false;
 
 				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
 				{
-					if (road.get() != current_road_ && road.get()->IsHorizontal())
+					Road* ptroad = road.get();
+					if (ptroad != current_road_ && ptroad->IsHorizontal())
 					{
 						current_road_ = road.get();
 						bool found = true;
@@ -514,13 +469,24 @@ namespace model
 
 				if (found)
 				{
-					MoveHorizontal(dist_left);
+					MoveHorizontal(distance);
 				}
+				else
+				{
+					if (desired_point < x1)
+					{
+						position_.x = x1;
+					}
+					else
+					{
+						position_.x = x2;
 
-				return;
+					}
+					velocity_ = { 0,0 };
+					//dist_left = desired_point - x1;
+				}
 			}
 
-			dist_left = 0;
 			position_.x = desired_point;
 			return;
 		}
@@ -654,6 +620,8 @@ namespace model
 	class Players
 	{
 	public:
+		Players(bool randomize)
+			:randomize_(randomize) {}
 
 		//This function creates a player and returns a token
 		std::string MakePlayer(std::string username, const Map* map)
@@ -746,10 +714,12 @@ namespace model
 				}
 			}
 			//Temporary setting dog spot to the start of the first road
-			Point p{ roads.at(0).GetStart() };
-			spot.x = p.x;
-			spot.y = p.y;
-			
+			if (!randomize_)
+			{
+				Point p{ roads.at(0).GetStart() };
+				spot.x = p.x;
+				spot.y = p.y;
+			}
 			Dog pup{ spot, map };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
@@ -779,6 +749,8 @@ namespace model
 		}
 
 	private:
+
+		bool randomize_;
 
 		std::unordered_map<std::string, Player*> token_to_player_;
 		std::unordered_map<std::string, std::deque<Player*>> map_id_to_players_;
