@@ -662,7 +662,8 @@ namespace http_handler
 	public:
 		explicit RequestHandler(const fs::path& static_path, model::Game& game, bool rest_api_ticks)
 			: static_path_{ static_path },
-			game_{ game }
+			game_{ game },
+			rest_api_ticks_(rest_api_ticks)
 		{}
 		RequestHandler(const RequestHandler&) = delete;
 		RequestHandler& operator=(const RequestHandler&) = delete;
