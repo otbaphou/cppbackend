@@ -34,7 +34,8 @@ namespace model
 	using namespace std::literals;
 
 	void Map::AddOffice(Office office) {
-		if (warehouse_id_to_index_.contains(office.GetId())) {
+		if (warehouse_id_to_index_.contains(office.GetId())) 
+		{
 			throw std::invalid_argument("Duplicate warehouse");
 		}
 

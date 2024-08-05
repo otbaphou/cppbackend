@@ -234,17 +234,10 @@ int main(int argc, const char* argv[])
 		json::object logger_data{ {"port", static_cast<unsigned>(port)}, {"address", address.to_string()} };
 
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "Server has started..."sv;
-
-		// 6. Запускаем обработку асинхронных операций
-		RunWorkers(std::max(1u, num_threads), [&ioc]
-			{
-				ioc.run();
-			});
-
+		
+		auto api_strand = net::make_strand(ioc);
 		if (!rest_api_tick_system)
 		{
-			auto api_strand = net::make_strand(ioc);
-
 			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&player_manager_](std::chrono::milliseconds delta)
 				{
 					player_manager_.MoveAll(delta.count());
@@ -253,6 +246,12 @@ int main(int argc, const char* argv[])
 
 			ticker->Start();
 		}
+
+		// 6. Запускаем обработку асинхронных операций
+		RunWorkers(std::max(1u, num_threads), [&ioc]
+			{
+				ioc.run();
+			});
 	}
 
 	catch (const std::exception& ex)
