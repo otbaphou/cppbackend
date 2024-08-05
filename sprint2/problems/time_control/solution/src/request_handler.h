@@ -119,7 +119,7 @@ namespace http_handler
 		return;
 	}
 	template <typename Send>
-	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request)
+	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request, bool rest_api_ticks)
 	{
 		std::string_view req_type = request.method_string();
 
@@ -154,34 +154,43 @@ namespace http_handler
 			}
 			else
 			{
-				int ms = 0;
-				try
+				if(rest_api_ticks)
 				{
-					auto value = json::parse(request.body());
-					ms = value.as_object().at("timeDelta").as_int64();
+					try
+					{
+						auto value = json::parse(request.body());
+						int ticks = 0;
+						ticks = value.as_object().at("timeDelta").as_int64();
 
-					response_status = http::status::ok;
-				}
-				catch (...)
-				{
-					response.emplace("code", "invalidArgument");
-					response.emplace("message", "Failed to parse tick request JSON");
-					response_status = http::status::bad_request;
-				}
-
-				if (ms == 0)
-				{
-					response.emplace("code", "invalidArgument");
-					response.emplace("message", "Failed to parse tick request JSON");
-					response_status = http::status::bad_request;
+						//Method not allowed if method isn't POST
+							//Bad request error if player name is invalid
+						if (ticks == 0)
+						{
+							response.emplace("code", "invalidArgument");
+							response.emplace("message", "Failed to parse tick request JSON");
+							response_status = http::status::bad_request;
+						}
+						else
+						{
+							game.ServerTick(ticks);
+							response_status = http::status::ok;
+						}
+					}
+					catch (...)
+					{
+						response.emplace("code", "invalidArgument");
+						response.emplace("message", "Failed to parse tick request JSON");
+						response_status = http::status::bad_request;
+					}
 				}
 				else
 				{
-					game.ServerTick(ms);
-
-					response_status = http::status::ok;
+					response.emplace("code", "invalidArgument");
+					response.emplace("message", "Invalid endpoint");
+					response_status = http::status::bad_request;
 				}
 			}
+
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
 			if (allow_post)
@@ -598,8 +607,9 @@ namespace http_handler
 		send(text_response(http::status::bad_request, { json::serialize(response) }, ContentType::APPLICATION_JSON));
 		return;
 	}
+
 	template <typename Send>
-	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send)
+	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send, bool rest_api_ticks)
 	{
 		using std::chrono::duration_cast;
 		using std::chrono::microseconds;
@@ -626,7 +636,7 @@ namespace http_handler
 		{
 			if (std::string_view(target.begin(), target.begin() + 5) == "/api/"sv || std::string_view(target.begin(), target.begin() + 4) == "/api"sv)
 			{
-				HandleRequestAPI(send, game, target, text_response, req);
+				HandleRequestAPI(send, game, target, text_response, req, rest_api_ticks);
 				return;
 			}
 		}
@@ -650,7 +660,7 @@ namespace http_handler
 	class RequestHandler
 	{
 	public:
-		explicit RequestHandler(const fs::path& static_path, model::Game& game)
+		explicit RequestHandler(const fs::path& static_path, model::Game& game, bool rest_api_ticks)
 			: static_path_{ static_path },
 			game_{ game }
 		{}
@@ -660,10 +670,11 @@ namespace http_handler
 		void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send)
 		{
 			// Обработать запрос request и отправить ответ, используя send
-			HandleRequest(req, game_, static_path_, send);
+			HandleRequest(req, game_, static_path_, send, rest_api_ticks_);
 		}
 	private:
 		const fs::path static_path_;
 		model::Game& game_;
+		bool rest_api_ticks_;
 	};
 }  // namespace http_handler

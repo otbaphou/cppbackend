@@ -32,7 +32,7 @@ namespace json_loader
 						{static_cast<int>(road_data.at(X0_COORDINATE).as_int64()), static_cast<int>(road_data.at(Y0_COORDINATE).as_int64())},
 						static_cast<int>(road_data.at(Y1_COORDINATE).as_int64())
 					});
-
+				model::Road* road_ptr = &road;
 				map.AddRoad(std::move(road));
 			}
 
@@ -77,12 +77,12 @@ namespace json_loader
 		}
 	}
 
-	model::Game LoadGame(const std::filesystem::path& json_path)
+	model::Game LoadGame(const std::filesystem::path& json_path, model::Players& pm)
 	{
 		// Загрузить содержимое файла json_path, например, в виде строки
 		// Распарсить строку как JSON, используя boost::json::parse
 		// Загрузить модель игры из файла
-		model::Game game;
+		model::Game game{pm};
 
 		std::ifstream file(json_path);
 
