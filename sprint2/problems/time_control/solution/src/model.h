@@ -235,7 +235,7 @@ namespace model
 						//std::cout << "POINT: {" << i << ", " << start.y << "}\n";
 						point_to_roads_[{i, start.y}].push_back(std::make_shared<Road>(road));
 					}
-					
+
 				}
 				else
 				{
@@ -620,8 +620,6 @@ namespace model
 	class Players
 	{
 	public:
-		Players(bool randomize)
-			:randomize_(randomize) {}
 
 		//This function creates a player and returns a token
 		std::string MakePlayer(std::string username, const Map* map)
@@ -714,12 +712,10 @@ namespace model
 				}
 			}
 			//Temporary setting dog spot to the start of the first road
-			if (!randomize_)
-			{
-				Point p{ roads.at(0).GetStart() };
-				spot.x = p.x;
-				spot.y = p.y;
-			}
+			Point p{ roads.at(0).GetStart() };
+			spot.x = p.x;
+			spot.y = p.y;
+			
 			Dog pup{ spot, map };
 			dogs_.push_back(std::move(pup));
 			return &dogs_.back();
@@ -749,8 +745,6 @@ namespace model
 		}
 
 	private:
-
-		bool randomize_;
 
 		std::unordered_map<std::string, Player*> token_to_player_;
 		std::unordered_map<std::string, std::deque<Player*>> map_id_to_players_;
