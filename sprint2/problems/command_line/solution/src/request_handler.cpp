@@ -33,7 +33,6 @@ namespace http_handler
 		response.set(http::field::content_type, content_type);
 		response.body() = std::move(body);
 		response.prepare_payload();
-		//response.content_length(body.size());
 		response.keep_alive(keep_alive);
 		return response;
 	}

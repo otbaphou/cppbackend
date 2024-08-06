@@ -6,6 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include <memory>
+#include <algorithm>
 
 #include "tagged.h"
 
@@ -204,63 +205,7 @@ namespace model
 			return dog_speed_;
 		}
 
-		void CalcRoads()
-		{
-			//std::cout << "PARSING ROADS!\n";
-			for (Road& road : roads_)
-			{
-				//std::cout << "-road\n";
-				Point start = road.GetStart();
-				Point end = road.GetEnd();
-
-				int small, big;
-
-				if (road.IsHorizontal())
-				{
-					int x1 = start.x, x2 = end.x;
-
-					if (x1 > x2)
-					{
-						small = x2;
-						big = x1;
-					}
-					else
-					{
-						big = x2;
-						small = x1;
-					}
-
-					for (int i = small; i <= big; ++i)
-					{
-						//std::cout << "POINT: {" << i << ", " << start.y << "}\n";
-						point_to_roads_[{i, start.y}].push_back(std::make_shared<Road>(road));
-					}
-					
-				}
-				else
-				{
-					int y1 = start.y, y2 = end.y;
-
-					if (y1 > y2)
-					{
-						small = y2;
-						big = y1;
-					}
-					else
-					{
-						big = y2;
-						small = y1;
-					}
-
-					for (int i = small; i <= big; ++i)
-					{
-						//std::cout << "POINT: {" << start.x << ", " << i << "}\n";
-						point_to_roads_[{start.x, i}].push_back(std::make_shared<Road>(road));
-					}
-				}
-			}
-			//std::cout << "Success!\n";
-		}
+		void CalcRoads();
 
 		const std::deque<std::shared_ptr<Road>>& GetRoadsAtPoint(Point p) const
 		{
@@ -308,22 +253,8 @@ namespace model
 	class Dog
 	{
 	public:
-		Dog(Coordinates coords, const Map* map)
-			:position_(coords)
-			, current_map_(map)
-			, speed_(map->GetDogSpeed())
-		{
-			const std::deque<std::shared_ptr<Road>>& roads = GetRoadsByPos(coords);
-			current_road_ = roads.front().get();
-			std::cout << "Found " << roads.size() << " roads at X: " << coords.x << " Y: " << coords.y << "\n";
-			std::cout << "Road isVertical: " << current_road_->IsVertical() << "\n";
 
-			Point start = current_road_->GetStart();
-			Point end = roads[0]->GetEnd();
-
-			std::cout << "Road start coordinates h: X(" << start.x << "), Y(" << start.y << ")\n";
-			std::cout << "Road end coordinates h: X(" << end.x << "), Y(" << end.y << ")\n";
-		}
+		Dog(Coordinates coords, const Map* map);
 
 		void SetVel(double vel_x, double vel_y)
 		{
@@ -336,22 +267,22 @@ namespace model
 			direction_ = dir;
 		}
 
-		Coordinates GetPos()
+		Coordinates GetPos() const
 		{
 			return position_;
 		}
 
-		Velocity GetVel()
+		Velocity GetVel() const
 		{
 			return velocity_;
 		}
 
-		char GetDir()
+		char GetDir() const
 		{
 			return direction_;
 		}
 
-		const std::deque<std::shared_ptr<Road>>& GetRoadsByPos(Coordinates pos)
+		const std::deque<std::shared_ptr<Road>>& GetRoadsByPos(Coordinates pos) const
 		{
 			int pos_x = static_cast<int>(pos.x + 0.5);
 			int pos_y = static_cast<int>(pos.y + 0.5);
@@ -359,157 +290,11 @@ namespace model
 			return current_map_->GetRoadsAtPoint({ pos_x, pos_y });
 		}
 
-		void MoveVertical(double distance)
-		{
-			if (distance == 0)
-				return;
+		void MoveVertical(double distance);
 
-			Point start = current_road_->GetStart();
-			Point end = current_road_->GetEnd();
+		void MoveHorizontal(double distance);
 
-			//std::cout << "Road start coordinates h: X(" << start.x << "), Y(" << start.y << ")\n";
-			//std::cout << "Road end coordinates h: X(" << end.x << "), Y(" << end.y << ")\n";
-
-			double desired_point = position_.y + distance;
-
-			double small_y, big_y;
-
-			if (start.y < end.y)
-			{
-				small_y = start.y;
-				big_y = end.y;
-			}
-			else
-			{
-				small_y = end.y;
-				big_y = start.y;
-			}
-
-			double y1 = small_y - 0.4;
-			double y2 = big_y + 0.4;
-
-			if (desired_point < y1 || desired_point > y2)
-			{
-				bool found = false;
-
-				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-				{
-					if (road.get() != current_road_ && road.get()->IsVertical())
-					{
-						current_road_ = road.get();
-						bool found = true;
-
-						MoveVertical(distance);
-						return;
-					}
-				}
-
-				if (!found)
-				{
-					velocity_ = { 0,0 };
-					if (desired_point < y1)
-					{
-						position_.y = y1;
-					}
-					else
-					{
-						position_.y = y2;
-					}
-					return;
-					//dist_left = desired_point - x1;
-				}
-			}
-
-			position_.y = desired_point;
-			return;
-		}
-
-		void MoveHorizontal(double distance)
-		{
-			if (distance == 0)
-				return;
-
-			Point start = current_road_->GetStart();
-			Point end = current_road_->GetEnd();
-
-			//std::cout << "Road start coordinates h: X(" << start.x << "), Y(" << start.y << ")\n";
-			//std::cout << "Road end coordinates h: X(" << end.x << "), Y(" << end.y << ")\n";
-
-			double desired_point = position_.x + distance;
-
-			double small_x, big_x;
-
-			if (start.x < end.x)
-			{
-				small_x = start.x;
-				big_x = end.x;
-			}
-			else
-			{
-				small_x = end.x;
-				big_x = start.x;
-			}
-
-			double x1 = small_x - 0.4;
-			double x2 = big_x + 0.4;
-
-			if (desired_point < x1 || desired_point > x2)
-			{
-				bool found = false;
-
-				for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-				{
-					if (road.get() != current_road_ && road.get()->IsHorizontal())
-					{
-						current_road_ = road.get();
-						bool found = true;
-
-						MoveHorizontal(distance);
-						return;
-					}
-				}
-
-				if (!found)
-				{
-					velocity_ = { 0,0 };
-					if (desired_point < x1)
-					{
-						position_.x = x1;
-					}
-					else
-					{
-						position_.x = x2;
-					}
-					return;
-					//dist_left = desired_point - x1;
-				}
-			}
-
-			position_.x = desired_point;
-			return;
-		}
-
-		void Move(double ms)
-		{
-			double distance = ms / 1000; // .14
-
-			//std::cout << "Current coordinates: X(" << position_.x << "), Y(" << position_.y << ")\n";
-			//std::cout << "Current velocity: X(" << velocity_.x * distance << "), Y(" << velocity_.y * distance << ")\n";
-			//std::cout << "Current direction: " << std::to_string(direction_) << '\n';
-
-			bool is_vertical = velocity_.x == 0 && velocity_.y != 0;
-			bool is_horizontal = velocity_.x != 0 && velocity_.y == 0;
-
-			if (is_vertical)
-			{
-				MoveVertical(distance * velocity_.y);
-			}
-
-			if (is_horizontal)
-			{
-				MoveHorizontal(distance * velocity_.x);
-			}
-		}
+		void Move(double ms);
 
 	private:
 
@@ -612,126 +397,23 @@ namespace model
 		const size_t id_;
 
 		Dog* pet_;
-		//GameSession* session_;
 	};
 
 	class Players
 	{
 	public:
-		Players(bool randomize)
+		explicit Players(bool randomize)
 			:randomize_(randomize) {}
 
 		//This function creates a player and returns a token
-		std::string MakePlayer(std::string username, const Map* map)
-		{
-			Player player{ BirthDog(map), players_.size(), username, map };
-			players_.push_back(std::move(player));
+		std::string MakePlayer(std::string username, const Map* map);
 
-			Player* ptr = &players_.back();
+		Player* FindPlayerByIdx(size_t idx);
+		Player* FindPlayerByToken(std::string token) const;
 
-			std::string token{ std::move(GenerateToken()) };
+		Dog* BirthDog(const Map* map);
 
-			//Protection against impossible odds of two identical tokens generating. What a waste :p
-			while (FindPlayerByToken(token) != nullptr)
-			{
-				//You should buy a lottery ticket!
-				token = std::move(GenerateToken());
-			}
-
-			token_to_player_.emplace(token, ptr);
-			map_id_to_players_[*map->GetId()].push_back(ptr);
-
-			return token;
-		}
-
-		Player* FindPlayerByIdx(size_t idx)
-		{
-			if (idx >= 0 || idx < players_.size())
-			{
-				return &players_[idx];
-			}
-
-			return nullptr;
-		}
-
-		Player* FindPlayerByToken(std::string token) const
-		{
-			for (char& c : token)
-			{
-				c = std::tolower(c);
-			}
-
-			if (token_to_player_.contains(token))
-			{
-				return token_to_player_.at(token);
-			}
-
-			return nullptr;
-		}
-
-		Dog* BirthDog(const Map* map)
-		{
-			//Finding the suitable road for the puppy to be born
-			const std::vector<Road>& roads = map->GetRoads();
-			const Road& road = roads.at(GetRandomNumber(roads.size()));
-
-			//Now we find the exact spot on that road
-			Coordinates spot;
-
-			Point start = road.GetStart();
-			Point end = road.GetEnd();
-
-			if (road.IsVertical())
-			{
-				spot.x = start.x;
-
-				int offset = GetRandomNumber(std::abs(start.y - end.y));
-
-				if (start.y < end.y)
-				{
-					spot.y = start.y + offset;
-				}
-				else
-				{
-					spot.y = end.y + offset;
-				}
-			}
-			else
-			{
-				spot.y = start.y;
-
-				int offset = GetRandomNumber(std::abs(start.x - end.x));
-
-				if (start.x < end.x)
-				{
-					spot.x = start.x + offset;
-				}
-				else
-				{
-					spot.x = end.x + offset;
-				}
-			}
-			//Temporary setting dog spot to the start of the first road
-			if (!randomize_)
-			{
-				Point p{ roads.at(0).GetStart() };
-				spot.x = p.x;
-				spot.y = p.y;
-			}
-			Dog pup{ spot, map };
-			dogs_.push_back(std::move(pup));
-			return &dogs_.back();
-		}
-
-		Dog* FindDogByIdx(size_t idx)
-		{
-			if (idx >= 0 || idx < dogs_.size())
-			{
-				return &dogs_[idx];
-			}
-
-			return nullptr;
-		}
+		Dog* FindDogByIdx(size_t idx);
 
 		const std::deque<Player*> GetPlayerList(std::string map_id) const
 		{
