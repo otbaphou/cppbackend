@@ -65,15 +65,15 @@ jobs:
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./async_server/run.sh
 
-#      - name: run tests sprint1 map_json
-#        run: |
-#          cd cpp-backend-tests-practicum/scripts/sprint1
-#          ./map_json/run.sh
+      - name: run tests sprint1 map_json
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint1
+          ./map_json/run.sh
 
-#      - name: run tests sprint1 final_task
-#        run: |
-#          cd cpp-backend-tests-practicum/scripts/sprint1
-#          ./final_task/run.sh
+      - name: run tests sprint1 final_task
+        run: |
+          cd cpp-backend-tests-practicum/scripts/sprint1
+          ./final_task/run.sh
 
       - name: Publish XML reports
         uses: EnricoMi/publish-unit-test-result-action@v2
