@@ -11,10 +11,10 @@ permissions:
   pull-requests: write
   issues: read
 
-#runs-on: ubuntu-22.04
 jobs:
   sprint_1:
-    runs-on: self-hosted
+    #runs-on: self-hosted
+    runs-on: ubuntu-22.04
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       volumes:
@@ -82,7 +82,8 @@ jobs:
           junit_files: ${{ github.workspace }}/*.xml
 
 #  sprint_2:
-#    runs-on: self-hosted
+#    #runs-on: self-hosted
+#    runs-on: ubuntu-22.04
 #    container:
 #      image: praktikumcpp/practicum_cpp_backend:latest
 #      volumes:
@@ -145,7 +146,8 @@ jobs:
 
 
   sprint_3:
-    runs-on: self-hosted
+    #runs-on: self-hosted
+    runs-on: ubuntu-22.04
     steps:
 
       - name: Checkout code & tests
