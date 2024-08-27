@@ -146,8 +146,8 @@ jobs:
 
 
   sprint_3:
-    #runs-on: self-hosted
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
+    #runs-on: ubuntu-22.04
     steps:
 
       - name: Checkout code & tests
