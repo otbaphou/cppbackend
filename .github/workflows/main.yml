@@ -11,10 +11,10 @@ permissions:
   pull-requests: write
   issues: read
 
-#jobs:
-  #sprint_1:
-    #runs-on: self-hosted
-    #runs-on: ubuntu-22.04
+jobs:
+#  sprint_1:
+#    runs-on: self-hosted
+#    runs-on: ubuntu-22.04
 #    container:
 #      image: praktikumcpp/practicum_cpp_backend:latest
 #      volumes:
