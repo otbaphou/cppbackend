@@ -48,9 +48,9 @@ def make_shots():
 
 
 server = run(start_server())
-subprocess.Popen(shlex.split("sudo perf record -g -o perf.data -p" + str(server.pid)), stdout=subprocess.PIPE)
+subprocess.Popen(shlex.split("sudo perf record -g -o perf.data -p" + str(server.pid)))
 make_shots()
 stop(server)
 time.sleep(1)
-subprocess.Popen('sudo perf script -f -i perf.data | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg',  stdout=None, shell=True)
+#subprocess.Popen('sudo perf script -i perf.data | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg', shell=True)
 print('Job done')
