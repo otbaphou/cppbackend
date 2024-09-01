@@ -52,5 +52,6 @@ subprocess.Popen(shlex.split("sudo perf record -g -o perf.data -p" + str(server.
 make_shots()
 stop(server)
 time.sleep(1)
-#subprocess.Popen('sudo perf script -i perf.data | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg', shell=True)
+subprocess.Popen('sudo perf script -i perf.data | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg', shell=True)
+time.sleep(1)
 print('Job done')
