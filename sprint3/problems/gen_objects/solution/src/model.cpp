@@ -330,44 +330,10 @@ namespace model
 	{
 		//Finding the suitable road for the puppy to be born
 		const std::vector<Road>& roads = map->GetRoads();
-		const Road& road = roads.at(GetRandomNumber(roads.size()));
 
 		//Now we find the exact spot on that road
-		Coordinates spot;
+		Coordinates spot = map->GetRandomSpot();
 
-		Point start = road.GetStart();
-		Point end = road.GetEnd();
-
-		if (road.IsVertical())
-		{
-			spot.x = start.x;
-
-			int offset = GetRandomNumber(std::abs(start.y - end.y));
-
-			if (start.y < end.y)
-			{
-				spot.y = start.y + offset;
-			}
-			else
-			{
-				spot.y = end.y + offset;
-			}
-		}
-		else
-		{
-			spot.y = start.y;
-
-			int offset = GetRandomNumber(std::abs(start.x - end.x));
-
-			if (start.x < end.x)
-			{
-				spot.x = start.x + offset;
-			}
-			else
-			{
-				spot.x = end.x + offset;
-			}
-		}
 		//Temporary setting dog spot to the start of the first road
 		if (!randomize_)
 		{

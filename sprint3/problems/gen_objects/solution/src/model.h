@@ -70,6 +70,7 @@ namespace model
 		Dimension dx, dy;
 	};
 
+
 	class Road {
 		struct HorizontalTag {
 			explicit HorizontalTag() = default;
@@ -156,6 +157,19 @@ namespace model
 		Offset offset_;
 	};
 
+
+	struct Coordinates
+	{
+		double x;
+		double y;
+	};
+
+	struct Object
+	{
+		int id;
+		Coordinates pos;
+	};
+
 	class Map
 	{
 	public:
@@ -202,6 +216,52 @@ namespace model
 			dog_speed_ = speed;
 		}
 
+		Coordinates GetRandomSpot() const
+		{
+			//Getting a random road
+			const std::vector<Road>& roads = GetRoads();
+			const Road& road = roads.at(GetRandomNumber(roads.size()));
+
+			//Now we find the precise spot on that road
+			Coordinates spot;
+
+			Point start = road.GetStart();
+			Point end = road.GetEnd();
+
+			if (road.IsVertical())
+			{
+				spot.x = start.x;
+
+				int offset = GetRandomNumber(std::abs(start.y - end.y));
+
+				if (start.y < end.y)
+				{
+					spot.y = start.y + offset;
+				}
+				else
+				{
+					spot.y = end.y + offset;
+				}
+			}
+			else
+			{
+				spot.y = start.y;
+
+				int offset = GetRandomNumber(std::abs(start.x - end.x));
+
+				if (start.x < end.x)
+				{
+					spot.x = start.x + offset;
+				}
+				else
+				{
+					spot.x = end.x + offset;
+				}
+			}
+
+			return spot;
+		}
+
 		double GetDogSpeed() const
 		{
 			return dog_speed_;
@@ -214,18 +274,24 @@ namespace model
 			return point_to_roads_.at(p);
 		}
 
-		void GenerateItems(unsigned int amount)
+		void GenerateItems(unsigned int amount, const Data::MapExtras& extras)
 		{
+			json::array loot_table_ = extras.GetTable(*id_);
+
 			for (int i = 0; i < amount; ++i)
 			{
-				//Add Item Generation From Pool Later!
-				items_.push_back("Default Item");
+				items_.push_back({ GetRandomNumber(2), GetRandomSpot() });
 			}
 		}
 
 		int GetItemCount() const
 		{
 			return items_.size();
+		}
+
+		const std::deque<Object>& GetItemList() const
+		{
+			return items_;
 		}
 
 		void AddOffice(Office office);
@@ -240,7 +306,7 @@ namespace model
 
 		std::unordered_map<Point, std::deque<std::shared_ptr<Road>>, PointHasher> point_to_roads_;
 
-		std::deque<std::string> items_;
+		std::deque<Object> items_;
 
 		double dog_speed_ = 1;
 
@@ -254,12 +320,6 @@ namespace model
 		SOUTH = 'D',
 		WEST = 'L',
 		EAST = 'R'
-	};
-
-	struct Coordinates
-	{
-		double x;
-		double y;
 	};
 
 	struct Velocity
@@ -440,7 +500,14 @@ namespace model
 
 		const int GetPlayerCount(std::string map_id) const
 		{
-			return map_id_to_players_.at(map_id).size();
+			if(map_id_to_players_.contains(map_id))
+			{
+				return map_id_to_players_.at(map_id).size();
+			}
+			else
+			{
+				return 0;
+			}
 		}
 
 		void MoveAll(double ms)
@@ -514,11 +581,16 @@ namespace model
 		{
 			player_manager_.MoveAll(milliseconds);
 			
-			for (Map& map : maps_)
+			loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
+			
+			if(gen_ptr != nullptr)
 			{
-				loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
+				for (Map& map : maps_)
+				{
+					unsigned player_count = GetPlayerCount(*(map.GetId()));
 
-				map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, map.GetItemCount(), GetPlayerCount(map.GetName())));
+					map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, map.GetItemCount(), player_count), extra_data_);
+				}
 			}
 		}
 
@@ -543,6 +615,9 @@ namespace model
 		}
 
 	private:
+
+		//Used to seed a random number
+		long int dynamic_seed_ = 0;
 
 		double global_dog_speed_ = 1;
 

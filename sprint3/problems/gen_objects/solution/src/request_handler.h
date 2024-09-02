@@ -152,6 +152,7 @@ namespace http_handler
 
 			StringResponse str_response{ text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
+			str_response.set(http::field::allow, "GET, HEAD");
 
 			send(str_response);
 			return;
@@ -434,7 +435,8 @@ namespace http_handler
 					}
 					else
 					{
-						json::object final_obj;
+						json::object player_data;
+
 						for (model::Player* player : game.GetPlayerList(*(player_ptr->GetCurrentMap()->GetId())))
 						{
 							json::object entry;
@@ -456,10 +458,35 @@ namespace http_handler
 							entry.emplace("speed", vel_arr);
 							entry.emplace("dir", std::string{ player->GetDir() });
 
-							final_obj.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
+							player_data.emplace(std::to_string(static_cast<int>(player->GetId())), entry);
 						}
 
-						response.emplace("players", final_obj);
+						response.emplace("players", player_data);
+
+						json::object loot_data;
+
+						const std::deque<model::Object>& items = player_ptr->GetCurrentMap()->GetItemList();
+
+						for (size_t i = 0; i < items.size(); ++i)
+						{
+							const model::Object& obj = items[i];
+
+							json::object item_data;
+
+							item_data.emplace("type", obj.id);
+
+							json::array position;
+
+							position.push_back(obj.pos.x);
+							position.push_back(obj.pos.y);
+
+							item_data.emplace("pos", position);
+
+							loot_data.emplace(std::to_string(i), item_data);
+						}
+
+						response.emplace("lostObjects", loot_data);
+
 						response_status = http::status::ok;
 					}
 				}
@@ -657,69 +684,87 @@ namespace http_handler
 			return;
 		}
 
-		if (req_type != "GET"sv && req_type != "HEAD"sv)
-		{
-			send(text_response(http::status::method_not_allowed, { "Invalid method" }, ContentType::APPLICATION_JSON));
-			return;
-		}
-
 		if (target.size() >= 13)
 		{
 			if (std::string_view(target.begin(), target.begin() + 13) == "/api/v1/maps/"sv)
 			{
-				using Id = util::Tagged<std::string, model::Map>;
-				Id id{ std::string(target.begin() + 13, target.end()) };
-
-				const model::Map* maptr = game.FindMap(id);
-
-				if (maptr != nullptr)
+				//JSON object with map data
+				json::object response;
+				
+				if (req_type != "GET"sv && req_type != "HEAD"sv)
 				{
-					//JSON object with map data
-					json::object response;
+					response.emplace("code", "invalidMethod");
+					response.emplace("message", "Invalid method");
+	
+					StringResponse str_response{ text_response(http::status::method_not_allowed, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+					str_response.set(http::field::cache_control, "no-cache");
 
-					//Initializing object using map id and name
-					response.emplace("id", *maptr->GetId());
-					response.emplace("name", maptr->GetName());
-
-					//Inserting Roads
-					json::array roads;
-					PackRoads(roads, maptr);
-
-					response.emplace("roads", std::move(roads));
-
-					//Inserting Buildings
-					json::array buildings;
-					PackBuildings(buildings, maptr);
-
-					response.emplace("buildings", std::move(buildings));
-
-					//Inserting Offices
-					json::array offices;
-					PackOffices(offices, maptr);
-
-					response.emplace("lootTypes", game.GetLootTable(*id));
-
-					//Appending loot table
-					
-					response.emplace("offices", std::move(offices));
-
-					//Printing response
-					send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+					str_response.set(http::field::allow, "GET, HEAD"sv);
+					send(str_response);
 					return;
 				}
 				else
 				{
-					//Throwing error if requested map isn't found
-					json::object response;
+					using Id = util::Tagged<std::string, model::Map>;
+					Id id{ std::string(target.begin() + 13, target.end()) };
+	
+					const model::Map* maptr = game.FindMap(id);
+	
+					if (maptr != nullptr)
+					{
+						
 
-					response.emplace("code", "mapNotFound");
-					response.emplace("message", "Map not found");
+						//Initializing object using map id and name
+						response.emplace("id", *maptr->GetId());
+						response.emplace("name", maptr->GetName());
 
-					send(text_response(http::status::not_found, { json::serialize(response) }, ContentType::APPLICATION_JSON));
-					return;
+						//Inserting Roads
+						json::array roads;
+						PackRoads(roads, maptr);
+
+						response.emplace("roads", std::move(roads));
+
+						//Inserting Buildings
+						json::array buildings;
+						PackBuildings(buildings, maptr);
+
+						response.emplace("buildings", std::move(buildings));
+
+						//Inserting Offices
+						json::array offices;
+						PackOffices(offices, maptr);
+
+						response.emplace("offices", std::move(offices));
+
+						//Appending loot table
+					
+						response.emplace("lootTypes", game.GetLootTable(*id));
+
+						//Printing response
+						StringResponse str_response{ text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+
+						send(str_response);
+						return;
+					}
+					else
+					{
+						//Throwing error if requested map isn't found
+						json::object response;
+
+						response.emplace("code", "mapNotFound");
+						response.emplace("message", "Map not found");
+
+						StringResponse str_response{ text_response(http::status::not_found, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+
+						send(str_response);
+						return;
+					}
 				}
 			}
 		}
+		
+
+		
 		//Throwing error when URL starts with /api/ but doesn't correlate to any of the commands
 		json::object response;
 
