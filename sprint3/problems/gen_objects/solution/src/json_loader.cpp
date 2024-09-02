@@ -137,7 +137,7 @@ namespace json_loader
 
 			if (map_data.contains("lootTypes"))
 			{
-				game.AddTable(*id, map_data.at("loot_types").as_array());
+				game.AddTable(*id, map_data.at("lootTypes").as_array());
 			}
 
 			//Reading JSON-object containing roads from map_data and adding them to the map
