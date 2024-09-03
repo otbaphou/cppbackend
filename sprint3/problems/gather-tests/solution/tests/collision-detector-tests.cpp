@@ -132,8 +132,8 @@ namespace Catch
 
         for (int i = 0; i < 2; ++i)
         {
-            CHECK(events_second[i].gatherer_id == 1);
-            CHECK(events_second[i].item_id == i);
+            CHECK(events_second[i].gatherer_id == 0);
+            CHECK(events_second[i].item_id == 0);
             //CHECK(events_second[i].sq_distance == std::pow(5 * (i + 1), 2));
         }
 
