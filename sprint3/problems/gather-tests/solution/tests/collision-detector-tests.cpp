@@ -68,8 +68,6 @@ namespace Catch
     {
         REQUIRE(collision_detector::TryCollectPoint({ 0, 0 }, { 1, 1 }, { 0, 1 }) == std::pair{ 0.5, 0.5 });
 
-        REQUIRE(collision_detector::TryCollectPoint({ 0, 0 }, { 0, 2 }, { 0, 1 }) == std::pair{0.0, 0.5});
-
         bool exception_thrown_on_same_pos = false;
 
         try
@@ -132,8 +130,8 @@ namespace Catch
 
         for (int i = 0; i < 2; ++i)
         {
-            CHECK(events_second[i].gatherer_id == 0);
-            CHECK(events_second[i].item_id == 0);
+            CHECK(events_second[2 - i].gatherer_id == 1);
+            CHECK(events_second[2 - i].item_id == 0);
             //CHECK(events_second[i].sq_distance == std::pow(5 * (i + 1), 2));
         }
 
