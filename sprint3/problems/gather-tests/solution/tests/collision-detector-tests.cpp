@@ -106,7 +106,6 @@ namespace Catch
         {
             CHECK(events_first[i].gatherer_id == 0);
             CHECK(events_first[i].item_id == i);
-            //CHECK(events_first[i].sq_distance == std::pow(5 * (i + 1), 2));
         }
 
         VectorItemGathererProvider second_provider{ items, {{{0,0}, {0, 20}, 3.}, {{0, 1}, {0,10}, 3.}} };
@@ -114,13 +113,6 @@ namespace Catch
         //Multiple Items Picked Up But One Gatherer Is Faster
         auto events_second = collision_detector::FindGatherEvents(second_provider);
         REQUIRE(events_second.size() != 0);
-
-        //for (int i = 0; i < 2; ++i)
-        //{
-        //    CHECK(events_second[i].gatherer_id == 0);
-        //    CHECK(events_second[i].item_id == 2 - i);
-        //    //CHECK(events_second[i].sq_distance == std::pow(5 * (i + 1), 2));
-        //}
 
         CHECK(events_second[2].gatherer_id == 0);
         CHECK(events_second[2].item_id == 1);
