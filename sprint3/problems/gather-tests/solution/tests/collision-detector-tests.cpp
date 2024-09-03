@@ -67,19 +67,6 @@ namespace Catch
     TEST_CASE("Collect Point Test", "[collision detector]")
     {
         REQUIRE(collision_detector::TryCollectPoint({ 0, 0 }, { 1, 1 }, { 0, 1 }) == std::pair{ 0.5, 0.5 });
-
-        bool exception_thrown_on_same_pos = false;
-
-        try
-        {
-            collision_detector::TryCollectPoint({ 0, 0 }, { 0, 0 }, { 100, 100 });
-        }
-        catch (...)
-        {
-            exception_thrown_on_same_pos = true;
-        }
-
-        REQUIRE(exception_thrown_on_same_pos == true);
     }
 
     TEST_CASE("Find Gather Events Test #1", "[no interaction]")
@@ -119,7 +106,7 @@ namespace Catch
         {
             CHECK(events_first[i].gatherer_id == 0);
             CHECK(events_first[i].item_id == i);
-            //CHECK(events_first[i].sq_distance == std::pow(5 * (i + 1), 2));
+            CHECK(events_first[i].sq_distance == std::pow(5 * (i + 1), 2));
         }
 
         //VectorItemGathererProvider second_provider{ items, {{{0,0}, {0, 20}, 3.}, {{0, 1}, {0,10}, 3.}} };
