@@ -4,6 +4,7 @@
 #include "../src/collision_detector.h"
 #include <string>
 #include <iostream>
+#include <cmath>
 
 using namespace std::literals;
 
