@@ -526,7 +526,12 @@ namespace model
 		{
 			return bag_;
 		}
-
+		
+		int GetItemCount() const
+		{
+			return bag_.size();
+		}
+		
 	private:
 
 		std::string username_;
@@ -587,18 +592,21 @@ namespace model
 			}
 		}
 
-		std::deque<Coordinates> GetLooterPositionsByMap(const std::string& id) const
+		std::deque<Coordinates> GetLooterPositionsByMap(const std::string& id)
 		{
 			std::deque<Coordinates> result;
 
-			for (Player* player : map_id_to_players_.at(id))
+			if(map_id_to_players_.contains(id))
 			{
-				if (player->PeekInTheBag().size() < player->GetCurrentMap()->GetBagCapacity())
+				for (Player* player : map_id_to_players_.at(id))
 				{
-					result.push_back(player->GetPos());
+					if (player->GetItemCount() < player->GetCurrentMap()->GetBagCapacity())
+					{
+						result.push_back(player->GetPos());
+					}
 				}
 			}
-
+			
 			return result;
 		}
 
@@ -722,7 +730,7 @@ namespace model
 			for (int id : removed_ids)
 			{
 				map.RemoveItem(id);
-			} //Wonder if I forgot anything..
+			}
 
 		}
 
