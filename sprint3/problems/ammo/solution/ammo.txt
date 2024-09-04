@@ -5,5 +5,3 @@
 /api/v1/maps/map1
 2 /api/v1/game/tick
 50
-/api/v1/game/players
-/api/v1/game/state
