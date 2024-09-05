@@ -10,8 +10,9 @@ permissions:
   contents: read
   pull-requests: write
   issues: read
-  
-sprint_4:
+
+jobs:
+  sprint_4:
     runs-on: ubuntu-20.04
     steps:
 
@@ -39,7 +40,7 @@ sprint_4:
           junit_files: ${{ github.workspace }}/*.xml
 
   sprint_4_with_postgress:
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       volumes:
