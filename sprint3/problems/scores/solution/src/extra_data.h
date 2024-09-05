@@ -13,9 +13,9 @@ namespace Data
 
 			MapExtras() = default;
 
-			MapExtras(boost::json::object config);
+			explicit MapExtras(boost::json::object config);
 
-			void AddTable(std::string map_id, boost::json::array& table);
+			void AddTable(const std::string& map_id, boost::json::array& table);
 
 			boost::json::array GetTable(const std::string& map_id) const;
 

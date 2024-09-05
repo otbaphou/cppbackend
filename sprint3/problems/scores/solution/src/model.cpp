@@ -564,7 +564,7 @@ namespace model
 	
 	void Player::StoreItem(Item item)
 	{
-		bag_.push_back(std::move(item));
+		bag_.push_back(item);
 
 		json::object logger_data;
 		logger_data.emplace("Player ID", id_);

@@ -73,7 +73,7 @@ namespace collision_detector
 	{
 	public:
 
-		VectorItemGathererProvider(std::vector<collision_detector::Item> items, std::vector<collision_detector::Gatherer> gatherers)
+		VectorItemGathererProvider(const std::vector<collision_detector::Item>& items, const std::vector<collision_detector::Gatherer>& gatherers)
 			:items_(items),
 			gatherers_(gatherers)
 		{}
@@ -86,7 +86,7 @@ namespace collision_detector
 
 		collision_detector::Item GetItem(size_t idx) const override
 		{
-			return items_[idx];
+			return items_.at(idx);
 		}
 
 		size_t GatherersCount() const override
@@ -96,13 +96,13 @@ namespace collision_detector
 
 		collision_detector::Gatherer GetGatherer(size_t idx) const override
 		{
-			return gatherers_[idx];
+			return gatherers_.at(idx);
 		}
 
 	private:
 
-		std::vector<collision_detector::Item> items_;
-		std::vector<collision_detector::Gatherer> gatherers_;
+		const std::vector<collision_detector::Item>& items_;
+		const std::vector<collision_detector::Gatherer>& gatherers_;
 	};
 
 }  // namespace collision_detector

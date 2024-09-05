@@ -344,7 +344,7 @@ namespace model
 			return velocity_;
 		}
 
-		char GetDir() const
+		Direction GetDir() const
 		{
 			return direction_;
 		}
@@ -398,18 +398,17 @@ namespace model
 	{
 	public:
 		Player(Dog* dog, size_t id, std::string username, const Map* maptr)
-			:pet_(dog),
-			id_(id),
+			:username_(username),
 			current_map_(maptr),
-			username_(username)
-		{}
+			id_(id),
+			pet_(dog){}
 
 		std::string GetName() const
 		{
 			return username_;
 		}
 
-		const Map* GetCurrentMap()
+		const Map* GetCurrentMap() const
 		{
 			return current_map_;
 		}
@@ -427,7 +426,7 @@ namespace model
 			return pet_->GetPos();
 		}
 
-		Velocity GetVel()
+		Velocity GetVel() const
 		{
 			if (pet_ == nullptr)
 				return { -1, -1 };
@@ -435,10 +434,10 @@ namespace model
 			return pet_->GetVel();
 		}
 
-		char GetDir()
+		Direction GetDir() const
 		{
 			if (pet_ == nullptr)
-				return '!';
+				return Direction::NORTH;
 
 			return pet_->GetDir();
 		}

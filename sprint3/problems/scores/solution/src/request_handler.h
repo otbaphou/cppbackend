@@ -197,7 +197,7 @@ namespace http_handler
 							response_status = http::status::ok;
 						}
 					}
-					catch (std::exception ex)
+					catch (std::exception& ex)
 					{
 						response.emplace("code", "invalidArgument");
 						response.emplace("message", "Failed to parse tick request JSON");
@@ -456,7 +456,7 @@ namespace http_handler
 							vel_arr.push_back(vel.y);
 
 							entry.emplace("speed", vel_arr);
-							entry.emplace("dir", std::string{ player->GetDir() });
+							entry.emplace("dir", std::string{ static_cast<char>(player->GetDir()) });
 
 							json::array bag_contents;
 
@@ -765,14 +765,14 @@ namespace http_handler
 					else
 					{
 						//Throwing error if requested map isn't found
-						json::object response;
+						json::object err_responce;
 
-						response.emplace("code", "mapNotFound");
-						response.emplace("message", "Map not found");
+						err_responce.emplace("code", "mapNotFound");
+						err_responce.emplace("message", "Map not found");
 
-						StringResponse str_response{ text_response(http::status::not_found, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+						StringResponse err_str_response{ text_response(http::status::not_found, { json::serialize(err_responce) }, ContentType::APPLICATION_JSON) };
 
-						send(str_response);
+						send(err_str_response);
 						return;
 					}
 				}

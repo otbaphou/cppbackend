@@ -7,9 +7,9 @@ namespace Data
 		generator_(std::chrono::milliseconds{ static_cast<int>(loot_config_.at("period").as_double() * 1000) }, loot_config_.at("probability").as_double())
 	{}
 
-	void MapExtras::AddTable(std::string map_id, boost::json::array& table)
+	void MapExtras::AddTable(const std::string& map_id, boost::json::array& table)
 	{
-		loot_table_by_id_[map_id] = std::move(table);
+		loot_table_by_id_[map_id] = table;
 	}
 
 	boost::json::array MapExtras::GetTable(const std::string& map_id) const
