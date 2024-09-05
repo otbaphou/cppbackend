@@ -13,6 +13,10 @@
 #include "extra_data.h"
 #include "tagged.h"
 
+//REMOVE LATER
+//UPD: Or maybe not, because it runs the logging..
+#include "http_server.h"
+
 const std::string X_COORDINATE = "x";
 const std::string Y_COORDINATE = "y";
 
@@ -167,27 +171,16 @@ namespace model
 
 	struct Depot
 	{
-		//To Be Made Later!
+		//To Be Made Later
 	};
 
 	struct Item
 	{
 		Item() = default;
 
-		Item(Coordinates pos_, int id_, int type_, int64_t value_)
-		:pos(pos_),
-		id(id_),
-		type(type_),
-		value(value_)
-		{}
+		Item(Coordinates pos_, int id_, int type_, int64_t value_);
 
-		Item(Coordinates pos_, double width_, int id_, int type_, int64_t value_)
-			:pos(pos_),
-			width(width_),
-			id(id_),
-			type(type_),
-			value(value_)
-		{}
+		Item(Coordinates pos_, double width_, int id_, int type_, int64_t value_);
 
 		Coordinates pos;		
 		double width = 0;
@@ -247,51 +240,7 @@ namespace model
 			bag_capacity_ = capacity;
 		}
 
-		Coordinates GetRandomSpot() const
-		{
-			//Getting a random road
-			const std::vector<Road>& roads = GetRoads();
-			const Road& road = roads.at(GetRandomNumber(roads.size()));
-
-			//Now we find the precise spot on that road
-			Coordinates spot;
-
-			Point start = road.GetStart();
-			Point end = road.GetEnd();
-
-			if (road.IsVertical())
-			{
-				spot.x = start.x;
-
-				int offset = GetRandomNumber(std::abs(start.y - end.y));
-
-				if (start.y < end.y)
-				{
-					spot.y = start.y + offset;
-				}
-				else
-				{
-					spot.y = end.y + offset;
-				}
-			}
-			else
-			{
-				spot.y = start.y;
-
-				int offset = GetRandomNumber(std::abs(start.x - end.x));
-
-				if (start.x < end.x)
-				{
-					spot.x = start.x + offset;
-				}
-				else
-				{
-					spot.x = end.x + offset;
-				}
-			}
-
-			return spot;
-		}
+		Coordinates GetRandomSpot() const;
 
 		double GetDogSpeed() const
 		{
@@ -305,19 +254,7 @@ namespace model
 			return point_to_roads_.at(p);
 		}
 
-		void GenerateItems(unsigned int amount, const Data::MapExtras& extras)
-		{
-			json::array loot_table_ = extras.GetTable(*id_);
-
-			size_t s = items_.size();
-
-			for (int i = 0; i < amount; ++i)
-			{
-				int id = s + i;
-				int item_type_id = GetRandomNumber(loot_table_.size());
-				items_.push_back({GetRandomSpot(), id, item_type_id, loot_table_[item_type_id].as_object().at("value").as_int64()});
-			}
-		}
+		void GenerateItems(unsigned int amount, const Data::MapExtras& extras);
 
 		int GetItemCount() const
 		{
@@ -521,10 +458,7 @@ namespace model
 			pet_->Move(ms);
 		}
 
-		void StoreItem(Item item)
-		{
-			bag_.push_back(std::move(item));
-		}
+		void StoreItem(Item item);
 
 		const std::deque<Item> PeekInTheBag() const
 		{
@@ -575,51 +509,11 @@ namespace model
 			return map_id_to_players_.at(map_id);
 		}
 
-		const int GetPlayerCount(std::string map_id) const
-		{
-			if(map_id_to_players_.contains(map_id))
-			{
-				return map_id_to_players_.at(map_id).size();
-			}
-			else
-			{
-				return 0;
-			}
-		}
+		const int GetPlayerCount(std::string map_id) const;
 
-		void MoveAll(double ms)
-		{
-			for (Dog& dog : dogs_)
-			{
-				dog.Move(ms);
-			}
-		}
+		void MoveAllByMap(double ms, std::string& id);
 
-		void MoveAllByMap(double ms, std::string& id)
-		{
-			for (Player* player : map_id_to_players_[id])
-			{
-				player->Move(ms);
-			}
-		}
-
-		std::deque<Coordinates> GetLooterPositionsByMap(const std::string& id) const
-		{
-			std::deque<Coordinates> result;
-
-			if (map_id_to_players_.contains(id))
-			{
-				for (Player* player : map_id_to_players_.at(id))
-				{
-					if (player->GetItemCount() < player->GetCurrentMap()->GetBagCapacity())
-					{
-						result.push_back(player->GetPos());
-					}
-				}
-			}
-
-			return result;
-		}
+		std::deque<Coordinates> GetLooterPositionsByMap(const std::string& id) const;
 
 	private:
 
@@ -685,82 +579,9 @@ namespace model
 			global_bag_capacity = capacity;
 		}
 
-		void MoveAndCalcPickups(Map& map, int ms)
-		{
-			std::string map_id{ *(map.GetId()) };
+		void MoveAndCalcPickups(Map& map, int ms);
 
-			//Saving positions of players with an empty slots in their bags before moving them
-			std::deque<Coordinates> start_positions{ player_manager_.GetLooterPositionsByMap(map_id) };
-
-			//Moving Players
-			player_manager_.MoveAllByMap(ms, map_id);
-
-			//Saving positions of players with an empty slots in their bags
-			std::deque<Coordinates> end_positions{ player_manager_.GetLooterPositionsByMap(map_id) };
-
-			//Getting a list of all items on the map
-			const std::deque<Item>& map_items = map.GetItemList();
-
-			//Temporary container to feed ItemProvider (Item Data)
-			std::vector<collision_detector::Item> items;
-
-			for (const auto& item : map_items)
-			{
-				items.push_back({ {item.pos.x, item.pos.y}, item.width });
-			}
-
-
-			//Temporary container to feed ItemProvider (Gatherer Data)
-			std::vector<collision_detector::Gatherer> gatherers;
-
-			for (int i = 0; i < start_positions.size(); ++i)
-			{
-				gatherers.push_back({ {start_positions[i].x, start_positions[i].y}, {end_positions[i].x, end_positions[i].y}, .3 });
-			}
-
-			//The provider itself
-			collision_detector::VectorItemGathererProvider provider{ items, gatherers };
-
-			//Calculating collisions
-			auto events = collision_detector::FindGatherEvents(provider);
-
-			//Items to remove
-			std::vector<int> removed_ids;
-
-			for (collision_detector::GatheringEvent& loot_event : events)
-			{
-				int item_id = loot_event.item_id;
-				removed_ids.push_back(item_id);
-
-				player_manager_.FindPlayerByIdx(loot_event.gatherer_id)->StoreItem(map.GetItemByIdx(item_id));
-			}
-
-			//Sorting removed ids by descention so it won't cause any problems on removal
-			std::sort(removed_ids.begin(), removed_ids.end(), [](int i1, int i2) { return i1 > i2; });
-
-			for (int id : removed_ids)
-			{
-				map.RemoveItem(id);
-			} //Wonder if I forgot anything..
-
-		}
-
-		void ServerTick(int milliseconds)
-		{
-			loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
-			
-			if(gen_ptr != nullptr)
-			{
-				for (Map& map : maps_)
-				{
-					MoveAndCalcPickups(map, milliseconds);
-
-					unsigned player_count = GetPlayerCount(*map.GetId());
-
-					map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, map.GetItemCount(), player_count), extra_data_);
-				}
-			}
-		}
+		void ServerTick(int milliseconds);
 
 		void SetExtraData(Data::MapExtras extras)
 		{

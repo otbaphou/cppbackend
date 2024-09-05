@@ -238,9 +238,9 @@ int main(int argc, const char* argv[])
 		auto api_strand = net::make_strand(ioc);
 		if (!rest_api_tick_system)
 		{
-			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&player_manager_](std::chrono::milliseconds delta)
+			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&game](std::chrono::milliseconds delta)
 				{
-					player_manager_.MoveAll(static_cast<double>(delta.count()));
+					game.ServerTick(static_cast<double>(delta.count()));
 				}
 			);
 

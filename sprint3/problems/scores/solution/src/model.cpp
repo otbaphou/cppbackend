@@ -73,6 +73,92 @@ namespace model
 		}
 	}
 
+	void Game::MoveAndCalcPickups(Map& map, int ms)
+	{
+		std::string map_id{ *(map.GetId()) };
+
+		//Saving positions of players with an empty slots in their bags before moving them
+		std::deque<Coordinates> start_positions{ player_manager_.GetLooterPositionsByMap(map_id) };
+
+		//Moving Players
+		player_manager_.MoveAllByMap(ms, map_id);
+
+		//Saving positions of players with an empty slots in their bags
+		std::deque<Coordinates> end_positions{ player_manager_.GetLooterPositionsByMap(map_id) };
+
+		//Getting a list of all items on the map
+		const std::deque<Item>& map_items = map.GetItemList();
+
+		//Temporary container to feed ItemProvider (Item Data)
+		std::vector<collision_detector::Item> items;
+
+		for (const auto& item : map_items)
+		{
+			items.push_back({ {item.pos.x, item.pos.y}, item.width });
+		}
+
+
+		//Temporary container to feed ItemProvider (Gatherer Data)
+		std::vector<collision_detector::Gatherer> gatherers;
+
+		for (int i = 0; i < start_positions.size(); ++i)
+		{
+			gatherers.push_back({ {start_positions[i].x, start_positions[i].y}, {end_positions[i].x, end_positions[i].y}, .3 });
+		}
+
+		//The provider itself
+		collision_detector::VectorItemGathererProvider provider{ items, gatherers };
+
+		//Calculating collisions
+		auto events = collision_detector::FindGatherEvents(provider);
+
+		//Items to remove
+		std::vector<int> removed_ids;
+
+		for (collision_detector::GatheringEvent& loot_event : events)
+		{
+			int item_id = loot_event.item_id;
+			removed_ids.push_back(item_id);
+
+			player_manager_.FindPlayerByIdx(loot_event.gatherer_id)->StoreItem(map.GetItemByIdx(item_id));
+		}
+
+		//Sorting removed ids by descention so it won't cause any problems on removal
+		std::sort(removed_ids.begin(), removed_ids.end(), [](int i1, int i2) { return i1 > i2; });
+
+		for (int id : removed_ids)
+		{
+			map.RemoveItem(id);
+		} //Wonder if I forgot anything..
+
+	}
+
+	void Game::ServerTick(int milliseconds)
+	{
+		loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
+
+		if (gen_ptr != nullptr)
+		{
+			for (Map& map : maps_)
+			{
+				MoveAndCalcPickups(map, milliseconds);
+
+				unsigned player_count = GetPlayerCount(*map.GetId());
+				int item_count = map.GetItemCount();
+				json::object logger_data;
+
+				//In case I ever need to debug this system
+				//logger_data.emplace("Player Count", player_count);
+				//logger_data.emplace("Item Count", item_count);
+				//logger_data.emplace("Ticks (ms)", milliseconds);
+
+				//BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "items";
+
+				map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, item_count, player_count), extra_data_);
+			}
+		}
+	}
+
 	//===Map===	
 	void Map::AddOffice(Office office) 
 	{
@@ -144,6 +230,78 @@ namespace model
 				}
 			}
 		}
+	}
+
+	void Map::GenerateItems(unsigned int amount, const Data::MapExtras& extras)
+	{
+		json::array loot_table_ = extras.GetTable(*id_);
+
+		size_t s = items_.size();
+
+		for (int i = 0; i < amount; ++i)
+		{
+			int id = s + i;
+			int item_type_id = GetRandomNumber(loot_table_.size());
+			Coordinates pos = GetRandomSpot();
+			int64_t value = loot_table_[item_type_id].as_object().at("value").as_int64();
+
+			items_.push_back({ pos, id, item_type_id, value });
+
+			json::object logger_data;
+			logger_data.emplace("ID", id);
+			logger_data.emplace("Type", item_type_id);
+			logger_data.emplace("Value", value);
+			logger_data.emplace("Position X", pos.x);
+			logger_data.emplace("Position Y", pos.y);
+
+			BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "generated item";
+		}
+	}
+
+	Coordinates Map::GetRandomSpot() const
+	{
+		//Getting a random road
+		const std::vector<Road>& roads = GetRoads();
+		const Road& road = roads.at(GetRandomNumber(roads.size()));
+
+		//Now we find the precise spot on that road
+		Coordinates spot;
+
+		Point start = road.GetStart();
+		Point end = road.GetEnd();
+
+		if (road.IsVertical())
+		{
+			spot.x = start.x;
+
+			int offset = GetRandomNumber(std::abs(start.y - end.y));
+
+			if (start.y < end.y)
+			{
+				spot.y = start.y + offset;
+			}
+			else
+			{
+				spot.y = end.y + offset;
+			}
+		}
+		else
+		{
+			spot.y = start.y;
+
+			int offset = GetRandomNumber(std::abs(start.x - end.x));
+
+			if (start.x < end.x)
+			{
+				spot.x = start.x + offset;
+			}
+			else
+			{
+				spot.x = end.x + offset;
+			}
+		}
+
+		return spot;
 	}
 
 	//===Dog===
@@ -272,7 +430,6 @@ namespace model
 	void Dog::Move(double ms)
 	{
 		double distance = ms / 1000;
-
 		bool is_vertical = velocity_.x == 0 && velocity_.y != 0;
 		bool is_horizontal = velocity_.x != 0 && velocity_.y == 0;
 
@@ -364,5 +521,77 @@ namespace model
 
 		return nullptr;
 	}
+
+	const int Players::GetPlayerCount(std::string map_id) const
+	{
+		if (map_id_to_players_.contains(map_id))
+		{
+			return map_id_to_players_.at(map_id).size();
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	void Players::MoveAllByMap(double ms, std::string& id)
+	{
+		for (Player* player : map_id_to_players_[id])
+		{
+			player->Move(ms);
+		}
+	}
+
+	std::deque<Coordinates> Players::GetLooterPositionsByMap(const std::string& id) const
+	{
+		std::deque<Coordinates> result;
+
+		if (map_id_to_players_.contains(id))
+		{
+			for (Player* player : map_id_to_players_.at(id))
+			{
+				if (player->GetItemCount() < player->GetCurrentMap()->GetBagCapacity())
+				{
+					result.push_back(player->GetPos());
+				}
+			}
+		}
+
+		return result;
+	}
+
+	//===Player===
+	
+	void Player::StoreItem(Item item)
+	{
+		bag_.push_back(std::move(item));
+
+		json::object logger_data;
+		logger_data.emplace("Player ID", id_);
+		logger_data.emplace("Item ID", item.id);
+		logger_data.emplace("Type", item.type);
+		logger_data.emplace("Value", item.value);
+
+		logger_data.emplace("Total Count", bag_.size());
+
+
+		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "collected item";
+	}
+
+	//===Item===
+	Item::Item(Coordinates pos_, int id_, int type_, int64_t value_)
+		:pos(pos_),
+		id(id_),
+		type(type_),
+		value(value_)
+	{}
+
+	Item::Item(Coordinates pos_, double width_, int id_, int type_, int64_t value_)
+		:pos(pos_),
+		width(width_),
+		id(id_),
+		type(type_),
+		value(value_)
+	{}
 
 }  // namespace model
