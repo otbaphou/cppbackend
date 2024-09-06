@@ -8,6 +8,8 @@
 #include <iostream>
 #include <variant>
 
+#include "save_manager.h"
+
 bool IsValidToken(std::string token);
 
 namespace http_handler
@@ -135,7 +137,8 @@ namespace http_handler
 	}
 
 	template <typename Send>
-	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, const auto& request, bool rest_api_ticks)
+	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, 
+	const auto& request, bool rest_api_ticks, savesystem::SaveManager& save_manager)
 	{
 		std::string_view req_type = request.method_string();
 
@@ -193,6 +196,7 @@ namespace http_handler
 						else
 						{
 							game.ServerTick(ticks);
+							save_manager.Listen(ticks);
 
 							response_status = http::status::ok;
 						}
@@ -792,7 +796,7 @@ namespace http_handler
 	}
 
 	template <typename Send>
-	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send, bool rest_api_ticks)
+	void HandleRequest(auto&& req, model::Game& game, const fs::path& static_path, Send&& send, bool rest_api_ticks, savesystem::SaveManager& save_manager)
 	{
 		using std::chrono::duration_cast;
 		using std::chrono::microseconds;
@@ -824,7 +828,7 @@ namespace http_handler
 		{
 			if (std::string_view(target.begin(), target.begin() + 5) == "/api/"sv || std::string_view(target.begin(), target.begin() + 4) == "/api"sv)
 			{
-				HandleRequestAPI(send, game, target, text_response, req, rest_api_ticks);
+				HandleRequestAPI(send, game, target, text_response, req, rest_api_ticks, save_manager);
 				return;
 			}
 		}
@@ -854,10 +858,11 @@ namespace http_handler
 	class RequestHandler
 	{
 	public:
-		explicit RequestHandler(const fs::path& static_path, model::Game& game, bool rest_api_ticks)
+		explicit RequestHandler(const fs::path& static_path, model::Game& game, bool rest_api_ticks, savesystem::SaveManager& save_manager)
 			: static_path_{ static_path },
 			game_{ game },
-			rest_api_ticks_(rest_api_ticks)
+			rest_api_ticks_(rest_api_ticks),
+			save_manager_(save_manager)
 		{}
 
 		RequestHandler(const RequestHandler&) = delete;
@@ -868,12 +873,13 @@ namespace http_handler
 		void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send)
 		{
 			// Обработать запрос request и отправить ответ, используя send
-			HandleRequest(req, game_, static_path_, send, rest_api_ticks_);
+			HandleRequest(req, game_, static_path_, send, rest_api_ticks_, save_manager_);
 		}
 
 	private:
 		const fs::path static_path_;
 		model::Game& game_;
 		bool rest_api_ticks_;
+		savesystem::SaveManager& save_manager_;
 	};
 }  // namespace http_handler

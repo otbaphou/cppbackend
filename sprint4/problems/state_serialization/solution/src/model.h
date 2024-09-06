@@ -226,6 +226,19 @@ namespace model
 			roads_.emplace_back(road);
 		}
 
+		const Road& FindRoad(Point start, Point end) const
+		{
+			for (const Road& road : roads_)
+			{
+				if (road.GetStart() == start && road.GetEnd() == end)
+				{
+					return road;
+				}
+			}
+
+			throw std::exception("Couldn't restore the save data: Invalid road!");
+		}
+
 		void AddBuilding(const Building& building) {
 			buildings_.emplace_back(building);
 		}
@@ -255,6 +268,11 @@ namespace model
 		}
 
 		void GenerateItems(unsigned int amount, const Data::MapExtras& extras);
+
+		void SetItems(const std::deque<Item>& items)
+		{
+			items_ = items;
+		}
 
 		int GetItemCount() const
 		{
@@ -322,6 +340,7 @@ namespace model
 	public:
 
 		Dog(Coordinates coords, const Map* map);
+		Dog(Coordinates coords, Road* current_road, Velocity vel, double speed, Direction dir, const Map* map);
 
 		void SetVel(double vel_x, double vel_y)
 		{
@@ -349,6 +368,16 @@ namespace model
 			return direction_;
 		}
 
+		const Map* GetCurrentMap() const
+		{
+			return current_map_;
+		}
+
+		Road* GetCurrentRoad() const
+		{
+			return current_road_;
+		}
+
 		const std::deque<std::shared_ptr<Road>>& GetRoadsByPos(Coordinates pos) const
 		{
 			int pos_x = static_cast<int>(pos.x + 0.5);
@@ -366,32 +395,14 @@ namespace model
 	private:
 
 		Coordinates position_;
-
 		Road* current_road_;
 
 		Velocity velocity_{ 0, 0 };
 		double speed_;
+
 		Direction direction_ = Direction::NORTH;
 
-		double width_ = 0.6;
-
-		bool is_moving = false;
-
 		const Map* current_map_;
-	};
-
-	class GameSession
-	{
-	public:
-
-		GameSession(Map* maptr)
-			:current_map_(maptr)
-		{}
-
-	private:
-
-		Map* current_map_;
-
 	};
 
 	class Player
@@ -402,6 +413,14 @@ namespace model
 			current_map_(maptr),
 			id_(id),
 			pet_(dog){}
+
+		Player(Dog* dog, size_t id, std::string username, const Map* maptr, int64_t score, std::deque<Item> items)
+			:username_(username),
+			current_map_(maptr),
+			bag_(items),
+			id_(id),
+			pet_(dog),
+			score_(score){}
 
 		std::string GetName() const
 		{
@@ -471,7 +490,12 @@ namespace model
 
 		int64_t GetScore() const
 		{
-			return score;
+			return score_;
+		}
+
+		Dog* GetDog() const
+		{
+			return pet_;
 		}
 
 	private:
@@ -482,7 +506,7 @@ namespace model
 		std::deque<Item> bag_;
 		const size_t id_;
 
-		int64_t score = 0;
+		int64_t score_ = 0;
 
 		Dog* pet_;
 	};
@@ -513,6 +537,15 @@ namespace model
 		void MoveAllByMap(double ms, std::string& id);
 
 		std::deque<Coordinates> GetLooterPositionsByMap(const std::string& id) const;
+
+		Dog* InsertDog(const Dog& dog);
+
+		void InsertPlayer(const Player& pl, const std::string& token, const std::string& map_id);
+
+		const std::unordered_map<std::string, Player*>& GetTokenToPlayerTable() const
+		{
+			return token_to_player_;
+		}
 
 	private:
 
@@ -597,15 +630,19 @@ namespace model
 			return extra_data_.GetTable(id);
 		}
 
+		Players& GetPlayerManager()
+		{
+			return player_manager_;
+		}
+
 		void AddTable(const std::string& id, boost::json::array& table)
 		{
 			extra_data_.AddTable(id, table);
 		}
 
-	private:
+		void SetLootOnMap(const std::deque<Item>& items, const std::string& map_id);
 
-		//Used to seed a random number
-		long int dynamic_seed_ = 0;
+	private:
 
 		double global_dog_speed_ = 1;
 		int global_bag_capacity = 3;
@@ -614,11 +651,13 @@ namespace model
 		using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
 
 		std::vector<Map> maps_;
-		std::deque<GameSession> sessions_;
 		MapIdToIndex map_id_to_index_;
 
 		Players& player_manager_;
 		Data::MapExtras extra_data_;
+
+		int save_period_ = -1;
+		std::string save_file_ = "";
 	};
 
 }  // namespace model

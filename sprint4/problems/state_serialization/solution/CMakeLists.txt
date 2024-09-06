@@ -15,8 +15,7 @@ endif()
 
 find_package(Threads REQUIRED)
 
-add_executable(game_server
-	src/main.cpp
+add_library(game_server_lib STATIC
 	src/http_server.cpp
 	src/http_server.h
 	src/sdk.h
@@ -34,7 +33,24 @@ add_executable(game_server
 	src/extra_data.h
 	src/collision_detector.cpp
 	src/collision_detector.h
+	src/model_serialization.h
+	src/save_manager.h
 )
 
-target_include_directories(game_server PRIVATE CONAN_PKG::boost)
-target_link_libraries(game_server PRIVATE CONAN_PKG::boost CONAN_PKG::catch2 Threads::Threads)
+target_include_directories(game_server_lib PUBLIC CONAN_PKG::boost)
+target_link_libraries(game_server_lib PUBLIC CONAN_PKG::boost Threads::Threads)
+
+add_executable(game_server
+	src/main.cpp
+)
+
+target_link_libraries(game_server PRIVATE game_server_lib)
+
+add_executable(game_server_tests
+	tests/collision-detector-tests.cpp
+	tests/loot_generator_tests.cpp
+	tests/model-tests.cpp
+	tests/state-serialization-tests.cpp
+)
+
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_server_lib)

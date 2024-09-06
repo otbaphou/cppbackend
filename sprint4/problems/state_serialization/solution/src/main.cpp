@@ -10,6 +10,7 @@
 
 #include "json_loader.h"
 #include "request_handler.h"
+#include "save_manager.h"
 
 using namespace std::literals;
 namespace net = boost::asio;
@@ -118,8 +119,10 @@ private:
 struct Args
 {
 	std::string config_file;
+	std::string save_file;
 	std::string static_dir;
 	int tick_period;
+	int autosave_period = -1;
 	bool randomize = false;
 };
 
@@ -134,7 +137,9 @@ struct Args
 	desc.add_options()
 		("help,h", "produce help message")
 		("tick-period,t", po::value<int>(&args.tick_period), "set tick period")
+		("save-state-period,a", po::value<int>(&args.autosave_period), "set autosave period")
 		("config-file,c", po::value(&args.config_file)->value_name("file"s), "set config file path")
+		("state-file,s", po::value(&args.save_file)->value_name("file"s), "set save file path")
 		("www-root,w", po::value(&args.static_dir)->value_name("dir"s), "set static files root")
 		("randomize-spawn-points", "spawn dogs at random positions");	
 
@@ -167,6 +172,18 @@ struct Args
 		if (args.tick_period <= 0)
 		{
 			throw std::runtime_error("Invalid tick speed!"s);
+		}
+	}
+
+	if (!vm.contains("save-state-period"s) || !vm.contains("state-file"))
+	{
+		args.autosave_period = -1;
+	}
+	else
+	{
+		if (args.autosave_period <= 0)
+		{
+			throw std::runtime_error("Invalid autosave period!"s);
 		}
 	}
 
@@ -204,9 +221,17 @@ int main(int argc, const char* argv[])
 
 	try
 	{
+
 		// 1. Загружаем карту из файла и построить модель игры
 		model::Players player_manager_{args.randomize};
 		model::Game game = json_loader::LoadGame(args.config_file, player_manager_);
+
+		savesystem::SaveManager save_manager{ args.save_file, args.autosave_period, game };
+
+		if(!args.config_file.empty())
+		{
+			save_manager.LoadState();
+		}
 
 		// 2. Инициализируем io_context
 		const unsigned num_threads = std::thread::hardware_concurrency();
@@ -216,7 +241,7 @@ int main(int argc, const char* argv[])
 
 		// 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
 		bool rest_api_tick_system = args.tick_period == -1;
-		http_handler::RequestHandler handler{ args.static_dir, game, rest_api_tick_system};
+		http_handler::RequestHandler handler{ args.static_dir, game, rest_api_tick_system, save_manager};
 
 		const auto address = net::ip::make_address("0.0.0.0");
 		constexpr net::ip::port_type port = 8080;
@@ -236,11 +261,15 @@ int main(int argc, const char* argv[])
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "Server has started..."sv;
 		
 		auto api_strand = net::make_strand(ioc);
+
 		if (!rest_api_tick_system)
 		{
-			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&game](std::chrono::milliseconds delta)
+			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&game, &save_manager](std::chrono::milliseconds delta)
 				{
-					game.ServerTick(static_cast<double>(delta.count()));
+					double ms = static_cast<double>(delta.count());
+
+					game.ServerTick(ms);
+					save_manager.Listen(ms);
 				}
 			);
 
@@ -252,8 +281,13 @@ int main(int argc, const char* argv[])
 			{
 				ioc.run();
 			});
-	}
 
+		if(!args.save_file.empty())
+		{
+			save_manager.SaveState();
+		}
+
+	}
 	catch (const std::exception& ex)
 	{
 		//Logging server exit with errors
@@ -263,6 +297,7 @@ int main(int argc, const char* argv[])
 
 		return EXIT_FAILURE;
 	}
+
 
 	//Logging server exit without errors
 	json::object logger_data{ {"code", 0} };

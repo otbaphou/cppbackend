@@ -159,6 +159,17 @@ namespace model
 		}
 	}
 
+	void Game::SetLootOnMap(const std::deque<Item>& items, const std::string& map_id)
+	{
+		for (Map& map : maps_)
+		{
+			if (*map.GetId() == map_id)
+			{
+				map.SetItems(items);
+			}
+		}
+	}
+
 	//===Map===	
 	void Map::AddOffice(Office office) 
 	{
@@ -317,6 +328,15 @@ namespace model
 		Point end = roads[0]->GetEnd();
 	}
 
+
+	Dog::Dog(Coordinates coords, Road* current_road, Velocity vel, double speed, Direction dir, const Map* map)
+	:position_(coords),
+	current_road_(current_road),
+	velocity_(vel),
+	speed_(speed),
+	direction_(dir),
+	current_map_(map){}
+
 	void Dog::MoveVertical(double distance)
 	{
 		if (distance == 0)
@@ -371,6 +391,7 @@ namespace model
 		position_.y = desired_point;
 		return;
 	}
+
 	void Dog::MoveHorizontal(double distance)
 	{
 		if (distance == 0)
@@ -558,6 +579,22 @@ namespace model
 		}
 
 		return result;
+	}
+
+	Dog* Players::InsertDog(const Dog& dog)
+	{
+		dogs_.push_back(dog);
+		return &dogs_.back();
+	}
+
+	void Players::InsertPlayer(const Player& player, const std::string& token, const std::string& map_id)
+	{
+		players_.push_back(player);
+
+		Player* player_ptr = &players_.back();
+
+		token_to_player_.emplace(token, player_ptr);
+		map_id_to_players_[map_id].push_back(player_ptr);
 	}
 
 	//===Player===
