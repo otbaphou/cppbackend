@@ -587,7 +587,7 @@ namespace model
 		return &dogs_.back();
 	}
 
-	void Players::InsertPlayer(const Player& player, const std::string& token, const std::string& map_id)
+	void Players::InsertPlayer(const Player player, const std::string& token, const std::string& map_id)
 	{
 		players_.push_back(player);
 

@@ -538,7 +538,7 @@ namespace model
 
 		Dog* InsertDog(const Dog& dog);
 
-		void InsertPlayer(const Player& pl, const std::string& token, const std::string& map_id);
+		void InsertPlayer(const Player pl, const std::string& token, const std::string& map_id);
 
 		const std::unordered_map<std::string, Player*>& GetTokenToPlayerTable() const
 		{

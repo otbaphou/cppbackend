@@ -434,6 +434,7 @@ namespace http_handler
 					{
 						response.emplace("code", "unknownToken");
 						response.emplace("message", "Player token has not been found");
+						response.emplace("token", token);
 
 						response_status = http::status::unauthorized;
 					}
