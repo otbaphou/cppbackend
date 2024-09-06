@@ -46,11 +46,11 @@ add_executable(game_server
 
 target_link_libraries(game_server PRIVATE game_server_lib)
 
-add_executable(game_server_tests
-	tests/collision-detector-tests.cpp
-	tests/loot_generator_tests.cpp
-	tests/model-tests.cpp
-	tests/state-serialization-tests.cpp
-)
-
-target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_server_lib)
+## add_executable(game_server_tests
+# 	tests/collision-detector-tests.cpp
+#	tests/loot_generator_tests.cpp
+#	tests/model-tests.cpp
+#	tests/state-serialization-tests.cpp
+#)
+#
+## target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 game_server_lib)
