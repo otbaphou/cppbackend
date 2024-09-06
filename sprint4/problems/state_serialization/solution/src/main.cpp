@@ -228,7 +228,7 @@ int main(int argc, const char* argv[])
 
 		savesystem::SaveManager save_manager{ args.save_file, args.autosave_period, game };
 
-		if(!args.config_file.empty())
+		if (!args.config_file.empty())
 		{
 			save_manager.LoadState();
 		}
