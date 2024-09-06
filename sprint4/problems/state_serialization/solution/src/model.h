@@ -235,8 +235,6 @@ namespace model
 					return road;
 				}
 			}
-
-			throw std::exception("Couldn't restore the save data: Invalid road!");
 		}
 
 		void AddBuilding(const Building& building) {
