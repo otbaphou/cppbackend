@@ -545,6 +545,14 @@ namespace model
 			return token_to_player_;
 		}
 
+		std::string GetToken() const
+		{
+			for (const auto& entry : token_to_player_)
+			{
+				return entry.first();
+			}
+		}
+
 	private:
 
 		bool randomize_;
