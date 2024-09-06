@@ -549,7 +549,7 @@ namespace model
 		{
 			for (const auto& entry : token_to_player_)
 			{
-				return entry.first();
+				return entry.first;
 			}
 		}
 
