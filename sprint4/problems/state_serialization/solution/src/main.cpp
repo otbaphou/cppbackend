@@ -263,12 +263,12 @@ int main(int argc, const char* argv[])
 		
 		auto api_strand = net::make_strand(ioc);
 
-		net::signal_set signals(ioc, SIGINT, SIGTERM);
-		signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
-			if (!ec) {
-				ioc.stop();
-			}
-			});
+		//net::signal_set signals(ioc, SIGINT, SIGTERM);
+		//signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
+		//	if (!ec) {
+		//		ioc.stop();
+		//	}
+		//	});
 
 		if (!rest_api_tick_system)
 		{
