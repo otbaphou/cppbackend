@@ -238,6 +238,16 @@ int main(int argc, const char* argv[])
 		const unsigned num_threads = std::thread::hardware_concurrency();
 		net::io_context ioc(num_threads);
 
+		net::signal_set signals(ioc, SIGINT, SIGTERM);
+		signals.async_wait([&ioc, &args, &save_manager](const sys::error_code& ec, [[maybe_unused]] int signal_number)
+			{
+				if (!ec)
+				{
+					ioc.stop();
+
+				}
+			});
+
 		// 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
 
 		// 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
@@ -277,29 +287,16 @@ int main(int argc, const char* argv[])
 			ticker->Start();
 		}
 
-		net::signal_set signals(ioc, SIGINT, SIGTERM);
-		signals.async_wait([&ioc, &args, &save_manager](const sys::error_code& ec, [[maybe_unused]] int signal_number)
-			{
-				if (!ec)
-				{
-					ioc.stop();
-
-					if (signal_number != 9 && signal_number != 15)
-					{
-						if (!args.save_file.empty())
-						{
-							save_manager.SaveState();
-						}
-					}
-				}
-			});
-
 		// 6. Запускаем обработку асинхронных операций
 		RunWorkers(std::max(1u, num_threads), [&ioc]
 			{
 				ioc.run();
 			});
 
+		if (!args.save_file.empty())
+		{
+			save_manager.SaveState();
+		}
 	}
 	catch (const std::exception& ex)
 	{
