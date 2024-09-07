@@ -48,8 +48,8 @@ namespace savesystem
 
 			if (ms_since_last_call >= save_period_)
 			{
-				SaveState();
 				ms_since_last_call = 0;
+				SaveState();
 			}
 		}
 
@@ -174,7 +174,7 @@ namespace savesystem
 		model::Game& game_;
 
 		std::filesystem::path filepath_;
-		int save_period_;
+		int save_period_ = -1;
 
 		int ms_since_last_call = 0;
 	};
