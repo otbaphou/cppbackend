@@ -237,7 +237,7 @@ int main(int argc, const char* argv[])
 		const unsigned num_threads = std::thread::hardware_concurrency();
 		net::io_context ioc(num_threads);
 
-		net::signal_set signals(ioc, SIGINT);
+		net::signal_set signals(ioc, SIGINT, SIGTERM);
 		signals.async_wait([&ioc, &args, &save_manager](const sys::error_code& ec, [[maybe_unused]] int signal_number)
 			{
 				if (!ec)
@@ -303,10 +303,7 @@ int main(int argc, const char* argv[])
 				ioc.run();
 			});
 
-		if (!args.save_file.empty())
-		{
-			save_manager.SaveState();
-		}
+
 	}
 	catch (const std::exception& ex)
 	{
