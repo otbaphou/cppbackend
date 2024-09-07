@@ -551,6 +551,7 @@ namespace model
 			{
 				return entry.first;
 			}
+			return "None";
 		}
 
 	private:

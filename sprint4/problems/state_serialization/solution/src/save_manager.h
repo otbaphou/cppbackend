@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <cstdio>
 
 #include "model.h"
 #include "model_serialization.h"
@@ -113,6 +114,7 @@ namespace savesystem
 			OutputArchive output_archive{ stream };
 
 			const std::vector<model::Map>& maps = game_.GetMaps();
+			const Players& player_manager = game_.GetPlayerManager();
 
 			//Steps to save a game state:
 
@@ -134,23 +136,35 @@ namespace savesystem
 				output_archive << players.size();
 
 				//For each player we have to save the dog first, so we can point to it later
-				for (const auto& entry : game_.GetPlayerManager().GetTokenToPlayerTable())
+				for (const Player* player : game_.GetPlayerList(*map_id))
 				{
-					const Dog* dog = entry.second->GetDog();
+					const Dog* dog = player->GetDog();
 
 					serialization::DogRepr dog_repr{ *dog };
-					serialization::PlayerRepr player_repr{ *entry.second };
+					serialization::PlayerRepr player_repr{ *player };
 
 					//6. Saving the dog and player
 					output_archive << dog_repr << player_repr;
 
 					//7. Storing the token
-					output_archive << entry.first;
+					std::string token = "InvalidToken";
+
+					for (const auto& entry : player_manager.GetTokenToPlayerTable())
+					{
+						if (entry.second == player)
+						{
+							token = entry.first;
+							break;
+						}
+					}
+
+					output_archive << token;
 				}
 			}
 			stream.close();
 
 			//8. Rename the savefile
+			remove(filepath_);
 			std::filesystem::rename(temp_path, filepath_);
 		}
 
