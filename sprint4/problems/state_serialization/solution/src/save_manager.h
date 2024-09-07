@@ -121,7 +121,7 @@ namespace savesystem
 			//1. Save the total amount of maps
 			output_archive << maps.size();
 			
-			//2. For each map we save it's ID, list of items and player data
+			////2. For each map we save it's ID, list of items and player data
 			for (const model::Map& map : maps)
 			{
 				model::Map::Id map_id = map.GetId();

@@ -119,7 +119,7 @@ private:
 struct Args
 {
 	std::string config_file;
-	std::string save_file;
+	std::string save_file = "";
 	std::string static_dir;
 	int tick_period;
 	int autosave_period = -1;
@@ -231,6 +231,7 @@ int main(int argc, const char* argv[])
 		if (!args.save_file.empty())
 		{
 			save_manager.LoadState();
+			Sleep(100);
 		}
 
 		// 2. Инициализируем io_context
