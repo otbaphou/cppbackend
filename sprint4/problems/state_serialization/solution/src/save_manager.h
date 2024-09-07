@@ -53,7 +53,10 @@ namespace savesystem
 		}
 
 		void LoadState()
-		{				
+		{			
+			if(!std::filesystem::exists(filepath_))
+				return;
+			
 			std::ifstream stream{ filepath_ };
 			InputArchive input_archive{ stream };
 
