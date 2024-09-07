@@ -49,14 +49,17 @@ namespace savesystem
 			if (ms_since_last_call >= save_period_)
 			{
 				SaveState();
+				ms_since_last_call = 0;
 			}
 		}
 
 		void LoadState()
-		{			
-			if(!std::filesystem::exists(filepath_))
+		{
+			if (!std::filesystem::exists(filepath_))
+			{
 				return;
-			
+			}
+
 			std::ifstream stream{ filepath_ };
 			InputArchive input_archive{ stream };
 
@@ -170,8 +173,8 @@ namespace savesystem
 
 		model::Game& game_;
 
-		std::filesystem::path filepath_ = "/saves/GameData";
-		int save_period_ = -1;
+		std::filesystem::path filepath_;
+		int save_period_;
 
 		int ms_since_last_call = 0;
 	};
