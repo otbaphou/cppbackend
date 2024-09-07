@@ -17,7 +17,6 @@ namespace net = boost::asio;
 namespace sys = boost::system;
 namespace http = boost::beast::http;
 
-
 namespace
 {
 	// Запускает функцию fn на n потоках, включая текущий
@@ -233,7 +232,7 @@ int main(int argc, const char* argv[])
 			save_manager.LoadState();
 			std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		}
-		
+
 		// 2. Инициализируем io_context
 		const unsigned num_threads = std::thread::hardware_concurrency();
 		net::io_context ioc(num_threads);
@@ -247,6 +246,11 @@ int main(int argc, const char* argv[])
 
 				}
 			});
+
+		sig::scoped_connection connection = game.DoOnTick([&save_manager](int ms) mutable 
+		{
+			save_manager.Listen(ms);
+		});
 
 		// 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
 
@@ -280,7 +284,6 @@ int main(int argc, const char* argv[])
 					double ms = static_cast<double>(delta.count());
 
 					game.ServerTick(ms);
-					save_manager.Listen(ms);
 				}
 			);
 
