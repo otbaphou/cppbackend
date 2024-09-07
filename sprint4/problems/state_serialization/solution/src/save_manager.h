@@ -104,12 +104,12 @@ namespace savesystem
 
 		void SaveState()
 		{
-			std::filesystem::path temp_path = filepath_;
+			std::string temp_path = filepath_;
 
 			std::string temp_name = "temp_";
 
-			temp_name += filepath_.filename().string();
-			temp_path.replace_filename(temp_name);
+			temp_name += filepath_;
+			temp_path = temp_name;
 
 			std::ofstream stream{ temp_path };
 			OutputArchive output_archive{ stream };
@@ -165,7 +165,7 @@ namespace savesystem
 			//stream.close();
 
 			//8. Rename the savefile
-			remove(filepath_);
+			remove(std::filesystem::path{filepath_});
 			std::filesystem::rename(temp_path, filepath_);
 		}
 
@@ -173,7 +173,7 @@ namespace savesystem
 
 		model::Game& game_;
 
-		std::filesystem::path filepath_;
+		std::string filepath_;
 		int save_period_ = -1;
 
 		int ms_since_last_call = 0;
