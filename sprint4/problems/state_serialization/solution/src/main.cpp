@@ -157,13 +157,7 @@ struct Args
 	{
 		throw std::runtime_error("Config file has not been specified"s);
 	}
-	
-	if (!vm.contains("state-file"s)) 
-	{
-		args.save_file.clear();
-		args.autosave_period = -1;
-	}
-	
+
 	if (!vm.contains("www-root"s)) 
 	{
 		throw std::runtime_error("Static dir path isn't specified"s);
@@ -184,6 +178,13 @@ struct Args
 	if (!vm.contains("save-state-period"s) || !vm.contains("state-file"))
 	{
 		args.autosave_period = -1;
+	}
+	else
+	{
+		if (args.autosave_period <= 0)
+		{
+			throw std::runtime_error("Invalid autosave period!"s);
+		}
 	}
 
 	if (vm.contains("randomize-spawn-points"))
@@ -227,11 +228,12 @@ int main(int argc, const char* argv[])
 
 		savesystem::SaveManager save_manager{ args.save_file, args.autosave_period, game };
 
-		if(!args.save_file.empty())
+		if (!args.save_file.empty())
 		{
 			save_manager.LoadState();
+			std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		}
-
+		
 		// 2. Инициализируем io_context
 		const unsigned num_threads = std::thread::hardware_concurrency();
 		net::io_context ioc(num_threads);
@@ -261,6 +263,13 @@ int main(int argc, const char* argv[])
 		
 		auto api_strand = net::make_strand(ioc);
 
+		net::signal_set signals(ioc, SIGINT, SIGTERM);
+		signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
+			if (!ec) {
+				ioc.stop();
+			}
+			});
+
 		if (!rest_api_tick_system)
 		{
 			auto ticker = std::make_shared<Ticker>(api_strand, std::chrono::milliseconds(args.tick_period), [&game, &save_manager](std::chrono::milliseconds delta)
@@ -274,6 +283,8 @@ int main(int argc, const char* argv[])
 
 			ticker->Start();
 		}
+
+
 
 		// 6. Запускаем обработку асинхронных операций
 		RunWorkers(std::max(1u, num_threads), [&ioc]
