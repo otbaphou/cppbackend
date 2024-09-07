@@ -196,7 +196,6 @@ namespace http_handler
 						else
 						{
 							game.ServerTick(ticks);
-							save_manager.Listen(ticks);
 
 							response_status = http::status::ok;
 						}
@@ -434,12 +433,7 @@ namespace http_handler
 					{
 						response.emplace("code", "unknownToken");
 						response.emplace("message", "Player token has not been found");
-						response.emplace("token", token);
-						response.emplace("storedToken", game.GetPlayerManager().GetToken());
-						response.emplace("totalTokens", game.GetPlayerManager().GetTokenToPlayerTable().size());
-						response.emplace("totalPlayers1", game.GetPlayerManager().GetPlayerCount("map1"));
-						response.emplace("totalPlayersT", game.GetPlayerManager().GetPlayerCount("town"));
-						
+
 						response_status = http::status::unauthorized;
 					}
 					else
