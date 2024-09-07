@@ -227,7 +227,7 @@ int main(int argc, const char* argv[])
 
 		savesystem::SaveManager save_manager{ args.save_file, args.autosave_period, game };
 
-		if(args.save_file != "")
+		if(!args.save_file.empty())
 		{
 			save_manager.LoadState();
 		}
@@ -281,7 +281,7 @@ int main(int argc, const char* argv[])
 				ioc.run();
 			});
 
-		if(args.save_file != "")
+		if(!args.save_file.empty())
 		{
 			save_manager.SaveState();
 		}
