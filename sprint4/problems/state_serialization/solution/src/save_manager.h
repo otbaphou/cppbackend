@@ -162,7 +162,7 @@ namespace savesystem
 					output_archive << token;
 				}
 			}
-			stream.close();
+			//stream.close();
 
 			//8. Rename the savefile
 			remove(filepath_);
