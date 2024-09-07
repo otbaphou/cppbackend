@@ -436,7 +436,10 @@ namespace http_handler
 						response.emplace("message", "Player token has not been found");
 						response.emplace("token", token);
 						response.emplace("storedToken", game.GetPlayerManager().GetToken());
-
+						response.emplace("totalTokens", game.GetPlayerManager().GetTokenToPlayerTable().size());
+						response.emplace("totalPlayers1", game.GetPlayerManager().GetPlayerCount("map1"));
+						response.emplace("totalPlayersT", game.GetPlayerManager().GetPlayerCount("town"));
+						
 						response_status = http::status::unauthorized;
 					}
 					else

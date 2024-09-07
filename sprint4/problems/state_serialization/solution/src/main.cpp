@@ -157,7 +157,13 @@ struct Args
 	{
 		throw std::runtime_error("Config file has not been specified"s);
 	}
-
+	
+	if (!vm.contains("state-file"s)) 
+	{
+		args.save_file.clear();
+		args.autosave_period = -1;
+	}
+	
 	if (!vm.contains("www-root"s)) 
 	{
 		throw std::runtime_error("Static dir path isn't specified"s);
@@ -178,13 +184,6 @@ struct Args
 	if (!vm.contains("save-state-period"s) || !vm.contains("state-file"))
 	{
 		args.autosave_period = -1;
-	}
-	else
-	{
-		if (args.autosave_period <= 0)
-		{
-			throw std::runtime_error("Invalid autosave period!"s);
-		}
 	}
 
 	if (vm.contains("randomize-spawn-points"))
@@ -228,10 +227,9 @@ int main(int argc, const char* argv[])
 
 		savesystem::SaveManager save_manager{ args.save_file, args.autosave_period, game };
 
-		if (!args.save_file.empty())
+		if(args.save_file != "")
 		{
 			save_manager.LoadState();
-			Sleep(100);
 		}
 
 		// 2. Инициализируем io_context
@@ -283,7 +281,7 @@ int main(int argc, const char* argv[])
 				ioc.run();
 			});
 
-		if(!args.save_file.empty())
+		if(args.save_file != "")
 		{
 			save_manager.SaveState();
 		}
