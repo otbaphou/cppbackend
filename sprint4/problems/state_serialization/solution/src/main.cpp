@@ -230,7 +230,6 @@ int main(int argc, const char* argv[])
 		if (!args.save_file.empty())
 		{
 			save_manager.LoadState();
-			std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		}
 
 		// 2. Инициализируем io_context
@@ -302,7 +301,11 @@ int main(int argc, const char* argv[])
 			{
 				ioc.run();
 			});
-
+			
+		if (!args.save_file.empty())
+		{
+			save_manager.SaveState();
+		}
 
 	}
 	catch (const std::exception& ex)
