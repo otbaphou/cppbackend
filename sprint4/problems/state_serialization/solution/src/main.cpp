@@ -247,9 +247,16 @@ int main(int argc, const char* argv[])
 				}
 			});
 
-		sig::scoped_connection connection = game.DoOnTick([&save_manager](int ms) mutable 
+		sig::scoped_connection connection = game.DoOnTick([total = 0, &save_manager, &args](int ms) mutable 
 		{
-			save_manager.Listen(ms);
+			total += ms;
+
+			if (total >= args.autosave_period)
+			{
+				save_manager.SaveState();
+				total = 0;
+			}
+
 		});
 
 		// 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
@@ -284,6 +291,7 @@ int main(int argc, const char* argv[])
 					double ms = static_cast<double>(delta.count());
 
 					game.ServerTick(ms);
+					save_manager.Listen(ms);
 				}
 			);
 
