@@ -237,13 +237,15 @@ int main(int argc, const char* argv[])
 		const unsigned num_threads = std::thread::hardware_concurrency();
 		net::io_context ioc(num_threads);
 
+		bool terminated = false;
+
 		net::signal_set signals(ioc, SIGINT, SIGTERM);
-		signals.async_wait([&ioc, &args, &save_manager](const sys::error_code& ec, [[maybe_unused]] int signal_number)
+		signals.async_wait([&ioc, &args, &save_manager, &terminated](const sys::error_code& ec, [[maybe_unused]] int signal_number)
 			{
 				if (!ec)
 				{
 					ioc.stop();
-
+					terminated = true;
 				}
 			});
 
@@ -304,7 +306,7 @@ int main(int argc, const char* argv[])
 				ioc.run();
 			});
 
-		if (!args.save_file.empty())
+		if (!args.save_file.empty() && terminated == false)
 		{
 			save_manager.SaveState();
 		}
