@@ -26,8 +26,8 @@ FROM ubuntu:22.04 as run
 
 # Создадим пользователя www
 RUN groupadd -r www && useradd -r -g www www
-USER www
 
+USER www
 # Скопируем приложение со сборочного контейнера в директорию /app.
 # Не забываем также папку data, она пригодится.
 COPY --from=build /app/build/bin/game_server /app/

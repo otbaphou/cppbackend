@@ -1,6 +1,7 @@
 #include "http_server.h"
 #include "sdk.h"
 
+#include <boost/signals2.hpp>
 #include <boost/program_options.hpp>
 #include <boost/asio/io_context.hpp>
 #include <iostream>
@@ -16,6 +17,7 @@ using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
 namespace http = boost::beast::http;
+
 
 namespace
 {
@@ -118,7 +120,7 @@ private:
 struct Args
 {
 	std::string config_file;
-	std::string save_file = "";
+	std::string save_file;
 	std::string static_dir;
 	int tick_period;
 	int autosave_period = -1;
@@ -236,29 +238,17 @@ int main(int argc, const char* argv[])
 		const unsigned num_threads = std::thread::hardware_concurrency();
 		net::io_context ioc(num_threads);
 
-		net::signal_set signals(ioc, SIGINT, SIGTERM);
-		signals.async_wait([&ioc, &args, &save_manager](const sys::error_code& ec, [[maybe_unused]] int signal_number)
-			{
-				if (!ec)
-				{
-					ioc.stop();
-				}
-			});
-
-		sig::scoped_connection connection = game.DoOnTick([total = 0, &save_manager, &args](int ms) mutable 
-		{
-			total += ms;
-
-			if (total >= args.autosave_period)
-			{
-				save_manager.SaveState();
-				total = 0;
-			}
-
-		});
-
 		// 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
-
+		net::signal_set signals(ioc, SIGINT, SIGTERM);
+		
+        	signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) 
+        	{
+            		if (!ec) 
+            		{
+                		ioc.stop();
+            		}
+        	});	
+        	
 		// 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
 		bool rest_api_tick_system = args.tick_period == -1;
 		http_handler::RequestHandler handler{ args.static_dir, game, rest_api_tick_system, save_manager};
@@ -301,8 +291,8 @@ int main(int argc, const char* argv[])
 			{
 				ioc.run();
 			});
-			
-		if (!args.save_file.empty())
+
+		if(!args.save_file.empty())
 		{
 			save_manager.SaveState();
 		}

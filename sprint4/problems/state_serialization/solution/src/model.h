@@ -12,7 +12,6 @@
 #include "loot_generator.h"
 #include "extra_data.h"
 #include "tagged.h"
-#include <boost/signals2.hpp>
 
 //REMOVE LATER
 //UPD: Or maybe not, because it runs the logging..
@@ -565,18 +564,9 @@ namespace model
 		std::deque<Dog> dogs_;
 	};
 
-	namespace sig = boost::signals2;
-
 	class Game
 	{
-		using TickSignal = sig::signal<void(int delta)>;
-
 	public:
-
-		[[nodiscard]] sig::connection DoOnTick(const TickSignal::slot_type& handler) 
-		{
-			return tick_signal_.connect(handler);
-		}
 
 		Game(Players& pm)
 			:player_manager_(pm) {}
@@ -660,8 +650,6 @@ namespace model
 		void SetLootOnMap(const std::deque<Item>& items, const std::string& map_id);
 
 	private:
-
-		TickSignal tick_signal_;
 
 		double global_dog_speed_ = 1;
 		int global_bag_capacity = 3;

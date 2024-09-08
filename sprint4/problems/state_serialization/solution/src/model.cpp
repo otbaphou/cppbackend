@@ -120,7 +120,6 @@ namespace model
 			int item_id = loot_event.item_id;
 			removed_ids.push_back(item_id);
 
-			//TODO: Rework this system so items won't go to the wrong person when someone's inventory is full..
 			player_manager_.FindPlayerByIdx(loot_event.gatherer_id)->StoreItem(map.GetItemByIdx(item_id));
 		}
 

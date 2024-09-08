@@ -48,7 +48,6 @@ namespace savesystem
 
 			if (ms_since_last_call >= save_period_)
 			{
-				ms_since_last_call = 0;
 				SaveState();
 			}
 		}
@@ -57,6 +56,8 @@ namespace savesystem
 		{
 			if (!std::filesystem::exists(filepath_))
 			{
+				//std::ofstream blank_savefile(filepath_);
+				//blank_savefile.close();
 				return;
 			}
 
@@ -104,14 +105,15 @@ namespace savesystem
 
 		void SaveState()
 		{
-			std::string temp_path = filepath_;
+			//std::filesystem::path temp_path = filepath_;
 
-			std::string temp_name = "temp_";
+			//std::string temp_name = " ";
 
-			temp_name += filepath_;
-			temp_path = temp_name;
+			//temp_name += filepath_.filename().string();
+			//temp_path.replace_filename(temp_name);
 
-			std::ofstream stream{ temp_path };
+			//std::ofstream stream{ temp_path };
+			std::ofstream stream{ filepath_ };
 			OutputArchive output_archive{ stream };
 
 			const std::vector<model::Map>& maps = game_.GetMaps();
@@ -122,7 +124,7 @@ namespace savesystem
 			//1. Save the total amount of maps
 			output_archive << maps.size();
 			
-			////2. For each map we save it's ID, list of items and player data
+			//2. For each map we save it's ID, list of items and player data
 			for (const model::Map& map : maps)
 			{
 				model::Map::Id map_id = map.GetId();
@@ -162,19 +164,19 @@ namespace savesystem
 					output_archive << token;
 				}
 			}
-			//stream.close();
+			stream.close();
 
 			//8. Rename the savefile
-			remove(std::filesystem::path{filepath_});
-			std::filesystem::rename(temp_path, filepath_);
+			//remove(filepath_);
+			//std::filesystem::rename(temp_path, filepath_);
 		}
 
 	private:
 
 		model::Game& game_;
 
-		std::string filepath_;
-		int save_period_ = -1;
+		std::filesystem::path filepath_;
+		int save_period_;
 
 		int ms_since_last_call = 0;
 	};
