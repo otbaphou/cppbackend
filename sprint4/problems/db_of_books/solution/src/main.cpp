@@ -87,8 +87,16 @@ int main(int argc, const char* argv[]) {
 					book.emplace("title", title);
 					book.emplace("author", author);
 					book.emplace("year", year);
-					book.emplace("ISBN", ISBN.value_or(NULL));
-
+					
+					if(ISBN.has_value())
+					{
+						book.emplace("ISBN", ISBN.value());
+					}
+					else
+					{
+						book.emplace("ISBN", nullptr);
+					}
+					
 					books.push_back(book);
 				}
 
