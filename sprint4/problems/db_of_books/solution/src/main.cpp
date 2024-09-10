@@ -114,7 +114,7 @@ int main(int argc, const char* argv[]) {
 					}
 					else
 					{
-						ISBN_str = "NONE";
+						ISBN_str = "NULL";
 					}
 					
 					query_work.exec("INSERT INTO books (title, author, year, ISBN) VALUES ('" 
