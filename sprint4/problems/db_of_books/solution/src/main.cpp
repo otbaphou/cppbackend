@@ -108,20 +108,19 @@ int main(int argc, const char* argv[]) {
 					
 					if(ISBN.is_string())
 					{
-						ISBN_str += "\'";
-						ISBN_str += ISBN.as_string();
-						ISBN_str += "\'";
+						query_work.exec("INSERT INTO books (title, author, year, ISBN) VALUES ('" 
+						+ query_work.esc(static_cast<std::string>(payload.at("title").as_string())) + "', '"
+						+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', '"
+						+ std::to_string(payload.at("year").as_int64()) + ", "
+						+ query_work.esc(static_cast<std::string>(ISBN.as_string())) + "')");
 					}
 					else
 					{
-						ISBN_str = "NULL";
+						query_work.exec("INSERT INTO books (title, author, year) VALUES ('" 
+						+ query_work.esc(static_cast<std::string>(payload.at("title").as_string())) + "', '"
+						+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', '"
+						+ std::to_string(payload.at("year").as_int64()) + ")");
 					}
-					
-					query_work.exec("INSERT INTO books (title, author, year, ISBN) VALUES ('" 
-					+ query_work.esc(static_cast<std::string>(payload.at("title").as_string())) + "', '"
-					+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', "
-					+ std::to_string(payload.at("year").as_int64()) + ", "
-					+ query_work.esc(ISBN_str) + ")");
 
 					query_work.commit();
 				}
