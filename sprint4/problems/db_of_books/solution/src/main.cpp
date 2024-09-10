@@ -104,21 +104,19 @@ int main(int argc, const char* argv[]) {
 					pqxx::work query_work(manager.GetDB());
 					json::value ISBN = payload.at("ISBN");
 					
-					std::string ISBN_str = "";
-					
 					if(ISBN.is_string())
 					{
 						query_work.exec("INSERT INTO books (title, author, year, ISBN) VALUES ('" 
 						+ query_work.esc(static_cast<std::string>(payload.at("title").as_string())) + "', '"
-						+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', '"
-						+ std::to_string(payload.at("year").as_int64()) + ", "
-						+ query_work.esc(static_cast<std::string>(ISBN.as_string())) + "')");
+						+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', "
+						+ std::to_string(payload.at("year").as_int64()) + ", '"
+						+ query_work.esc(static_cast<std::string>(payload.at("ISBN").as_string())) + "')");
 					}
 					else
 					{
 						query_work.exec("INSERT INTO books (title, author, year) VALUES ('" 
 						+ query_work.esc(static_cast<std::string>(payload.at("title").as_string())) + "', '"
-						+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', '"
+						+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', "
 						+ std::to_string(payload.at("year").as_int64()) + ")");
 					}
 
