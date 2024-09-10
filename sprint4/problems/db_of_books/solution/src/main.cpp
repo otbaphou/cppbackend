@@ -50,16 +50,16 @@ int main(int argc, const char* argv[]) {
 		}
 
 		// Подключаемся к БД, указывая её параметры в качестве аргумента
-		TableManager manager(argv[1]);
+		//TableManager manager(argv[1]);
 		// Создаём транзакцию. Это понятие будет разобрано в следующих уроках.
-		pqxx::work w(manager.GetDB());
+		//pqxx::work w(manager.GetDB());
 		// Транзакция нужна, чтобы выполнять запросы.
 
 		// Используя транзакцию создадим таблицу в выбранной базе данных:
-		w.exec("CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY, title varchar(100), author varchar(100), year integer, ISBN char(13));");
+		//w.exec("CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY, title varchar(100), author varchar(100), year integer, ISBN char(13));");
 
 		// Применяем все изменения
-		w.commit();
+		//w.commit();
 
 		while (true)
 		{
@@ -67,17 +67,16 @@ int main(int argc, const char* argv[]) {
 			//pqxx::read_transaction read_t(manager.GetDB());
 
 			//bool status = true;
-			std::string query;
-			std::getline(std::cin, query);
+			//std::string query;
+			//std::getline(std::cin, query);
 
-			json::object request = json::parse(query).as_object();
+			//json::object request = json::parse(query).as_object();
 
-			boost::json::string req_str = request.at("action").as_string();
+			//boost::json::string req_str = request.at("action").as_string();
 			//json::object payload = request.at("payload").as_object();
 
-			if (req_str == "exit"s)
-				break;
-
+			//if (req_str == "exit"s)
+				//break;
 			//if (req_str == "add_book")
 			//{
 			//	std::string check_query = "SELECT id, title FROM books WHERE ISBN=";
