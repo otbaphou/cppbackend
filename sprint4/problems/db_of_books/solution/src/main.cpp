@@ -121,7 +121,7 @@ int main(int argc, const char* argv[]) {
 					+ query_work.esc(static_cast<std::string>(payload.at("title").as_string())) + "', '"
 					+ query_work.esc(static_cast<std::string>(payload.at("author").as_string())) + "', "
 					+ std::to_string(payload.at("year").as_int64()) + ", "
-					+ query_work.esc(ISBN_str) + ")");
+					+ ISBN_str + ")");
 
 					query_work.commit();
 				}
