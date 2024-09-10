@@ -3,6 +3,7 @@
 #include <iostream>
 #include <pqxx/pqxx>
 #include <boost/json.hpp>
+#include <optional>
 
 using namespace std::literals;
 
@@ -49,75 +50,88 @@ int main(int argc, const char* argv[]) {
 		// Транзакция нужна, чтобы выполнять запросы.
 
 		// Используя транзакцию создадим таблицу в выбранной базе данных:
-		w.exec("CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY, title varchar(100), author varchar(100), year integer, ISBN char(13));");
+		w.exec("CREATE TABLE IF NOT EXISTS books (id SERIAL PRIMARY KEY NOT NULL, title varchar(100) NOT NULL, author varchar(100) NOT NULL, year integer NOT NULL, ISBN char(13) CONSTRAINT must_be_different UNIQUE);");
 
 		// Применяем все изменения
 		w.commit();
 
 		while (true)
 		{
-			pqxx::work query_work(manager.GetDB());
-			pqxx::read_transaction read_t(manager.GetDB());
 
 			bool status = true;
 			std::string query;
 			std::getline(std::cin, query);
 
-			json::object request = json::parse(query).as_object();
+			json::value raw_request = json::parse(query);
+			json::object request = raw_request.as_object();
 
 			boost::json::string req_str = request.at("action").as_string();
 			json::object payload = request.at("payload").as_object();
 
 			if (req_str == "exit"s)
 				break;
-			if (req_str == "add_book")
-			{
-				std::string check_query = "SELECT id, title FROM books WHERE ISBN=";
-				check_query += payload.at("ISBN").as_string();
-				check_query += " LIMIT 1;";
-				std::optional query_result = read_t.query01<int, std::string>(check_query);
-
-				json::object result;
-
-				if (query_result)
-				{
-					status = false;
-				}
-				else
-				{
-					query_work.exec("INSERT INTO movies (title, year) VALUES ('"
-					+ static_cast<std::string>(payload.at("title").as_string()) + "', "
-					+ static_cast<std::string>(payload.at("author").as_string()) + "', "
-					+ static_cast<std::string>(payload.at("year").as_string()) + "', "
-					+ static_cast<std::string>(payload.at("ISBN").as_string()) + ")");
-
-					query_work.commit();
-				}
-
-				result.emplace("result", status);
-				std::cout << json::serialize(result) << std::endl;
-			}
-
+				
 			if (req_str == "all_books")
 			{
+				pqxx::read_transaction read_t(manager.GetDB());
+				
 				json::array books;
 
-				auto query_text = "SELECT * FROM books"_zv;
+				auto query_text = "SELECT * FROM books ORDER BY year DESC, title ASC, author ASC, ISBN ASC"_zv;
 
 				// Выполняем запрос и итерируемся по строкам ответа
-				for (auto [id, title, author, year, ISBN] : read_t.query<int, std::string, std::string, int, std::string>(query_text))
+				for (auto [id, title, author, year, ISBN] : read_t.query<int, std::string, std::string, int, std::optional<std::string>>(query_text))
 				{
 					json::object book;
 					book.emplace("id", id);
 					book.emplace("title", title);
 					book.emplace("author", author);
 					book.emplace("year", year);
-					book.emplace("ISBN", ISBN);
+					book.emplace("ISBN", ISBN.value_or("null"));
 
 					books.push_back(book);
 				}
 
 				std::cout << json::serialize(books) << std::endl;
+			}
+			
+			if (req_str == "add_book")
+			{
+				json::object result;
+
+				try
+				{
+					pqxx::work query_work(manager.GetDB());
+					json::value ISBN = payload.at("ISBN");
+					
+					std::string ISBN_str = "";
+					
+					if(ISBN.is_string())
+					{
+						ISBN_str += "\'";
+						ISBN_str += ISBN.as_string();
+						ISBN_str += "\'";
+					}
+					else
+					{
+						ISBN_str = "null";
+					}
+					
+					query_work.exec("INSERT INTO books (title, author, year, ISBN) VALUES ('" 
+					+ static_cast<std::string>(payload.at("title").as_string()) + "', '"
+					+ static_cast<std::string>(payload.at("author").as_string()) + "', "
+					+ std::to_string(payload.at("year").as_int64()) + ", "
+					+ ISBN_str + ")");
+
+					query_work.commit();
+				}
+				catch(...)
+				{
+					status = false;
+				}
+
+				result.emplace("result", status);
+				std::cout << json::serialize(result) << std::endl;
 			}
 		}
 	}
