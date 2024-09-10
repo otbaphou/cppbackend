@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(book_manager CXX)
+project(postgres CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
-add_executable(book_manager
-	src/main.cpp
-)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
-target_link_libraries(book_manager PRIVATE CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
+add_executable(book_manager src/main.cpp)
+target_link_libraries(book_manager CONAN_PKG::libpqxx Threads::Threads CONAN_PKG::boost)
