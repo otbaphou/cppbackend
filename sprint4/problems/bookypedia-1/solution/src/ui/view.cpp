@@ -4,6 +4,9 @@
 #include <cassert>
 #include <iostream>
 
+
+#include "../domain/author.h"
+#include "../domain/book.h"
 #include "../app/use_cases.h"
 #include "../menu/menu.h"
 
@@ -52,23 +55,31 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
 }
 
 bool View::AddAuthor(std::istream& cmd_input) const {
-    try {
+    try 
+    {
         std::string name;
         std::getline(cmd_input, name);
         boost::algorithm::trim(name);
         use_cases_.AddAuthor(std::move(name));
-    } catch (const std::exception&) {
+    } 
+    catch (const std::exception&) 
+    {
         output_ << "Failed to add author"sv << std::endl;
     }
     return true;
 }
 
 bool View::AddBook(std::istream& cmd_input) const {
-    try {
-        if (auto params = GetBookParams(cmd_input)) {
+    try 
+    {
+        if (auto params = GetBookParams(cmd_input)) 
+        {
             assert(!"TODO: implement book adding");
         }
-    } catch (const std::exception&) {
+
+    } 
+    catch (const std::exception&) 
+    {
         output_ << "Failed to add book"sv << std::endl;
     }
     return true;
@@ -86,11 +97,15 @@ bool View::ShowBooks() const {
 
 bool View::ShowAuthorBooks() const {
     // TODO: handle error
-    try {
-        if (auto author_id = SelectAuthor()) {
+    try 
+    {
+        if (auto author_id = SelectAuthor()) 
+        {
             PrintVector(output_, GetAuthorBooks(*author_id));
         }
-    } catch (const std::exception&) {
+    } 
+    catch (const std::exception&) 
+    {
         throw std::runtime_error("Failed to Show Books");
     }
     return true;
@@ -141,15 +156,25 @@ std::optional<std::string> View::SelectAuthor() const {
 
 std::vector<detail::AuthorInfo> View::GetAuthors() const 
 {
-    std::vector<detail::AuthorInfo> dst_autors;
-    assert(!"TODO: implement GetAuthors()");
-    return dst_autors;
+    std::vector<detail::AuthorInfo> dst_authors;
+    
+    for (const domain::Author& author : use_cases_.GetAuthors())
+    {
+        dst_authors.emplace_back(author.GetId().ToString(), author.GetName());
+    }
+
+    return dst_authors;
 }
 
 std::vector<detail::BookInfo> View::GetBooks() const 
 {
     std::vector<detail::BookInfo> books;
-    assert(!"TODO: implement GetBooks()");
+
+    for (const domain::Book& book : use_cases_.GetBooks())
+    {
+        books.emplace_back(book.GetName(), book.GetReleaseYear());
+    }
+
     return books;
 }
 

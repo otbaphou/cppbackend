@@ -3,6 +3,7 @@
 #include <pqxx/transaction>
 
 #include "../domain/author.h"
+#include "../domain/book.h"
 
 namespace postgres {
 
@@ -13,6 +14,20 @@ public:
     }
     
     void Save(const domain::Author& author) override;
+    const std::vector<domain::Author>& Load() const override;
+private:
+    pqxx::connection& connection_;
+};
+
+class BookRepositoryImpl : public domain::BookRepository 
+{
+public:
+    explicit BookRepositoryImpl(pqxx::connection& connection)
+        : connection_{ connection } 
+    {}
+
+    void Save(const domain::Book& book) override;
+    const std::vector<domain::Book>& Load() const override;
 
 private:
     pqxx::connection& connection_;
@@ -26,9 +41,15 @@ public:
         return authors_;
     }
 
+    BookRepositoryImpl& GetBooks()& 
+    {
+        return books_;
+    }
+
 private:
     pqxx::connection connection_;
     AuthorRepositoryImpl authors_{connection_};
+    BookRepositoryImpl books_{ connection_ };
 };
 
 }  // namespace postgres
