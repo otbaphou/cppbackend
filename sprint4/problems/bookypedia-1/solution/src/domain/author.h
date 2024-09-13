@@ -35,7 +35,7 @@ private:
 class AuthorRepository {
 public:
     virtual void Save(const Author& author) = 0;
-    virtual const std::vector<domain::Author>& Load() const = 0;
+    virtual const std::vector<domain::Author> Load() const = 0;
 
 protected:
     ~AuthorRepository() = default;

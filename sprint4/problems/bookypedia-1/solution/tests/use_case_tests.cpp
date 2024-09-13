@@ -13,7 +13,7 @@ namespace {
 			saved_authors.emplace_back(author);
 		}
 
-		const std::vector<domain::Author>& Load() const override
+		const std::vector<domain::Author> Load() const override
 		{
 			return saved_authors;
 		}
@@ -27,7 +27,7 @@ namespace {
 			saved_books.emplace_back(book);
 		}
 
-		const std::vector<domain::Book>& Load() const override
+		const std::vector<domain::Book> Load() const override
 		{
 			return saved_books;
 		}

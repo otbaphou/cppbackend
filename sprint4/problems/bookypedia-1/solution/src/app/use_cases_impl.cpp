@@ -27,12 +27,12 @@ namespace app
 		books_.Save({BookId::New(), AuthorId::New(), title, pub_year });
 	}
 
-	const std::vector<domain::Author>& UseCasesImpl::GetAuthors() const
+	const std::vector<domain::Author> UseCasesImpl::GetAuthors() const
 	{
 		return authors_.Load();
 	}
 
-	const std::vector<domain::Book>& UseCasesImpl::GetBooks() const
+	const std::vector<domain::Book> UseCasesImpl::GetBooks() const
 	{
 		return books_.Load();
 	}

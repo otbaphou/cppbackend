@@ -1,6 +1,7 @@
 #include "postgres.h"
 
 #include <pqxx/zview.hxx>
+#include <pqxx/pqxx>
 
 namespace postgres {
 
@@ -18,23 +19,22 @@ namespace postgres {
 		work.commit();
 	}
 
-	const std::vector<domain::Author>& AuthorRepositoryImpl::Load() const
+	const std::vector<domain::Author> AuthorRepositoryImpl::Load() const
 	{
 		std::vector<domain::Author> result;
 
-		pqxx::read_transaction read{ connection_ };
+		pqxx::read_transaction read_t(connection_);
 
 		auto query_text = "SELECT * FROM authors ORDER BY name DESC, id ASC"_zv;
 
-		// Выполняем запрос и итерируемся по строкам ответа
-		//for (auto [id, name] : read.query<std::string, std::string>(query_text))
-		//{
+		//Выполняем запрос и итерируемся по строкам ответа
+		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
+		{
+			domain::AuthorId author_id = domain::AuthorId::FromString("id");
+			domain::Author author{ author_id, name};
 
-		//	domain::AuthorId author_id = domain::AuthorId::FromString("id");
-		//	domain::Author author{ author_id, name};
-
-		//	result.push_back(author);
-		//}
+			result.push_back(author);
+		}
 
 		return result;
 	}
@@ -48,23 +48,22 @@ namespace postgres {
 		work.commit();
 	}
 
-	const std::vector<domain::Book>& BookRepositoryImpl::Load() const
+	const std::vector<domain::Book> BookRepositoryImpl::Load() const
 	{
 		std::vector<domain::Book> result;
 
-		pqxx::read_transaction read{ connection_ };
+		pqxx::read_transaction read_t(connection_);
 		auto query_text = "SELECT * FROM books ORDER BY title DESC, id ASC"_zv;
 
-		//for (auto [id, author_id, title, publication_year] : read.query<std::string, std::string, std::string, int>(query_text))
-		//{
+		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
+		{
+			domain::BookId book_id = domain::BookId::FromString("id");
+			domain::AuthorId author_id_tmp = domain::AuthorId::FromString("author_id");
 
-		//	domain::BookId book_id = domain::BookId::FromString("id");
-		//	domain::AuthorId author_id_tmp = domain::AuthorId::FromString("author_id");
+			domain::Book book{ book_id, author_id_tmp, title, publication_year };
 
-		//	domain::Book book{ book_id, author_id_tmp, title, publication_year };
-
-		//	result.push_back(book);
-		//}
+			result.push_back(book);
+		}
 
 		return result;
 	}
@@ -74,7 +73,7 @@ namespace postgres {
 	{
 		pqxx::work work{ connection_ };
 		work.exec(R"(CREATE TABLE IF NOT EXISTS authors ( id UUID CONSTRAINT author_id_constraint PRIMARY KEY, name varchar(100) UNIQUE NOT NULL );)"_zv);
-		work.exec(R"(CREATE TABLE IF NOT EXISTS books ( id UUID CONSTRAINT book_id_constraint PRIMARY KEY, author_id NOT NULL, title varchar(100) NOT NULL, publication_year integer);)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS books ( id UUID CONSTRAINT book_id_constraint PRIMARY KEY, author_id UUID NOT NULL, title varchar(100) NOT NULL, publication_year integer);)"_zv);
 
 		// ... создать другие таблицы
 

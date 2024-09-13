@@ -55,7 +55,7 @@ namespace domain
     {
     public:
         virtual void Save(const Book& book) = 0;
-        virtual const std::vector<domain::Book>& Load() const = 0;
+        virtual const std::vector<domain::Book> Load() const = 0;
 
     protected:
         ~BookRepository() = default;
