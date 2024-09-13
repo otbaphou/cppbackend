@@ -15,16 +15,9 @@ namespace app
 	}
 
 
-	void UseCasesImpl::AddBook(int pub_year, const std::string& title)
+	void UseCasesImpl::AddBook(int pub_year, const std::string& title, const std::string& author_id)
 	{
-		//TODO: Complete this operation
-		//Show the list of authors on request
-		//Pass the selected id on successful attempt
-
-		int author_id;
-		std::cout << "Select author:" << std::endl;
-		std::cin >> author_id;
-		books_.Save({BookId::New(), AuthorId::New(), title, pub_year });
+		books_.Save({BookId::New(), AuthorId::FromString(author_id), title, pub_year });
 	}
 
 	const std::vector<domain::Author> UseCasesImpl::GetAuthors() const
@@ -35,6 +28,11 @@ namespace app
 	const std::vector<domain::Book> UseCasesImpl::GetBooks() const
 	{
 		return books_.Load();
+	}
+	
+	const std::vector<domain::Book> UseCasesImpl::GetAuthorBooks(const std::string& author_id) const
+	{
+		return books_.LoadByAuthor(author_id);
 	}
 
 }  // namespace app

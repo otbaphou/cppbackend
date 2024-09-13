@@ -27,7 +27,8 @@ public:
     {}
 
     void Save(const domain::Book& book) override;
-    const std::vector<domain::Book> Load() const override;
+    const std::vector<domain::Book> Load() const override;	
+    const std::vector<domain::Book> LoadByAuthor(const std::string& author_id) const override;
 
 private:
     pqxx::connection& connection_;

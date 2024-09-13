@@ -74,7 +74,8 @@ bool View::AddBook(std::istream& cmd_input) const {
     {
         if (auto params = GetBookParams(cmd_input)) 
         {
-            assert(!"TODO: implement book adding");
+            detail::AddBookParams p = params.value();
+            use_cases_.AddBook(p.publication_year, p.title, p.author_id);
         }
 
     } 
@@ -181,7 +182,12 @@ std::vector<detail::BookInfo> View::GetBooks() const
 std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id) const 
 {
     std::vector<detail::BookInfo> books;
-    assert(!"TODO: implement GetAuthorBooks()");
+
+    for (const domain::Book& book : use_cases_.GetAuthorBooks(author_id))
+    {
+        books.emplace_back(book.GetName(), book.GetReleaseYear());
+    }
+
     return books;
 }
 

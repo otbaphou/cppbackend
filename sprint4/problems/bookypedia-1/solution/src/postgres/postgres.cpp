@@ -68,6 +68,28 @@ namespace postgres {
 		return result;
 	}
 
+	const std::vector<domain::Book> BookRepositoryImpl::LoadByAuthor(const std::string& author_id ) const
+	{
+		std::vector<domain::Book> result;
+
+		pqxx::read_transaction read_t(connection_);
+		std::string query_text = "SELECT * FROM books WHERE author_id='";
+		query_text = query_text + author_id;
+		query_text = query_text + "' ORDER BY title DESC, id ASC";
+
+		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
+		{
+			domain::BookId book_id = domain::BookId::FromString("id");
+			domain::AuthorId author_id_tmp = domain::AuthorId::FromString("author_id");
+
+			domain::Book book{ book_id, author_id_tmp, title, publication_year };
+
+			result.push_back(book);
+		}
+
+		return result;
+	}
+
 	Database::Database(pqxx::connection connection)
 		: connection_{ std::move(connection) }
 	{
