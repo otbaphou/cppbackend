@@ -60,7 +60,14 @@ bool View::AddAuthor(std::istream& cmd_input) const {
         std::string name;
         std::getline(cmd_input, name);
         boost::algorithm::trim(name);
-        use_cases_.AddAuthor(std::move(name));
+        if (!name.empty())
+        {
+            use_cases_.AddAuthor(std::move(name));
+        }
+        else
+        {
+            output_ << "Failed to add author"sv << std::endl;
+        }
     } 
     catch (const std::exception&) 
     {
@@ -159,10 +166,10 @@ std::vector<detail::AuthorInfo> View::GetAuthors() const
 {
     std::vector<detail::AuthorInfo> dst_authors;
     
-    for (const domain::Author& author : use_cases_.GetAuthors())
-    {
-        dst_authors.emplace_back(author.GetId().ToString(), author.GetName());
-    }
+    //for (const domain::Author& author : use_cases_.GetAuthors())
+    //{
+    //    dst_authors.emplace_back(author.GetId().ToString(), author.GetName());
+    //}
 
     return dst_authors;
 }
@@ -171,10 +178,10 @@ std::vector<detail::BookInfo> View::GetBooks() const
 {
     std::vector<detail::BookInfo> books;
 
-    for (const domain::Book& book : use_cases_.GetBooks())
-    {
-        books.emplace_back(book.GetName(), book.GetReleaseYear());
-    }
+    //for (const domain::Book& book : use_cases_.GetBooks())
+    //{
+    //    books.emplace_back(book.GetName(), book.GetReleaseYear());
+    //}
 
     return books;
 }
@@ -183,10 +190,10 @@ std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id)
 {
     std::vector<detail::BookInfo> books;
 
-    for (const domain::Book& book : use_cases_.GetAuthorBooks(author_id))
-    {
-        books.emplace_back(book.GetName(), book.GetReleaseYear());
-    }
+    //for (const domain::Book& book : use_cases_.GetAuthorBooks(author_id))
+    //{
+    //    books.emplace_back(book.GetName(), book.GetReleaseYear());
+    //}
 
     return books;
 }
