@@ -25,7 +25,7 @@ namespace postgres {
 
 		pqxx::read_transaction read_t(connection_);
 
-		auto query_text = "SELECT * FROM authors ORDER BY name ASC, id ASC"_zv;
+		auto query_text = "SELECT id, name FROM authors ORDER BY name ASC, id ASC"_zv;
 
 		//Выполняем запрос и итерируемся по строкам ответа
 		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
@@ -53,7 +53,7 @@ namespace postgres {
 		std::vector<domain::Book> result;
 
 		pqxx::read_transaction read_t(connection_);
-		auto query_text = "SELECT * FROM books ORDER BY title ASC"_zv;
+		auto query_text = "SELECT id, author_id, title, publication_year FROM books ORDER BY title ASC"_zv;
 
 		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
 		{
@@ -73,7 +73,7 @@ namespace postgres {
 		std::vector<domain::Book> result;
 
 		pqxx::read_transaction read_t(connection_);
-		std::string query_text = "SELECT * FROM books WHERE author_id='";
+		std::string query_text = "SELECT id, author_id, title, publication_year FROM books WHERE author_id='";
 		query_text = query_text + domain::AuthorId::FromString(author_id).ToString();
 		query_text = query_text + "' ORDER BY title ASC, id ASC";
 
