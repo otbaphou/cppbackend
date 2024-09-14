@@ -94,8 +94,8 @@ namespace postgres {
 		: connection_{ std::move(connection) }
 	{
 		pqxx::work work{ connection_ };
-		work.exec(R"(CREATE TABLE IF NOT EXISTS authors ( id UUID CONSTRAINT author_id_constraint PRIMARY KEY, name varchar(100) UNIQUE NOT NULL );)"_zv);
-		work.exec(R"(CREATE TABLE IF NOT EXISTS books ( id UUID CONSTRAINT book_id_constraint PRIMARY KEY, author_id UUID NOT NULL, title varchar(100) NOT NULL, publication_year integer);)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS authors (id UUID CONSTRAINT firstindex PRIMARY KEY, name varchar(100) NOT NULL UNIQUE);)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS books (id UUID PRIMARY KEY, title VARCHAR(100) NOT NULL, publication_year INT, author_id UUID, CONSTRAINT fk_authors FOREIGN KEY(author_id) REFERENCES authors(id));)"_zv);
 
 		// ... создать другие таблицы
 
