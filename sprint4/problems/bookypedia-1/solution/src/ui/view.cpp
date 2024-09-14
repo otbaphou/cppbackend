@@ -87,7 +87,7 @@ namespace ui {
 
                 if (!p.title.empty())
                 {
-                    use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+                    //use_cases_.AddBook(p.publication_year, p.title, p.author_id);
                 }
             }
             else
