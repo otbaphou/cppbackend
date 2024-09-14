@@ -16,7 +16,7 @@ namespace postgres {
 		// Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
 		pqxx::transaction<pqxx::isolation_level::read_committed> work{ connection_ };
 		work.exec_params(R"(INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2;)"_zv, author.GetId().ToString(), author.GetName());
-		work.commit();
+		//work.commit();
 	}
 
 	const std::vector<domain::Author> AuthorRepositoryImpl::Load() const
@@ -35,7 +35,7 @@ namespace postgres {
 
 			result.push_back(author);
 		}
-		read_t.commit();
+		//read_t.commit();
 
 		return result;
 	}
@@ -46,7 +46,7 @@ namespace postgres {
 		pqxx::transaction<pqxx::isolation_level::read_committed> work{ connection_ };
 		work.exec_params(R"(INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET title=$2;)"_zv, 
 			book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetName(), book.GetReleaseYear());
-		work.commit();
+		//work.commit();
 	}
 
 	const std::vector<domain::Book> BookRepositoryImpl::Load() const
@@ -65,7 +65,7 @@ namespace postgres {
 
 			result.push_back(book);
 		}
-		read_t.commit();
+		//read_t.commit();
 
 		return result;
 	}
@@ -89,7 +89,7 @@ namespace postgres {
 
 			result.push_back(book);
 		}
-		read_t.commit();
+		//read_t.commit();
 
 		return result;
 	}
