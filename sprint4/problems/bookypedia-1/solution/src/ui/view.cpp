@@ -80,8 +80,8 @@ namespace ui {
 
     bool View::AddBook(std::istream& cmd_input) const 
     {
-        //try
-        //{
+        try
+        {
             if (auto params = GetBookParams(cmd_input))
             {
                 detail::AddBookParams p = params.value();
@@ -90,18 +90,18 @@ namespace ui {
                 {
                     use_cases_.AddBook(p.publication_year, p.title, p.author_id);
                 }
+                return true;
             }/*
             else
             {
                 return false;
             }*/
 
-        //}
-        //catch (const std::exception& ex)
-        //{
-            //output_ << "Failed to add book"sv << std::endl;
-            //output_ << "Failed to add book: "sv << ex.what() << std::endl;
-        //}
+        }
+        catch (const std::exception& ex)
+        {
+            output_ << "Failed to add book"sv << std::endl;
+        }
         return true;
     }
 
