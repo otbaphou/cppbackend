@@ -78,34 +78,6 @@ namespace ui {
         return true;
     }
 
-    bool View::AddBook(std::istream& cmd_input) const 
-    {
-                    assert(0 == 1);
-        try
-        {
-            if (auto params = GetBookParams(cmd_input))
-            {
-                detail::AddBookParams p = params.value();
-
-                if (!p.title.empty())
-                {
-                    //use_cases_.AddBook(p.publication_year, p.title, p.author_id);
-                }
-            }/*
-            else
-            {
-                return false;
-            }*/
-
-        }
-        catch (const std::exception& ex)
-        {
-            output_ << "Failed to add book"sv << std::endl;
-            //output_ << "Failed to add book: "sv << ex.what() << std::endl;
-        }
-        return true;
-    }
-
     bool View::ShowAuthors() const {
         PrintVector(output_, GetAuthors());
         return true;
