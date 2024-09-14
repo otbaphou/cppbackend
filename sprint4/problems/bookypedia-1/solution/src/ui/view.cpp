@@ -45,7 +45,7 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
     , output_{output} {
     menu_.AddAction(  //
         "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-        // либо
+        // Г«ГЁГЎГ®
         // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
     );
     menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
@@ -83,11 +83,12 @@ bool View::AddBook(std::istream& cmd_input) const {
     {
         if (auto params = GetBookParams(cmd_input)) 
         {
-            //if (params.has_value())
-            //{
-            //    detail::AddBookParams p = params.value();
-            //    use_cases_.AddBook(p.publication_year, p.title, p.author_id);
-            //}
+            detail::AddBookParams p = params.value();
+            use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+        }
+        else
+        {
+            return false;
         }
 
     } 
