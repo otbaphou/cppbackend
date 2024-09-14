@@ -85,7 +85,7 @@ namespace ui {
             {
                 detail::AddBookParams p = params.value();
 
-                if (p.title.empty())
+                if (!p.title.empty())
                 {
                     assert(0 == 1);
                     //use_cases_.AddBook(p.publication_year, p.title, p.author_id);
@@ -99,8 +99,8 @@ namespace ui {
         }
         catch (const std::exception& ex)
         {
-            //output_ << "Failed to add book"sv << std::endl;
-            output_ << "Failed to add book: "sv << ex.what() << std::endl;
+            output_ << "Failed to add book"sv << std::endl;
+            //output_ << "Failed to add book: "sv << ex.what() << std::endl;
         }
         return true;
     }
