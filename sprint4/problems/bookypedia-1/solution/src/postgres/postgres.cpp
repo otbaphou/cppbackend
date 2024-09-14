@@ -30,7 +30,7 @@ namespace postgres {
 		//Выполняем запрос и итерируемся по строкам ответа
 		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
 		{
-			domain::AuthorId author_id = domain::AuthorId::FromString("id");
+			domain::AuthorId author_id = domain::AuthorId::FromString(id);
 			domain::Author author{ author_id, name};
 
 			result.push_back(author);
@@ -57,8 +57,8 @@ namespace postgres {
 
 		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
 		{
-			domain::BookId book_id = domain::BookId::FromString("id");
-			domain::AuthorId author_id_tmp = domain::AuthorId::FromString("author_id");
+			domain::BookId book_id = domain::BookId::FromString(id);
+			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
 
 			domain::Book book{ book_id, author_id_tmp, title, publication_year };
 
@@ -79,8 +79,8 @@ namespace postgres {
 
 		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
 		{
-			domain::BookId book_id = domain::BookId::FromString("id");
-			domain::AuthorId author_id_tmp = domain::AuthorId::FromString("author_id");
+			domain::BookId book_id = domain::BookId::FromString(id);
+			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
 
 			domain::Book book{ book_id, author_id_tmp, title, publication_year };
 
