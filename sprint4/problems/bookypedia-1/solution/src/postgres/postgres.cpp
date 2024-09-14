@@ -14,9 +14,9 @@ namespace postgres {
 		// В будущих уроках вы узнаете про паттерн Unit of Work, при помощи которого сможете несколько
 		// запросов выполнить в рамках одной транзакции.
 		// Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
-		pqxx::transaction<pqxx::isolation_level::read_committed> work{ connection_ };
+		pqxx::work work{ connection_ };
 		work.exec_params(R"(INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2;)"_zv, author.GetId().ToString(), author.GetName());
-		//work.commit();
+		work.commit();
 	}
 
 	const std::vector<domain::Author> AuthorRepositoryImpl::Load() const
@@ -35,18 +35,16 @@ namespace postgres {
 
 			result.push_back(author);
 		}
-		//read_t.commit();
-
+		
 		return result;
 	}
 
 
 	void BookRepositoryImpl::Save(const domain::Book& book)
 	{
-		pqxx::transaction<pqxx::isolation_level::read_committed> work{ connection_ };
-		work.exec_params(R"(INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET title=$2;)"_zv, 
+		pqxx::work work{ connection_ };
+		work.exec_params(R"(INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET author_id=$2, title=$3, publication_year=$4;)"_zv, 
 			book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetName(), book.GetReleaseYear());
-		//work.commit();
 	}
 
 	const std::vector<domain::Book> BookRepositoryImpl::Load() const
