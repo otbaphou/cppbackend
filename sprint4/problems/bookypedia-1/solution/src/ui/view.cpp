@@ -178,10 +178,10 @@ std::vector<detail::BookInfo> View::GetBooks() const
 {
     std::vector<detail::BookInfo> books;
 
-    //for (const domain::Book& book : use_cases_.GetBooks())
-    //{
-    //    books.emplace_back(book.GetName(), book.GetReleaseYear());
-    //}
+    for (const domain::Book& book : use_cases_.GetBooks())
+    {
+        books.emplace_back(book.GetName(), book.GetReleaseYear());
+    }
 
     return books;
 }
@@ -190,10 +190,10 @@ std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id)
 {
     std::vector<detail::BookInfo> books;
 
-    //for (const domain::Book& book : use_cases_.GetAuthorBooks(author_id))
-    //{
-    //    books.emplace_back(book.GetName(), book.GetReleaseYear());
-    //}
+    for (const domain::Book& book : use_cases_.GetAuthorBooks(author_id))
+    {
+        books.emplace_back(book.GetName(), book.GetReleaseYear());
+    }
 
     return books;
 }
