@@ -78,6 +78,11 @@ namespace ui {
         return true;
     }
 
+    bool View::AddBook(std::istream& cmd_input) const 
+    {
+        return true;
+    }
+
     bool View::ShowAuthors() const {
         PrintVector(output_, GetAuthors());
         return true;
