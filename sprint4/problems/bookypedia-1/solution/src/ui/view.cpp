@@ -81,11 +81,11 @@ bool View::AddBook(std::istream& cmd_input) const {
     {
         if (auto params = GetBookParams(cmd_input)) 
         {
-            if (params.has_value())
-            {
-                detail::AddBookParams p = params.value();
-                use_cases_.AddBook(p.publication_year, p.title, p.author_id);
-            }
+            //if (params.has_value())
+            //{
+            //    detail::AddBookParams p = params.value();
+            //    use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+            //}
         }
 
     } 
@@ -110,10 +110,10 @@ bool View::ShowAuthorBooks() const {
     // TODO: handle error
     try 
     {
-        //if (auto author_id = SelectAuthor()) 
-        //{
-        //    PrintVector(output_, GetAuthorBooks(*author_id));
-        //}
+        if (auto author_id = SelectAuthor()) 
+        {
+            PrintVector(output_, GetAuthorBooks(*author_id));
+        }
     } 
     catch (const std::exception&) 
     {
