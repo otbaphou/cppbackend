@@ -89,11 +89,11 @@ namespace ui {
                 {
                     //use_cases_.AddBook(p.publication_year, p.title, p.author_id);
                 }
-            }
+            }/*
             else
             {
                 return false;
-            }
+            }*/
 
         }
         catch (const std::exception& ex)
@@ -121,11 +121,11 @@ namespace ui {
             if (auto author_id = SelectAuthor())
             {
                 PrintVector(output_, GetAuthorBooks(*author_id));
-            }
+            }/*
             else
             {
                 return true;
-            }
+            }*/
         }
         catch (const std::exception& ex)
         {
