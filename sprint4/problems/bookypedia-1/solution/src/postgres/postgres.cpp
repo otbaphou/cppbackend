@@ -25,7 +25,7 @@ namespace postgres {
 
 		pqxx::read_transaction read_t(connection_);
 
-		auto query_text = "SELECT id, name FROM authors ORDER BY name ASC"_zv;
+		auto query_text = "SELECT id, name FROM authors ORDER BY name"_zv;
 
 		//Выполняем запрос и итерируемся по строкам ответа
 		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
