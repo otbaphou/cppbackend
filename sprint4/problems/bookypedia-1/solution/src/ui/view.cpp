@@ -84,7 +84,11 @@ namespace ui {
             if (auto params = GetBookParams(cmd_input))
             {
                 detail::AddBookParams p = params.value();
-                use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+
+                if (!p.title.empty())
+                {
+                    use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+                }
             }
             else
             {
@@ -110,8 +114,8 @@ namespace ui {
         return true;
     }
 
-    bool View::ShowAuthorBooks() const {
-        // TODO: handle error
+    bool View::ShowAuthorBooks() const 
+    {
         try
         {
             if (auto author_id = SelectAuthor())
@@ -140,11 +144,6 @@ namespace ui {
         std::getline(cmd_input, params.title);
 
         boost::algorithm::trim(params.title);
-
-        if (params.title.empty()) 
-        {
-            throw std::runtime_error("Title cannot be empty");
-        }
 
         auto author_id = SelectAuthor();
 
