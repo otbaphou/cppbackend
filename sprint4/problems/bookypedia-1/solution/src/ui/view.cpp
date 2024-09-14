@@ -29,9 +29,11 @@ std::ostream& operator<<(std::ostream& out, const BookInfo& book) {
 }  // namespace detail
 
 template <typename T>
-void PrintVector(std::ostream& out, const std::vector<T>& vector) {
+void PrintVector(std::ostream& out, const std::vector<T>& vector) 
+{
     int i = 1;
-    for (auto& value : vector) {
+    for (auto& value : vector) 
+    {
         out << i++ << " " << value << std::endl;
     }
 }
@@ -43,7 +45,7 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
     , output_{output} {
     menu_.AddAction(  //
         "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-        // Ã«Ã¨Ã¡Ã®
+        // ëèáî
         // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
     );
     menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
@@ -114,10 +116,15 @@ bool View::ShowAuthorBooks() const {
         {
             PrintVector(output_, GetAuthorBooks(*author_id));
         }
+        else
+        {
+            return false;
+        }
     } 
-    catch (const std::exception&) 
+    catch (const std::exception& ex) 
     {
-        throw std::runtime_error("Failed to Show Books");
+        throw std::runtime_error(std::string("Failed to Show Books: ") + ex.what());
+        //throw std::runtime_error("Failed to Show Books");
     }
     return true;
 }
@@ -131,7 +138,7 @@ std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input
 
     auto author_id = SelectAuthor();
 
-    if (not author_id.has_value())
+    if (!author_id.has_value())
     {
         return std::nullopt;
     }
@@ -161,7 +168,7 @@ std::optional<std::string> View::SelectAuthor() const {
     }
 
     --author_idx;
-    if (author_idx < 0 or author_idx >= authors.size()) 
+    if (author_idx < 0 || author_idx >= authors.size()) 
     {
         throw std::runtime_error("Invalid author num");
     }
