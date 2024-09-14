@@ -77,7 +77,7 @@ namespace postgres {
 		pqxx::read_transaction read_t(connection_);
 
 		std::string query_text = "SELECT id, author_id, title, publication_year FROM books WHERE author_id='";
-		query_text = query_text + domain::AuthorId::FromString(author_id).ToString();
+		query_text = query_text + author_id;
 		query_text = query_text + "' ORDER BY publication_year, title";
 
 		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
