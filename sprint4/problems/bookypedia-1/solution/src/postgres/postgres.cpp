@@ -43,7 +43,7 @@ namespace postgres {
 	void BookRepositoryImpl::Save(const domain::Book& book)
 	{
 		pqxx::work work{ connection_ };
-		work.exec_params(R"(INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2;)"_zv, 
+		work.exec_params(R"(INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4);)"_zv, 
 			book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetName(), book.GetReleaseYear());
 		work.commit();
 	}
