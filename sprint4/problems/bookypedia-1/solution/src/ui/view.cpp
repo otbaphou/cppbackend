@@ -83,8 +83,8 @@ bool View::AddBook(std::istream& cmd_input) const {
         {
             if (params.has_value())
             {
-                detail::AddBookParams p = params.value();
-                use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+                detail::AddBookParams p = params.value();//p.author_id
+                use_cases_.AddBook(p.publication_year, p.title, domain::AuthorId::New().ToString());
             }
         }
 

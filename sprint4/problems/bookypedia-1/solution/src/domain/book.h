@@ -19,7 +19,7 @@ namespace domain
     public:
         Book(BookId id, AuthorId author_id, std::string name, int year)
             : id_(std::move(id)),
-              author_id_(author_id),
+              author_id_(std::move(author_id)),
               title_(std::move(name)),
               release_year_(year) 
         {}
