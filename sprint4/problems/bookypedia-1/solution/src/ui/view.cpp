@@ -124,7 +124,7 @@ namespace ui {
             }
             else
             {
-                //return false;
+                return true;
             }
         }
         catch (const std::exception& ex)
