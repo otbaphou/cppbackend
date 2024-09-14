@@ -14,7 +14,7 @@ namespace postgres {
 		// В будущих уроках вы узнаете про паттерн Unit of Work, при помощи которого сможете несколько
 		// запросов выполнить в рамках одной транзакции.
 		// Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
-		pqxx::work work{ connection_ };
+		pqxx::transaction<pqxx::isolation_level::repeatable_read> work{ connection_ };
 		work.exec_params(R"(INSERT INTO authors (id, name) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET name=$2;)"_zv, author.GetId().ToString(), author.GetName());
 		work.commit();
 	}
@@ -43,7 +43,7 @@ namespace postgres {
 
 	void BookRepositoryImpl::Save(const domain::Book& book)
 	{
-		pqxx::work work{ connection_ };
+		pqxx::transaction<pqxx::isolation_level::repeatable_read> work{ connection_ };
 		work.exec_params(R"(INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4);)"_zv, 
 			book.GetId().ToString(), book.GetAuthorId().ToString(), book.GetName(), book.GetReleaseYear());
 		work.commit();
@@ -75,6 +75,7 @@ namespace postgres {
 		std::vector<domain::Book> result;
 
 		pqxx::read_transaction read_t(connection_);
+
 		std::string query_text = "SELECT id, author_id, title, publication_year FROM books WHERE author_id='";
 		query_text = query_text + domain::AuthorId::FromString(author_id).ToString();
 		query_text = query_text + "' ORDER BY publication_year ASC, title ASC";
@@ -97,8 +98,8 @@ namespace postgres {
 		: connection_{ std::move(connection) }
 	{
 		pqxx::work work{ connection_ };
-		work.exec(R"(CREATE TABLE IF NOT EXISTS authors (id UUID CONSTRAINT firstindex PRIMARY KEY, name varchar(100) NOT NULL UNIQUE);)"_zv);
-		work.exec(R"(CREATE TABLE IF NOT EXISTS books (id UUID PRIMARY KEY, title VARCHAR(100) NOT NULL, publication_year INT, author_id UUID, CONSTRAINT fk_authors FOREIGN KEY(author_id) REFERENCES authors(id));)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS authors ( id UUID CONSTRAINT author_id_constraint PRIMARY KEY, name varchar(100) UNIQUE NOT NULL );)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS books ( id UUID CONSTRAINT book_id_constraint PRIMARY KEY, author_id UUID NOT NULL, title varchar(100) NOT NULL, publication_year integer);)"_zv);
 
 		// ... создать другие таблицы
 
