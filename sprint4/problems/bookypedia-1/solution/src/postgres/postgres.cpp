@@ -35,6 +35,7 @@ namespace postgres {
 
 			result.push_back(author);
 		}
+		read_t.commit();
 
 		return result;
 	}
@@ -64,6 +65,7 @@ namespace postgres {
 
 			result.push_back(book);
 		}
+		read_t.commit();
 
 		return result;
 	}
@@ -86,6 +88,7 @@ namespace postgres {
 
 			result.push_back(book);
 		}
+		read_t.commit();
 
 		return result;
 	}
