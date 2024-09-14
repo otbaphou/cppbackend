@@ -64,7 +64,7 @@ namespace ui {
             boost::algorithm::trim(name);
             if (!name.empty())
             {
-                use_cases_.AddAuthor(std::move(name));
+                //use_cases_.AddAuthor(std::move(name));
             }
             else
             {
