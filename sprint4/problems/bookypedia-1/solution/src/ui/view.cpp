@@ -78,10 +78,11 @@ namespace ui {
         return true;
     }
 
-    bool View::AddBook(std::istream& cmd_input) const {
+    bool View::AddBook(std::istream& cmd_input) const 
+    {
+                    assert(0 == 1);
         try
         {
-                    assert(0 == 1);
             if (auto params = GetBookParams(cmd_input))
             {
                 detail::AddBookParams p = params.value();
