@@ -95,7 +95,7 @@ namespace ui {
         catch (const std::exception& ex)
         {
             //output_ << "Failed to add book"sv << std::endl;
-            output_ << "Failed to add book"sv << std::endl;
+            output_ << "Failed to add book: "sv << ex.what() << std::endl;
         }
         return true;
     }
@@ -125,8 +125,8 @@ namespace ui {
         }
         catch (const std::exception& ex)
         {
-            //throw std::runtime_error(std::string("Failed to Show Books: ") + ex.what());
             throw std::runtime_error("Failed to Show Books");
+            return false;
         }
         return true;
     }
@@ -135,8 +135,16 @@ namespace ui {
         detail::AddBookParams params;
 
         cmd_input >> params.publication_year;
+
+        cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::getline(cmd_input, params.title);
+
         boost::algorithm::trim(params.title);
+
+        if (params.title.empty()) 
+        {
+            throw std::runtime_error("Title cannot be empty");
+        }
 
         auto author_id = SelectAuthor();
 
@@ -144,11 +152,9 @@ namespace ui {
         {
             return std::nullopt;
         }
-        else
-        {
-            params.author_id = author_id.value();
-            return params;
-        }
+
+        params.author_id = author_id.value();
+        return params;
     }
 
     std::optional<std::string> View::SelectAuthor() const {
