@@ -43,7 +43,7 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
     , output_{output} {
     menu_.AddAction(  //
         "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-        // либо
+        // Г«ГЁГЎГ®
         // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
     );
     menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
@@ -166,10 +166,10 @@ std::vector<detail::AuthorInfo> View::GetAuthors() const
 {
     std::vector<detail::AuthorInfo> dst_authors;
     
-    //for (const domain::Author& author : use_cases_.GetAuthors())
-    //{
-    //    dst_authors.emplace_back(author.GetId().ToString(), author.GetName());
-    //}
+    for (const domain::Author& author : use_cases_.GetAuthors())
+    {
+        dst_authors.emplace_back(author.GetId().ToString(), author.GetName());
+    }
 
     return dst_authors;
 }
