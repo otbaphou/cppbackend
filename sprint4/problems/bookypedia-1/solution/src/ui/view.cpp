@@ -140,7 +140,7 @@ namespace ui {
 
         cmd_input >> params.publication_year;
 
-        cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        //cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::getline(cmd_input, params.title);
 
         boost::algorithm::trim(params.title);
