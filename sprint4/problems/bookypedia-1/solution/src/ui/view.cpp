@@ -81,13 +81,13 @@ namespace ui {
     bool View::AddBook(std::istream& cmd_input) const {
         try
         {
+                    assert(0 == 1);
             if (auto params = GetBookParams(cmd_input))
             {
                 detail::AddBookParams p = params.value();
 
                 if (!p.title.empty())
                 {
-                    assert(0 == 1);
                     //use_cases_.AddBook(p.publication_year, p.title, p.author_id);
                 }
             }/*
