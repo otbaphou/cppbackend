@@ -130,7 +130,6 @@ namespace ui {
         catch (const std::exception& ex)
         {
             throw std::runtime_error("Failed to Show Books");
-            return false;
         }
         return true;
     }
