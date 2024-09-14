@@ -79,7 +79,7 @@ namespace ui {
     }
 
     bool View::AddBook(std::istream& cmd_input) const 
-    {/*
+    {
         //try
         //{
             if (auto params = GetBookParams(cmd_input))
@@ -101,8 +101,8 @@ namespace ui {
         //{
             //output_ << "Failed to add book"sv << std::endl;
             //output_ << "Failed to add book: "sv << ex.what() << std::endl;
-        //}*/
-        return false;
+        //}
+        return true;
     }
 
     bool View::ShowAuthors() const {
