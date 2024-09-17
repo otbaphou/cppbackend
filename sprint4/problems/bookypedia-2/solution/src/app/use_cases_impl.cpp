@@ -25,7 +25,7 @@ namespace app
 		return authors_.Load();
 	}
 
-	const std::vector<domain::Book> UseCasesImpl::GetBooks() const
+	const std::vector<domain::BookRepresentation> UseCasesImpl::GetBooks() const
 	{
 		return books_.Load();
 	}
@@ -33,6 +33,11 @@ namespace app
 	const std::vector<domain::Book> UseCasesImpl::GetAuthorBooks(const std::string& author_id) const
 	{
 		return books_.LoadByAuthor(author_id);
+	}
+
+	const std::vector<domain::Book> UseCasesImpl::GetBooksWithName(const std::string& book_name) const
+	{
+		return books_.LoadByName(book_name);
 	}
 
 }  // namespace app

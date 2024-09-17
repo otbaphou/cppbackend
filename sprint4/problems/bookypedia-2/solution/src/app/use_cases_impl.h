@@ -16,8 +16,9 @@ namespace app
 		void AddAuthor(const std::string& name) override;
 		void AddBook(int pub_year, const std::string& title, const std::string& author_id) override;
 		const std::vector<domain::Author> GetAuthors() const override;
-		const std::vector<domain::Book> GetBooks() const override;
+		const std::vector<domain::BookRepresentation> GetBooks() const override;
 		const std::vector<domain::Book> GetAuthorBooks(const std::string& author_id) const override;
+		const std::vector<domain::Book> GetBooksWithName(const std::string& author_id) const override;
 
 	private:
 		domain::AuthorRepository& authors_;

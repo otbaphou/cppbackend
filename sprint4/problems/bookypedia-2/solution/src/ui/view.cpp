@@ -21,7 +21,8 @@ namespace ui {
             return out;
         }
 
-        std::ostream& operator<<(std::ostream& out, const BookInfo& book) {
+        std::ostream& operator<<(std::ostream& out, const BookInfo& book) 
+        {
             out << book.title << ", " << book.publication_year;
             return out;
         }
@@ -38,6 +39,15 @@ namespace ui {
         }
     }
 
+    void PrintBooks(std::ostream& out, const std::vector<detail::BookInfo>& vector)
+    {
+        int i = 1;
+        for (const detail::BookInfo& book : vector)
+        {
+            out << i++ << " " << book.title << " by " << book.author_name << ", " << book.publication_year << std::endl;
+        }
+    }
+
     View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std::ostream& output)
         : menu_{ menu }
         , use_cases_{ use_cases }
@@ -48,12 +58,11 @@ namespace ui {
             // либо
             // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
         );
-        menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
-            std::bind(&View::AddBook, this, ph::_1));
+        menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
+        menu_.AddAction("DeleteBook"s, "<title>"s, "Deletes book"s, std::bind(&View::DeleteBook, this, ph::_1));
         menu_.AddAction("ShowAuthors"s, {}, "Show authors"s, std::bind(&View::ShowAuthors, this));
         menu_.AddAction("ShowBooks"s, {}, "Show books"s, std::bind(&View::ShowBooks, this));
-        menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s,
-            std::bind(&View::ShowAuthorBooks, this));
+        menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s, std::bind(&View::ShowAuthorBooks, this));
     }
 
     bool View::AddAuthor(std::istream& cmd_input) const {
@@ -91,12 +100,39 @@ namespace ui {
                     use_cases_.AddBook(p.publication_year, p.title, p.author_id);
                 }
                 return true;
-            }/*
-            else
-            {
-                return false;
-            }*/
+            }
+        }
+        catch (const std::exception& ex)
+        {
+            output_ << "Failed to add book"sv << std::endl;
+        }
+        return true;
+    }
 
+    bool View::DeleteBook(std::istream& cmd_input) const
+    {
+        try
+        {
+            std::string title;
+            std::getline(cmd_input, title);
+
+            boost::algorithm::trim(title);
+
+            if (title.empty())
+            {
+                ShowBooks();
+            }
+
+            if (auto params = GetBookParams(cmd_input))
+            {
+                detail::AddBookParams p = params.value();
+
+                if (!p.title.empty())
+                {
+                    use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+                }
+                return true;
+            }
         }
         catch (const std::exception& ex)
         {
@@ -111,7 +147,7 @@ namespace ui {
     }
 
     bool View::ShowBooks() const {
-        PrintVector(output_, GetBooks());
+        PrintBooks(output_, GetBooks());
         return true;
     }
 
@@ -122,11 +158,7 @@ namespace ui {
             if (auto author_id = SelectAuthor())
             {
                 PrintVector(output_, GetAuthorBooks(*author_id));
-            }/*
-            else
-            {
-                return true;
-            }*/
+            }
         }
         catch (const std::exception& ex)
         {
@@ -134,6 +166,8 @@ namespace ui {
         }
         return true;
     }
+
+
 
     std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input) const {
         detail::AddBookParams params;
@@ -200,9 +234,9 @@ namespace ui {
     {
         std::vector<detail::BookInfo> books;
 
-        for (const domain::Book& book : use_cases_.GetBooks())
+        for (const domain::BookRepresentation& book : use_cases_.GetBooks())
         {
-            books.emplace_back(book.GetName(), book.GetReleaseYear());
+            books.emplace_back(book.title, book.author_name, book.year);
         }
 
         return books;
@@ -214,7 +248,7 @@ namespace ui {
 
         for (const domain::Book& book : use_cases_.GetAuthorBooks(author_id))
         {
-            books.emplace_back(book.GetName(), book.GetReleaseYear());
+            books.emplace_back(book.GetName(), "Author", book.GetReleaseYear());
         }
 
         return books;

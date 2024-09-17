@@ -26,8 +26,10 @@ struct AuthorInfo {
     std::string name;
 };
 
-struct BookInfo {
+struct BookInfo 
+{
     std::string title;
+    std::string author_name;
     int publication_year;
 };
 
@@ -40,6 +42,7 @@ public:
 private:
     bool AddAuthor(std::istream& cmd_input) const;
     bool AddBook(std::istream& cmd_input) const;
+    bool DeleteBook(std::istream& cmd_input) const;
     bool ShowAuthors() const;
     bool ShowBooks() const;
     bool ShowAuthorBooks() const;

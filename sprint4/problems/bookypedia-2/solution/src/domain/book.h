@@ -51,15 +51,31 @@ namespace domain
         int release_year_;
     };
 
+    struct BookRepresentation
+    {
+        BookRepresentation(std::string title_, BookId book_id_, std::string author_name_, int year_)
+            :title(title_),
+            book_id(book_id_),
+            author_name(author_name_),
+            year(year_) {}
+
+        std::string title;
+        BookId book_id;
+        std::string author_name;
+        int year;
+    };
+
     class BookRepository 
     {
     public:
         virtual void Save(const Book& book) = 0;
-        virtual const std::vector<domain::Book> Load() const = 0;
+        virtual const std::vector<BookRepresentation> Load() const = 0;
         virtual const std::vector<domain::Book> LoadByAuthor(const std::string& author_id) const = 0;
+        virtual const std::vector<domain::Book> LoadByName(const std::string& author_id) const = 0;
 
     protected:
         ~BookRepository() = default;
     };
+
 
 }  // namespace domain
