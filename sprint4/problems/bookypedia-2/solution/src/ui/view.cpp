@@ -95,7 +95,7 @@ namespace ui {
 
     void PrintBookDetailed(std::ostream& out, const domain::BookRepresentation& book, const std::vector<std::string>& tags)
     {
-        out << "Title: " << book.title << "\nAuthor: " << book.author_name << "\nPublication year: " << book.year << "\Tags: " << std::endl;
+        out << "Title: " << book.title << "\nAuthor: " << book.author_name << "\nPublication year: " << book.year << "\nTags: " << std::endl;
 
         for (int i = 0; i < tags.size(); ++i)
         {
