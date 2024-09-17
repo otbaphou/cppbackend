@@ -112,9 +112,10 @@ namespace postgres {
 
 		return result;
 	}
-	const std::vector<domain::Book> BookRepositoryImpl::LoadByAuthor(const std::string& author_id) const
+
+	const std::vector<domain::BookRepresentation> BookRepositoryImpl::LoadByAuthor(const std::string& author_id) const
 	{
-		std::vector<domain::Book> result;
+		std::vector<domain::BookRepresentation> result;
 
 		pqxx::read_transaction read_t(connection_);
 
@@ -127,7 +128,7 @@ namespace postgres {
 			domain::BookId book_id = domain::BookId::FromString(id);
 			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
 
-			domain::Book book{ book_id, author_id_tmp, title, publication_year };
+			domain::BookRepresentation book{ title, book_id, author_id_tmp, publication_year };
 
 			result.push_back(book);
 		}
@@ -136,9 +137,27 @@ namespace postgres {
 		return result;
 	}
 
-	const std::vector<domain::Book> BookRepositoryImpl::LoadByName(const std::string& book_name) const
+	const std::string AuthorRepositoryImpl::GetAuthorId(const std::string& name) const
 	{
-		std::vector<domain::Book> result;
+		pqxx::read_transaction read_t(connection_);
+
+		std::string query_text = "SELECT id, name FROM authors WHERE name='";
+		query_text = query_text + name;
+		query_text = query_text + "' ORDER BY name";
+
+		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
+		{
+			return name;
+		}
+
+		read_t.commit();
+
+		return "error_name";
+	}
+
+	const std::vector<domain::BookRepresentation> BookRepositoryImpl::LoadByName(const std::string& book_name) const
+	{
+		std::vector<domain::BookRepresentation> result;
 
 		pqxx::read_transaction read_t(connection_);
 
@@ -151,7 +170,7 @@ namespace postgres {
 			domain::BookId book_id = domain::BookId::FromString(id);
 			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
 
-			domain::Book book{ book_id, author_id_tmp, title, publication_year };
+			domain::BookRepresentation book{ title, book_id, author_id_tmp, publication_year };
 
 			result.push_back(book);
 		}
@@ -160,13 +179,139 @@ namespace postgres {
 		return result;
 	}
 
+	const domain::BookRepresentation BookRepositoryImpl::LoadById(const std::string& book_id) const
+	{
+		pqxx::read_transaction read_t(connection_);
+
+		std::string query_text = "SELECT id, author_id, title, publication_year FROM books WHERE id='";
+		query_text = query_text + book_id;
+		query_text = query_text + "';";
+
+		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
+		{
+			domain::BookId book_id = domain::BookId::FromString(id);
+			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
+
+			domain::BookRepresentation book{ title, book_id, author_id_tmp, publication_year };
+
+			return book;
+		}
+		read_t.commit();
+
+		return {"error", domain::BookId::New(), "I'm tired, boss", 1234 };
+	}
+
+	const std::vector<std::string> BookRepositoryImpl::LoadTags(const std::string& book_id) const
+	{
+		std::vector<std::string> result;
+
+		pqxx::read_transaction read_t(connection_);
+
+		std::string query_text = "SELECT book_id, tag FROM book_tags WHERE book_id='";
+		query_text = query_text + book_id;
+		query_text = query_text + "' ORDER BY tag";
+
+		for (auto [book_id, tag] : read_t.query<std::string, std::string>(query_text))
+		{
+			//domain::BookId book_id = domain::BookId::FromString(book_id);
+
+			result.push_back(tag);
+		}
+		read_t.commit();
+
+		return result;
+	}
+
+	void BookRepositoryImpl::SaveTags(const std::string& book_id, const std::vector<std::string>& tags)
+	{
+		pqxx::work work{ connection_ };
+
+		for (const std::string& tag : tags)
+		{
+			work.exec_params(R"(INSERT IGNORE INTO book_tags (id, tag) VALUES ($1, $2);)"_zv, book_id, tag);
+		}
+	}
+
+	//EDITING
+
+	void AuthorRepositoryImpl::EditAuthor(const std::string& author_id, const std::string new_name)
+	{
+		pqxx::work work{ connection_ };
+
+		std::string query_text = "UPDATE authors SET name = '";
+		query_text = query_text + new_name + "' WHERE id = '" + author_id + "';";
+
+		work.exec(query_text);
+
+		work.commit();
+	}
+
+	void BookRepositoryImpl::EditBook(const std::string& book_id, const domain::BookRepresentation& new_data, const std::vector<std::string>& tags)
+	{
+		pqxx::work work{ connection_ };
+
+		std::string query_text = "UPDATE books SET title = '";
+		query_text = query_text + new_data.title + "', publication_year = " + std::to_string(new_data.year) + " WHERE id = '" + book_id + "';";
+
+		work.exec(query_text);
+
+		query_text = "DELETE FROM book_tags WHERE book_id = '";
+		query_text = query_text + book_id;
+		query_text = query_text + "';";
+
+		work.exec(query_text);
+
+		for (const std::string& tag : tags)
+		{
+			work.exec_params(R"(INSERT IGNORE INTO book_tags (id, tag) VALUES ($1, $2);)"_zv, book_id, tag);
+		}
+
+		work.commit();
+	}
+
+	//DELETION
+
+	void AuthorRepositoryImpl::DeleteAuthor(const std::string& author_id)
+	{
+		pqxx::work work{ connection_ };
+
+		std::string query_text = "DELETE FROM authors WHERE id = '";
+		query_text = query_text + author_id;
+		query_text = query_text + "';";
+
+		work.exec(query_text);
+
+		work.commit();
+	}
+
+	void BookRepositoryImpl::DeleteBook(const std::string& book_id)
+	{
+		pqxx::work work{ connection_ };
+
+		std::string query_text = "DELETE FROM book_tags WHERE book_id = '";
+		query_text = query_text + book_id;
+		query_text = query_text + "';";
+
+		work.exec(query_text);
+
+		query_text = "DELETE FROM books WHERE id = '";
+		query_text = query_text + book_id;
+		query_text = query_text + "';";
+
+		work.exec(query_text);
+
+		work.commit();
+	}
+
+	//INITIALIZATION
+
 	Database::Database(pqxx::connection connection)
 		: connection_{ std::move(connection) }
 	{
 		pqxx::work work{ connection_ };
 		work.exec(R"(CREATE TABLE IF NOT EXISTS authors ( id UUID CONSTRAINT author_id_constraint PRIMARY KEY, name varchar(100) UNIQUE NOT NULL );)"_zv);
 		work.exec(R"(CREATE TABLE IF NOT EXISTS books ( id UUID CONSTRAINT book_id_constraint PRIMARY KEY, author_id UUID NOT NULL, title varchar(100) NOT NULL, publication_year integer);)"_zv);
-		work.exec(R"(CREATE TABLE IF NOT EXISTS book_tags ( book_id UUID CONSTRAINT book_id_constraint PRIMARY KEY, tag varchar(100));)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS book_tags ( book_id UUID CONSTRAINT book_id_constraint PRIMARY KEY, tag varchar(30) UNIQUE);)"_zv);
 
 		// ... создать другие таблицы
 
@@ -176,19 +321,19 @@ namespace postgres {
 
 	/*
 	 
-		1. Show books
+		1. Show books +?
 	
-		2. Show book
+		2. Show book -/
 
-		3. Add book
+		3. Add book +
 	
-		4. Edit book
+		4. Edit book +
 
-		5. Edit author
+		5. Edit author +
 
-		6. Delete book
+		6. Delete book +
 
-		7. Delete author
+		7. Delete author +
 	
 	*/
 

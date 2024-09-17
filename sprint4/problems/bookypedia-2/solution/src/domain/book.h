@@ -53,16 +53,34 @@ namespace domain
 
     struct BookRepresentation
     {
+        BookRepresentation(std::string title_, BookId book_id_, AuthorId author_id_, std::string author_name_, int year_)
+            :title(title_),
+            book_id(book_id_),
+            author_id(author_id_),
+            author_name(author_name_),
+            year(year_),
+            has_id(true){}
+
         BookRepresentation(std::string title_, BookId book_id_, std::string author_name_, int year_)
             :title(title_),
             book_id(book_id_),
             author_name(author_name_),
             year(year_) {}
 
+        BookRepresentation(std::string title_, BookId book_id_, AuthorId author_id_, int year_)
+            :title(title_),
+            book_id(book_id_),
+            author_id(author_id_),
+            year(year_),
+            has_id(true){}
+
         std::string title;
         BookId book_id;
         std::string author_name;
+        AuthorId author_id;
         int year;
+
+        bool has_id = false;
     };
 
     class BookRepository 
@@ -70,9 +88,15 @@ namespace domain
     public:
         virtual void Save(const Book& book) = 0;
         virtual const std::vector<BookRepresentation> Load() const = 0;
-        virtual const std::vector<domain::Book> LoadByAuthor(const std::string& author_id) const = 0;
-        virtual const std::vector<domain::Book> LoadByName(const std::string& author_id) const = 0;
+        virtual const std::vector<domain::BookRepresentation> LoadByAuthor(const std::string& author_id) const = 0;
+        virtual const std::vector<domain::BookRepresentation> LoadByName(const std::string& author_id) const = 0;
+        virtual const domain::BookRepresentation LoadById(const std::string& book_id) const = 0;
+        virtual const std::vector<std::string> LoadTags(const std::string& book_id) const = 0;
 
+        virtual void SaveTags(const std::string& book_id, const std::vector<std::string>& tags) = 0;
+
+        virtual void EditBook(const std::string& book_id, const domain::BookRepresentation& new_data, const std::vector<std::string>& tags) = 0;
+        virtual void DeleteBook(const std::string& id) = 0;
     protected:
         ~BookRepository() = default;
     };

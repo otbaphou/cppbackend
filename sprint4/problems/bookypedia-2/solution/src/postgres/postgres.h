@@ -16,6 +16,11 @@ public:
     void Save(const domain::Author& author) override;
     const std::vector<domain::Author> Load() const override;
     const domain::Author LoadSingle(const std::string& id) const override;
+    const std::string GetAuthorId(const std::string& name) const override;
+
+    void EditAuthor(const std::string& author_id, const std::string new_name) override;
+
+    void DeleteAuthor(const std::string& id) override;
 private:
     pqxx::connection& connection_;
 };
@@ -29,8 +34,15 @@ public:
 
     void Save(const domain::Book& book) override;
     const std::vector<domain::BookRepresentation> Load() const override;
-    const std::vector<domain::Book> LoadByAuthor(const std::string& author_id) const override;
-    const std::vector<domain::Book> LoadByName(const std::string& author_id) const override;
+    const std::vector<domain::BookRepresentation> LoadByAuthor(const std::string& author_id) const override;
+    const std::vector<domain::BookRepresentation> LoadByName(const std::string& author_id) const override; 
+    const domain::BookRepresentation LoadById(const std::string& book_id) const override;
+    const std::vector<std::string> LoadTags(const std::string& book_id) const override; 
+    void SaveTags(const std::string& book_id, const std::vector<std::string>& tags) override;
+
+    void EditBook(const std::string& book_id, const domain::BookRepresentation& new_data, const std::vector<std::string>& tags) override;
+
+    void DeleteBook(const std::string& id) override;
 
 private:
     pqxx::connection& connection_;

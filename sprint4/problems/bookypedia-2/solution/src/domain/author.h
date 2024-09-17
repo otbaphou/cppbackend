@@ -36,7 +36,10 @@ class AuthorRepository {
 public:
     virtual void Save(const Author& author) = 0;
     virtual const std::vector<domain::Author> Load() const = 0;
-    virtual const Author LoadSingle(const std::string& id) const = 0;
+    virtual const Author LoadSingle(const std::string& id) const = 0;	
+    virtual void EditAuthor(const std::string& author_id, const std::string new_name) = 0;
+    virtual void DeleteAuthor(const std::string& id) = 0;
+    virtual const std::string GetAuthorId(const std::string& name) const = 0;
 
 protected:
     ~AuthorRepository() = default;
