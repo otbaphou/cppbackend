@@ -121,7 +121,7 @@ namespace postgres {
 
 		std::string query_text = "SELECT id, author_id, title, publication_year FROM books WHERE author_id='";
 		query_text = query_text + author_id;
-		query_text = query_text + "' ORDER BY publication_year, title";
+		query_text = query_text + "' ORDER BY publication_year, title;";
 
 		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
 		{
@@ -143,7 +143,7 @@ namespace postgres {
 
 		std::string query_text = "SELECT id, name FROM authors WHERE name='";
 		query_text = query_text + name;
-		query_text = query_text + "' ORDER BY name";
+		query_text = query_text + "';";
 
 		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
 		{
