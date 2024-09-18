@@ -282,8 +282,7 @@ namespace ui {
 
                 if (!author.has_value())
                 {
-
-                    return true;
+                    throw std::invalid_argument("Author does not exist!");
                 }
                 else
                 {
