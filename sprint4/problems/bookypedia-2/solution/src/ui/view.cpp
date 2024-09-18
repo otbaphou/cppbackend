@@ -122,7 +122,7 @@ namespace ui {
         , output_{ output } {
         menu_.AddAction(  //
             "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-            // либо
+            // Г«ГЁГЎГ®
             // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
         );
         menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
@@ -297,8 +297,8 @@ namespace ui {
 
             if (author_id == "")
             {
-                return true;
-                //throw std::invalid_argument("Author does not exist!");
+                //return true;
+                throw std::invalid_argument("Author does not exist!");
             }
 
             auto books = use_cases_.GetAuthorBooks(author_id);
