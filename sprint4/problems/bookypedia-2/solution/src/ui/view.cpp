@@ -161,57 +161,57 @@ namespace ui {
 
     bool View::AddBook(std::istream& cmd_input) const
     {
-        try
-        {
-            if (auto params = GetBookParams(cmd_input))
-            {
-                if (!params.has_value())
-                {
-                    //throw std::invalid_argument("Failed to add the book..");
-                    return true;
-                }
+        //try
+        //{
+        //    if (auto params = GetBookParams(cmd_input))
+        //    {
+        //        if (!params.has_value())
+        //        {
+        //            //throw std::invalid_argument("Failed to add the book..");
+        //            return true;
+        //        }
 
-                detail::AddBookParams p = params.value();
-                
-                if (!p.title.empty())
-                {
-                    use_cases_.AddBook(p.publication_year, p.title, p.author_id);
+        //        detail::AddBookParams p = params.value();
+        //        
+        //        if (!p.title.empty())
+        //        {
+        //            use_cases_.AddBook(p.publication_year, p.title, p.author_id);
 
-                    output_ << "Enter tags (comma separated):\n";
+        //            output_ << "Enter tags (comma separated):\n";
 
-                    std::string tags;
-                    std::getline(cmd_input, tags);
-                    boost::algorithm::trim(tags);
+        //            std::string tags;
+        //            std::getline(cmd_input, tags);
+        //            boost::algorithm::trim(tags);
 
-                    auto& tmp_books = use_cases_.GetBooksWithName(p.title);
+        //            auto& tmp_books = use_cases_.GetBooksWithName(p.title);
 
-                    std::string current_id;
+        //            std::string current_id;
 
-                    if (tmp_books.size() > 1)
-                    {
-                        for (auto& book : tmp_books)
-                        {
-                            if (book.author_id.ToString() == p.author_id)
-                            {
-                                current_id = book.book_id.ToString();
-                            }
-                        }
-                    }
+        //            if (tmp_books.size() > 1)
+        //            {
+        //                for (auto& book : tmp_books)
+        //                {
+        //                    if (book.author_id.ToString() == p.author_id)
+        //                    {
+        //                        current_id = book.book_id.ToString();
+        //                    }
+        //                }
+        //            }
 
-                    if(!current_id.empty())
-                    {
-                        use_cases_.SaveTags(current_id, ParseTags(tags));
-                    }
-                }
+        //            if(!current_id.empty())
+        //            {
+        //                use_cases_.SaveTags(current_id, ParseTags(tags));
+        //            }
+        //        }
 
-                return true;
-            }
-        }
-        catch (const std::exception& ex)
-        {
-            output_ << "Failed to add book"sv << std::endl;
-        }
-        return true;
+        //        return true;
+        //    }
+        //}
+        //catch (const std::exception& ex)
+        //{
+        //    output_ << "Failed to add book"sv << std::endl;
+        //}
+        //return true;
     }
 
     bool View::DeleteBook(std::istream& cmd_input) const
