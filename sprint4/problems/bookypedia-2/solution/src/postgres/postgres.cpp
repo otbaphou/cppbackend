@@ -152,7 +152,7 @@ namespace postgres {
 
 		read_t.commit();
 
-		return "error_name";
+		return "";
 	}
 
 	const std::vector<domain::BookRepresentation> BookRepositoryImpl::LoadByName(const std::string& book_name) const
