@@ -347,23 +347,22 @@ namespace ui {
             else
             {
                 author_id = use_cases_.GetAuthorId(name);
-            }
 
-            if (author_id == "")
-            {
-                throw std::invalid_argument("Author not found!!\n");
-                //return true;
+                if (author_id == "")
+                {
+                    throw std::invalid_argument("Author not found!!\n");
+                    //return true;
+                }
             }
 
             output_ << "Enter new name:\n";
 
             std::string new_name;
             std::getline(cmd_input, new_name);
-            //std::getline(cmd_input, new_name);
 
-            boost::algorithm::trim(new_name);
+            //boost::algorithm::trim(new_name);
 
-            use_cases_.EditAuthor(author_id, new_name);
+            use_cases_.EditAuthor(author_id, name); //bugger
 
             return true;
         }
