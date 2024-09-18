@@ -359,11 +359,13 @@ namespace ui {
 
             std::string new_name;
             std::getline(cmd_input, new_name);
-            std::getline(cmd_input, new_name);
+            //std::getline(cmd_input, new_name);
 
             boost::algorithm::trim(new_name);
 
             use_cases_.EditAuthor(author_id, new_name);
+
+            return true;
         }
         catch (...)
         {
