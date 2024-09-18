@@ -328,7 +328,7 @@ namespace ui {
 
         if (name.empty())
         {
-            ShowAuthors();
+            //ShowAuthors();
 
             auto author = SelectAuthor(false);
 
