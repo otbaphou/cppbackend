@@ -282,6 +282,7 @@ namespace ui {
 
                 if (!author.has_value())
                 {
+
                     return true;
                 }
                 else
@@ -296,7 +297,8 @@ namespace ui {
 
             if (author_id == "")
             {
-                throw std::invalid_argument("Author does not exist!");
+                return true;
+                //throw std::invalid_argument("Author does not exist!");
             }
 
             auto books = use_cases_.GetAuthorBooks(author_id);
@@ -338,11 +340,21 @@ namespace ui {
             else
             {
                 author_id = author.value();
+
+                if (author_id == "")
+                {
+                    return true; //This one either \/
+                }
             }
         }
         else
         {
             author_id = use_cases_.GetAuthorId(name);
+
+            if (author_id == "")
+            {
+                return true; //TODO: Check if it's causing problems
+            }
         }
 
         output_ << "Enter new name:\n";
