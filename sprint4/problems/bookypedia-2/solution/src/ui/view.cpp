@@ -306,6 +306,7 @@ namespace ui {
             }
 
             use_cases_.DeleteAuthor(author_id);
+            return true;
         }
         catch (const std::exception& ex)
         {
