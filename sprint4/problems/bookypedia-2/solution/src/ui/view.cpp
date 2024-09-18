@@ -264,49 +264,49 @@ namespace ui {
 
     bool View::DeleteAuthor(std::istream& cmd_input) const
     {
-        //try
-        //{
-        //    std::string name;
-        //    std::getline(cmd_input, name);
+        try
+        {
+            std::string name;
+            std::getline(cmd_input, name);
 
-        //    boost::algorithm::trim(name);
+            boost::algorithm::trim(name);
 
-        //    std::string author_id;
+            std::string author_id;
 
-        //    if (name.empty())
-        //    {
-        //        ShowAuthors();           
+            if (name.empty())
+            {
+                ShowAuthors();           
 
-        //        auto author = SelectAuthor(false);
+                auto author = SelectAuthor(false);
 
-        //        if (!author.has_value())
-        //        {
-        //            return true;
-        //        }
-        //        else
-        //        {
-        //            author_id = author.value();
-        //        }
-        //    }
-        //    else
-        //    {
-        //        author_id = use_cases_.GetAuthorId(name);
-        //    }
+                if (!author.has_value())
+                {
+                    return true;
+                }
+                else
+                {
+                    author_id = author.value();
+                }
+            }
+            else
+            {
+                author_id = use_cases_.GetAuthorId(name);
+            }
 
-        //    auto books = use_cases_.GetAuthorBooks(author_id);
+            auto books = use_cases_.GetAuthorBooks(author_id);
 
-        //    for (const auto& book : books)
-        //    {
-        //        use_cases_.DeleteBook(book.book_id.ToString());
-        //    }
+            for (const auto& book : books)
+            {
+                use_cases_.DeleteBook(book.book_id.ToString());
+            }
 
-        //    use_cases_.DeleteAuthor(author_id);
-        //}
-        //catch (const std::exception& ex)
-        //{
-        //    output_ << "Failed to delete author"sv << std::endl;
-        //}
-        //return true;
+            use_cases_.DeleteAuthor(author_id);
+        }
+        catch (const std::exception& ex)
+        {
+            output_ << "Failed to delete author"sv << std::endl;
+        }
+        return true;
     }
 
     bool View::EditAuthor(std::istream& cmd_input) const
