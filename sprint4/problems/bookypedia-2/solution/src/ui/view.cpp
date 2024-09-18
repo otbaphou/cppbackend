@@ -293,12 +293,12 @@ namespace ui {
                 author_id = use_cases_.GetAuthorId(name);
             }
 
-            auto books = use_cases_.GetAuthorBooks(author_id);
+            //auto books = use_cases_.GetAuthorBooks(author_id);
 
-            for (const auto& book : books)
-            {
-                use_cases_.DeleteBook(book.book_id.ToString());
-            }
+            //for (const auto& book : books)
+            //{
+            //    use_cases_.DeleteBook(book.book_id.ToString());
+            //}
 
             use_cases_.DeleteAuthor(author_id);
         }
