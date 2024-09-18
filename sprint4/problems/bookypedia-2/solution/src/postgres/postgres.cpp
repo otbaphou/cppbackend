@@ -147,7 +147,7 @@ namespace postgres {
 
 		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
 		{
-			return name;
+			return id;
 		}
 
 		read_t.commit();
