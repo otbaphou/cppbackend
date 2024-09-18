@@ -359,6 +359,7 @@ namespace ui {
 
             std::string new_name;
             std::getline(cmd_input, new_name);
+            std::getline(cmd_input, new_name);
 
             boost::algorithm::trim(new_name);
 
