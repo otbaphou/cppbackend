@@ -122,7 +122,7 @@ namespace ui {
         , output_{ output } {
         menu_.AddAction(  //
             "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-            // Г«ГЁГЎГ®
+            // либо
             // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
         );
         menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
@@ -568,7 +568,7 @@ namespace ui {
         boost::algorithm::trim(author);
 
         if (author.empty())
-        {//C
+        {
             auto author_id = SelectAuthor(true);
 
             if (!author_id.has_value())

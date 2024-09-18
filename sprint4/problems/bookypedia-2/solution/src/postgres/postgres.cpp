@@ -97,13 +97,14 @@ namespace postgres {
 		std::vector<domain::BookRepresentation> result;
 
 		pqxx::read_transaction read_t(connection_);
-		auto query_text = "SELECT books.id, books.title, authors.name AS author_name, books.publication_year FROM books JOIN authors ON books.author_id = authors.id ORDER BY books.title ASC,authors.name ASC, books.publication_year ASC;"_zv;
+		auto query_text = "SELECT books.id, books.title, authors.name AS author_name, authors.id AS author_id, books.publication_year FROM books JOIN authors ON books.author_id = authors.id ORDER BY books.title ASC,authors.name ASC, books.publication_year ASC;"_zv;
 
-		for (auto [id, title, author_name, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
+		for (auto [id, title, author_name, author_id, publication_year] : read_t.query<std::string, std::string, std::string, std::string, int>(query_text))
 		{
 			domain::BookId book_id = domain::BookId::FromString(id);
+			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
 
-			domain::BookRepresentation book{ title, book_id, author_name, publication_year };
+			domain::BookRepresentation book{ title, book_id, author_name, author_id_tmp, publication_year };
 
 			result.push_back(book);
 		}
@@ -163,7 +164,7 @@ namespace postgres {
 
 		std::string query_text = "SELECT id, author_id, title, publication_year FROM books WHERE title='";
 		query_text = query_text + book_name;
-		query_text = query_text + "' ORDER BY publication_year, title";
+		query_text = query_text + "' ORDER BY publication_year, title;";
 
 		for (auto [id, author_id, title, publication_year] : read_t.query<std::string, std::string, std::string, int>(query_text))
 		{
@@ -191,7 +192,7 @@ namespace postgres {
 		{
 			domain::BookId book_id = domain::BookId::FromString(id);
 			domain::AuthorId author_id_tmp = domain::AuthorId::FromString(author_id);
-
+			//
 			domain::BookRepresentation book{ title, book_id, author_id_tmp, publication_year };
 
 			return book;

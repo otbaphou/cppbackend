@@ -53,7 +53,7 @@ namespace domain
 
     struct BookRepresentation
     {
-        BookRepresentation(std::string title_, BookId book_id_, AuthorId author_id_, std::string author_name_, int year_)
+        BookRepresentation(std::string title_, BookId book_id_, std::string author_name_, AuthorId author_id_,  int year_)
             :title(title_),
             book_id(book_id_),
             author_id(author_id_),
