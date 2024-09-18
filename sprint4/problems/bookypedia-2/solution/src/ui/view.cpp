@@ -359,6 +359,8 @@ namespace ui {
 
             std::string new_name = "";
 
+            //std::cin >> new_name; // TODO: Check for errs
+            std::getline(input_, new_name);
             std::getline(input_, new_name);
 
             boost::algorithm::trim(new_name);
@@ -617,7 +619,7 @@ namespace ui {
                 std::getline(cmd_input, response);
                 boost::algorithm::trim(response);
 
-                if (response.size() != 1 || response[0] != 'Y' || response[0] != 'y')
+                if (response.size() != 1 || response[0] != 'Y' && response[0] != 'y')
                 {
                     return std::nullopt;
                 }
@@ -644,15 +646,18 @@ namespace ui {
         output_ << "Enter author # or empty line to cancel" << std::endl;
 
         std::string str;
-        if (!std::getline(input_, str) || str.empty()) {
+        if (!std::getline(input_, str) || str.empty()) 
+        {
             return std::nullopt;
         }
 
         int author_idx;
-        try {
+        try 
+        {
             author_idx = std::stoi(str);
         }
-        catch (std::exception const&) {
+        catch (std::exception const&) 
+        {
             throw std::runtime_error("Invalid author num");
         }
 
