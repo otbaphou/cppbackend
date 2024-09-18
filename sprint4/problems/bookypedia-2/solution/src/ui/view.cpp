@@ -357,12 +357,18 @@ namespace ui {
 
             output_ << "Enter new name:\n";
 
-            std::string new_name;
+            std::string new_name = "";
+
             std::getline(cmd_input, new_name);
 
-            //boost::algorithm::trim(new_name);
+            boost::algorithm::trim(new_name);
 
-            //use_cases_.EditAuthor(author_id, "new_name");
+            if (new_name == "")
+            {
+                throw std::invalid_argument("Invalid author name!");
+            }
+
+            use_cases_.EditAuthor(author_id, "new_name");
 
             return true;
         }
@@ -496,15 +502,6 @@ namespace ui {
             }
             
         }
-
-        output_ << "Enter new name:\n";
-
-        std::string new_name;
-        std::getline(cmd_input, new_name);
-
-        boost::algorithm::trim(new_name);
-
-        //use_cases_.EditAuthor(author_id, new_name);
 
         return true;
     }
