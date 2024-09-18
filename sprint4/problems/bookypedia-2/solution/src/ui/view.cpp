@@ -278,7 +278,7 @@ namespace ui {
             {
                 ShowAuthors();           
 
-                auto author = SelectAuthor(false);
+                auto author = SelectAuthor(true);
 
                 if (!author.has_value())
                 {
