@@ -359,6 +359,7 @@ namespace ui {
 
             std::string new_name = "";
 
+            cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::getline(cmd_input, new_name);
 
             boost::algorithm::trim(new_name);
