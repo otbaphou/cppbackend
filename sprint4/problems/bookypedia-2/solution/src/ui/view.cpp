@@ -68,7 +68,10 @@ namespace ui {
                 tag.pop_back();
             }
 
-            result.push_back(tag);
+            if (std::find(result.begin(), result.end(), tag) == result.end())
+            {
+                result.push_back(tag);
+            }
         }
 
         return result;
@@ -119,7 +122,7 @@ namespace ui {
         , output_{ output } {
         menu_.AddAction(  //
             "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-            // ëèáî
+            // Ã«Ã¨Ã¡Ã®
             // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
         );
         menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
@@ -161,8 +164,13 @@ namespace ui {
         {
             if (auto params = GetBookParams(cmd_input))
             {
-                detail::AddBookParams p = params.value();
+                if (!params.has_value())
+                {
+                    throw std::invalid_argument("Failed to add the book..");
+                }
 
+                detail::AddBookParams p = params.value();
+                
                 if (!p.title.empty())
                 {
                     use_cases_.AddBook(p.publication_year, p.title, p.author_id);
