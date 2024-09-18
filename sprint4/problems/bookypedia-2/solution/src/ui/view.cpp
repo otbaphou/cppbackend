@@ -128,8 +128,8 @@ namespace ui {
         menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
         menu_.AddAction("DeleteBook"s, {}, "Deletes book"s, std::bind(&View::DeleteBook, this, ph::_1));
         menu_.AddAction("DeleteAuthor"s, {}, "Deletes author"s, std::bind(&View::DeleteAuthor, this, ph::_1));
-        menu_.AddAction("EditBook"s, {}, "Deletes book"s, std::bind(&View::EditBook, this, ph::_1));
-        menu_.AddAction("EditAuthor"s, {}, "Deletes author"s, std::bind(&View::EditAuthor, this, ph::_1));
+        menu_.AddAction("EditBook"s, {}, "Edits book"s, std::bind(&View::EditBook, this, ph::_1));
+        menu_.AddAction("EditAuthor"s, "<title>"s, "Edits author"s, std::bind(&View::EditAuthor, this, ph::_1));
         menu_.AddAction("ShowAuthors"s, {}, "Show authors"s, std::bind(&View::ShowAuthors, this));
         menu_.AddAction("ShowBooks"s, {}, "Show books"s, std::bind(&View::ShowBooks, this));
         menu_.AddAction("ShowBook"s, {}, "Shows book"s, std::bind(&View::ShowBook, this, ph::_1));
