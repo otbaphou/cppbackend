@@ -122,7 +122,7 @@ namespace ui {
         , output_{ output } {
         menu_.AddAction(  //
             "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-            // ëèáî
+            // Ã«Ã¨Ã¡Ã®
             // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
         );
         menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s, std::bind(&View::AddBook, this, ph::_1));
@@ -309,43 +309,43 @@ namespace ui {
 
     bool View::EditAuthor(std::istream& cmd_input) const
     {
-        //std::string name;
-        //std::getline(cmd_input, name);
+        std::string name;
+        std::getline(cmd_input, name);
 
-        //boost::algorithm::trim(name);
+        boost::algorithm::trim(name);
 
-        //std::string author_id;
+        std::string author_id;
 
-        //if (name.empty())
-        //{
-        //    ShowAuthors();
+        if (name.empty())
+        {
+            ShowAuthors();
 
-        //    auto author = SelectAuthor(false);
+            auto author = SelectAuthor(false);
 
-        //    if (!author.has_value())
-        //    {
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        author_id = author.value();
-        //    }
-        //}
-        //else
-        //{
-        //    author_id = use_cases_.GetAuthorId(name);
-        //}
+            if (!author.has_value())
+            {
+                return true;
+            }
+            else
+            {
+                author_id = author.value();
+            }
+        }
+        else
+        {
+            author_id = use_cases_.GetAuthorId(name);
+        }
 
-        //output_ << "Enter new name:\n";
+        output_ << "Enter new name:\n";
 
-        //std::string new_name;
-        //std::getline(cmd_input, new_name);
+        std::string new_name;
+        std::getline(cmd_input, new_name);
 
-        //boost::algorithm::trim(new_name);
+        boost::algorithm::trim(new_name);
 
-        //use_cases_.EditAuthor(author_id, new_name);
+        use_cases_.EditAuthor(author_id, new_name);
 
-        //return true;
+        return true;
     }
 
     std::pair<detail::BookInfo, std::vector<std::string>> View::MakeBookData(const detail::BookInfo& old_book, std::istream& cmd_input) const
