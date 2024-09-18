@@ -214,97 +214,97 @@ namespace ui {
 
     bool View::DeleteBook(std::istream& cmd_input) const
     {
-        try
-        {
-            std::string title;
-            std::getline(cmd_input, title);
+        //try
+        //{
+        //    std::string title;
+        //    std::getline(cmd_input, title);
 
-            boost::algorithm::trim(title);
+        //    boost::algorithm::trim(title);
 
-            if (title.empty())
-            {
-                ShowBooks();
-            }
+        //    if (title.empty())
+        //    {
+        //        ShowBooks();
+        //    }
 
-            auto books = use_cases_.GetBooksWithName(title);
+        //    auto books = use_cases_.GetBooksWithName(title);
 
-            if (books.size() == 0)
-            {
-                throw std::invalid_argument("No book found to delete!");
-            }
-            else
-            {
-                if(books.size() > 1)
-                { 
-                    auto book_id = SelectBook();
+        //    if (books.size() == 0)
+        //    {
+        //        throw std::invalid_argument("No book found to delete!");
+        //    }
+        //    else
+        //    {
+        //        if(books.size() > 1)
+        //        { 
+        //            auto book_id = SelectBook();
 
-                    if (book_id.has_value())
-                    {
-                        use_cases_.DeleteBook(book_id.value());
-                    }
-                    else
-                    {
-                        throw std::invalid_argument("Chosen Invalid Book To Delete!");
-                    }
-                }
-                else
-                {
-                    use_cases_.DeleteBook(books[0].book_id.ToString());
-                }
-            }
+        //            if (book_id.has_value())
+        //            {
+        //                use_cases_.DeleteBook(book_id.value());
+        //            }
+        //            else
+        //            {
+        //                throw std::invalid_argument("Chosen Invalid Book To Delete!");
+        //            }
+        //        }
+        //        else
+        //        {
+        //            use_cases_.DeleteBook(books[0].book_id.ToString());
+        //        }
+        //    }
 
-        }
-        catch (const std::exception& ex)
-        {
-            output_ << "Failed to delete book"sv << std::endl;
-        }
-        return true;
+        //}
+        //catch (const std::exception& ex)
+        //{
+        //    output_ << "Failed to delete book"sv << std::endl;
+        //}
+        //return true;
     }
 
     bool View::DeleteAuthor(std::istream& cmd_input) const
     {
-        try
-        {
-            std::string name;
-            std::getline(cmd_input, name);
+        //try
+        //{
+        //    std::string name;
+        //    std::getline(cmd_input, name);
 
-            boost::algorithm::trim(name);
+        //    boost::algorithm::trim(name);
 
-            std::string author_id;
+        //    std::string author_id;
 
-            if (name.empty())
-            {
-                ShowAuthors();           
+        //    if (name.empty())
+        //    {
+        //        ShowAuthors();           
 
-                auto author = SelectAuthor(false);
+        //        auto author = SelectAuthor(false);
 
-                if (!author.has_value())
-                {
-                    return true;
-                }
-                else
-                {
-                    author_id = author.value();
-                }
-            }
-            else
-            {
-                author_id = use_cases_.GetAuthorId(name);
-            }
+        //        if (!author.has_value())
+        //        {
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            author_id = author.value();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        author_id = use_cases_.GetAuthorId(name);
+        //    }
 
-            auto books = use_cases_.GetAuthorBooks(author_id);
+        //    auto books = use_cases_.GetAuthorBooks(author_id);
 
-            for (const auto& book : books)
-            {
-                use_cases_.DeleteBook(book.book_id.ToString());
-            }
-            use_cases_.DeleteAuthor(author_id);
-        }
-        catch (const std::exception& ex)
-        {
-            output_ << "Failed to delete author"sv << std::endl;
-        }
-        return true;
+        //    for (const auto& book : books)
+        //    {
+        //        use_cases_.DeleteBook(book.book_id.ToString());
+        //    }
+        //    use_cases_.DeleteAuthor(author_id);
+        //}
+        //catch (const std::exception& ex)
+        //{
+        //    output_ << "Failed to delete author"sv << std::endl;
+        //}
+        //return true;
     }
 
     bool View::EditAuthor(std::istream& cmd_input) const
@@ -541,7 +541,8 @@ namespace ui {
 
 
 
-    std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input) const {
+    std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input) const 
+    {
         detail::AddBookParams params;
 
         cmd_input >> params.publication_year;
