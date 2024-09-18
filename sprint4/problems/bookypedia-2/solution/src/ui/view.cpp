@@ -278,11 +278,11 @@ namespace ui {
             {
                 ShowAuthors();           
 
-                auto author = SelectAuthor(true);
+                auto author = SelectAuthor(false);
 
                 if (!author.has_value())
                 {
-                    throw std::invalid_argument("Author does not exist!");
+                    return true;
                 }
                 else
                 {
@@ -296,7 +296,6 @@ namespace ui {
 
             if (author_id == "")
             {
-                //return true;
                 throw std::invalid_argument("Author does not exist!");
             }
 
@@ -430,7 +429,7 @@ namespace ui {
 
         if (title.empty())
         {
-            ShowBooks();
+            //ShowBooks();
 
             auto book = SelectBook();
 
