@@ -319,51 +319,59 @@ namespace ui {
 
     bool View::EditAuthor(std::istream& cmd_input) const
     {
-        std::string name;
-        std::getline(cmd_input, name);
-
-        boost::algorithm::trim(name);
-
-        std::string author_id;
-
-        if (name.empty())
+        try
         {
-            //ShowAuthors();
+            std::string name;
+            std::getline(cmd_input, name);
 
-            auto author = SelectAuthor(false);
+            boost::algorithm::trim(name);
 
-            if (!author.has_value())
+            std::string author_id;
+
+            if (name.empty())
             {
-                return true;
+                //ShowAuthors();
+
+                auto author = SelectAuthor(false);
+
+                if (!author.has_value())
+                {
+                    return true;
+                }
+                else
+                {
+                    author_id = author.value();
+
+                    if (author_id == "")
+                    {
+                        return true;
+                    }
+                }
             }
             else
             {
-                author_id = author.value();
+                author_id = use_cases_.GetAuthorId(name);
 
                 if (author_id == "")
                 {
-                    return true; //This one either \/
+                    throw std::invalid_argument("Author not found!!\n");
+                    //return true;
                 }
             }
+
+            output_ << "Enter new name:\n";
+
+            std::string new_name;
+            std::getline(cmd_input, new_name);
+
+            boost::algorithm::trim(new_name);
+
+            use_cases_.EditAuthor(author_id, new_name);
         }
-        else
+        catch (...)
         {
-            author_id = use_cases_.GetAuthorId(name);
-
-            if (author_id == "")
-            {
-                return true; //TODO: Check if it's causing problems
-            }
+            output_ << "Failed to edit author\n";
         }
-
-        output_ << "Enter new name:\n";
-
-        std::string new_name;
-        std::getline(cmd_input, new_name);
-
-        boost::algorithm::trim(new_name);
-
-        use_cases_.EditAuthor(author_id, new_name);
 
         return true;
     }
