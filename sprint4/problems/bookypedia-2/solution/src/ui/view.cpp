@@ -496,29 +496,29 @@ namespace ui {
 
     bool View::ShowBook(std::istream& cmd_input) const
     {
-        try
-        {
-            std::string title;
+        //try
+        //{
+        //    std::string title;
 
-            std::getline(cmd_input, title);
-            std::vector<domain::BookRepresentation> books = use_cases_.GetBooksWithName(title);
+        //    std::getline(cmd_input, title);
+        //    std::vector<domain::BookRepresentation> books = use_cases_.GetBooksWithName(title);
 
-            if (!books.empty())
-            {
-                if (books.size() == 1)
-                {
-                    PrintBookDetailed(output_, books[0], GetTags(books[0].book_id.ToString()));//BROKEN
-                }
-                else
-                {
-                    auto book_id = SelectBook();
-                }
-            }
-        }
-        catch(...)
-        {
-            //throw std::invalid_argument("Failed to show book!");
-        }
+        //    if (!books.empty())
+        //    {
+        //        if (books.size() == 1)
+        //        {
+        //            PrintBookDetailed(output_, books[0], GetTags(books[0].book_id.ToString()));//BROKEN
+        //        }
+        //        else
+        //        {
+        //            auto book_id = SelectBook();
+        //        }
+        //    }
+        //}
+        //catch(...)
+        //{
+        //    //throw std::invalid_argument("Failed to show book!");
+        //}
 
         return true;
     }
