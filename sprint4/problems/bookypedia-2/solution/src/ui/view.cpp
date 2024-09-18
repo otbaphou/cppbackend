@@ -293,12 +293,17 @@ namespace ui {
                 author_id = use_cases_.GetAuthorId(name);
             }
 
-            //auto books = use_cases_.GetAuthorBooks(author_id);
+            if (author_id == "")
+            {
+                throw std::invalid_argument("Author does not exist!");
+            }
 
-            //for (const auto& book : books)
-            //{
-            //    use_cases_.DeleteBook(book.book_id.ToString());
-            //}
+            auto books = use_cases_.GetAuthorBooks(author_id);
+
+            for (const auto& book : books)
+            {
+                use_cases_.DeleteBook(book.book_id.ToString());
+            }
 
             use_cases_.DeleteAuthor(author_id);
         }
