@@ -355,14 +355,14 @@ namespace ui {
                 //return true;
             }
 
-            //output_ << "Enter new name:\n";
+            output_ << "Enter new name:\n";
 
-            //std::string new_name;
-            //std::getline(cmd_input, new_name);
+            std::string new_name;
+            std::getline(cmd_input, new_name);
 
             //boost::algorithm::trim(new_name);
 
-            use_cases_.EditAuthor(author_id, "new_name");
+            //use_cases_.EditAuthor(author_id, "new_name");
 
             return true;
         }
