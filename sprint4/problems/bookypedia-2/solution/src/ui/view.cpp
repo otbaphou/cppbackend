@@ -360,7 +360,7 @@ namespace ui {
             std::string new_name = "";
 
             //std::cin >> new_name; // TODO: Check for errs
-            //std::getline(input_, new_name);
+            std::getline(input_, new_name);
             std::getline(input_, new_name);
 
             boost::algorithm::trim(new_name);
