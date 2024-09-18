@@ -557,7 +557,6 @@ namespace ui {
 
         cmd_input >> params.publication_year;
 
-        //cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::getline(cmd_input, params.title);
 
         boost::algorithm::trim(params.title);
@@ -569,7 +568,7 @@ namespace ui {
         boost::algorithm::trim(author);
 
         if (author.empty())
-        {
+        {//C
             auto author_id = SelectAuthor(true);
 
             if (!author_id.has_value())
@@ -586,7 +585,15 @@ namespace ui {
             {
                 std::string author_id = use_cases_.GetAuthorId(author);
                 params.author_id = author_id;
-                return params;
+
+                if (author_id != "")
+                {
+                    return params;
+                }
+                else
+                {
+                    throw std::invalid_argument("Author not found.");
+                }
             }
             catch (...)
             {
