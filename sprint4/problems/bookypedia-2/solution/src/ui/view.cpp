@@ -362,7 +362,7 @@ namespace ui {
 
             //boost::algorithm::trim(new_name);
 
-            //use_cases_.EditAuthor(author_id, new_name);
+            use_cases_.EditAuthor(author_id, "new_name");
 
             return true;
         }
