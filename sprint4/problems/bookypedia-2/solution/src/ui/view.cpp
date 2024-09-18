@@ -328,6 +328,7 @@ namespace ui {
 
             std::string author_id;
 
+
             if (name.empty())
             {
                 //ShowAuthors();
@@ -348,18 +349,18 @@ namespace ui {
                 author_id = use_cases_.GetAuthorId(name);
             }
 
-            if (author_id == "")
-            {
-                throw std::invalid_argument("Author not found!!\n");
-                //return true;
-            }
-
             output_ << "Enter new name:\n";
 
             std::string new_name;
             std::getline(cmd_input, new_name);
 
             boost::algorithm::trim(new_name);
+
+            if (author_id == "")
+            {
+                throw std::invalid_argument("Author not found!!\n");
+                //return true;
+            }
 
             use_cases_.EditAuthor(author_id, new_name);
         }
