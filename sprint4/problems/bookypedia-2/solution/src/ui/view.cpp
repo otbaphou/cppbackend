@@ -276,12 +276,13 @@ namespace ui {
 
             if (name.empty())
             {
-                ShowAuthors();           
+                //ShowAuthors();           
 
                 auto author = SelectAuthor(false);
 
                 if (!author.has_value())
                 {
+
                     return true;
                 }
                 else
