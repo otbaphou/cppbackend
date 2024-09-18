@@ -167,7 +167,8 @@ namespace ui {
             {
                 if (!params.has_value())
                 {
-                    throw std::invalid_argument("Failed to add the book..");
+                    //throw std::invalid_argument("Failed to add the book..");
+                    return true;
                 }
 
                 detail::AddBookParams p = params.value();
