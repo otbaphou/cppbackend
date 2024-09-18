@@ -359,8 +359,8 @@ namespace ui {
 
             std::string new_name = "";
 
-            cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::getline(cmd_input, new_name);
+            std::cin >> new_name;
+            std::getline(input_, new_name);
 
             boost::algorithm::trim(new_name);
 
@@ -369,7 +369,7 @@ namespace ui {
                 throw std::invalid_argument("Invalid author name!");
             }
 
-            use_cases_.EditAuthor(author_id, "new_name");
+            use_cases_.EditAuthor(author_id, new_name);
 
             return true;
         }
