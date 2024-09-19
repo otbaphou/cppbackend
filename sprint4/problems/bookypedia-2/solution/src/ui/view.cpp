@@ -491,12 +491,12 @@ namespace ui {
         std::getline(input_, tag_str);
         boost::algorithm::trim(tag_str);
         
-	auto new_tags = tags;
+	//auto new_tags = tags;
 	
-	if(tag_str != "")
-        {
-        	new_tags = ParseTags(tag_str);
-        }
+	//if(tag_str != "")
+        //{
+        new_tags = ParseTags(tag_str);
+        //}
 
         return { book, new_tags };
     }
