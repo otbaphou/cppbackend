@@ -198,7 +198,7 @@ namespace ui {
                         }
                     }
 
-                    if(!current_id != "")
+                    if(current_id != "")
                     {
                         if(tags != "")
                         {
