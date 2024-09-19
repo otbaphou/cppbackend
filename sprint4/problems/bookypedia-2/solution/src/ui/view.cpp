@@ -447,10 +447,10 @@ namespace ui {
     {
         detail::BookInfo book = old_book;
 
-        output_ << "Enter new title or empty line to use the current one (" << old_book.title << "):";
+        output_ << "Enter new title or empty line to use the current one (" << old_book.title << "):\n";
 
         std::string title;
-        std::getline(cmd_input, title);
+        std::getline(input_, title);
         boost::algorithm::trim(title);
 
         if (!title.empty())
@@ -458,10 +458,10 @@ namespace ui {
             book.title = title;
         }
 
-        output_ << "Enter publication year or empty line to use the current one (" << old_book.publication_year << "):";
+        output_ << "Enter publication year or empty line to use the current one (" << old_book.publication_year << "):\n";
 
         std::string year;
-        std::getline(cmd_input, year);
+        std::getline(input_, year);
         boost::algorithm::trim(year);
 
         if (!year.empty())
@@ -481,29 +481,36 @@ namespace ui {
             }
             else
             {
-                output_ << tags[i] << "):";
+                output_ << tags[i];
             }
-        }        
+        }     
         
-        std::string tag_str;
-        std::getline(cmd_input, tag_str);
+        output_ << "):\n";   
+        
+        std::string tag_str = "";
+        std::getline(input_, tag_str);
         boost::algorithm::trim(tag_str);
-
-        auto new_tags = ParseTags(tag_str);
+        
+	auto new_tags = tags;
+	
+	if(tag_str != "")
+        {
+        	new_tags = ParseTags(tag_str);
+        }
 
         return { book, new_tags };
     }
 
     bool View::EditBook(std::istream& cmd_input) const
     {
-        std::string title;
+        std::string title = "";
         std::getline(cmd_input, title);
 
         boost::algorithm::trim(title);
 
-        std::string book_id;
+        std::string book_id = "";
 
-        if (title.empty())
+        if (title == "")
         {
             //ShowBooks();
 
@@ -538,21 +545,37 @@ namespace ui {
             {
                 if (books.size() > 1)
                 {
-                    if (const auto& val = SelectBook(false, {}))
-                    {
-                        if (val.has_value())
-                        {
-                            book_id = val.value();
-                        }
-                        else
-                        {
-                            throw std::invalid_argument("Invalid book edit selection!");
-                        }
-                    }
+                 	std::vector<detail::BookInfo> book_info;
+    		     
+    		     	for(const domain::BookRepresentation book : books)
+    		     	{
+    		     		if(book.has_id)
+    		     		{
+    		     			detail::BookInfo tmp{book.title, use_cases_.GetAuthorName(book.author_id.ToString()), book.year, book.book_id.ToString()};
+    		     			book_info.push_back(tmp);
+    		     		}
+    		     		else
+    		     		{
+    		     			detail::BookInfo tmp{book.title, book.author_name, book.year, book.book_id.ToString()};
+    		     			book_info.push_back(tmp);
+    		     		}
+    		     	
+    		     	}
+    		     
+                    	auto tmp_book_id = SelectBook(true, book_info);
+                                        
+                    	if(tmp_book_id.has_value())
+                    	{	
+                    		book_id = tmp_book_id.value();
+                    	}
+                    	else
+                    	{
+                    	    	return true;
+                   	}
                 }
                 else
                 {
-                    book_id = books[0].book_id.ToString();
+                	book_id = books[0].book_id.ToString();
                 }
 
                 auto& book = use_cases_.GetBookById(book_id);
