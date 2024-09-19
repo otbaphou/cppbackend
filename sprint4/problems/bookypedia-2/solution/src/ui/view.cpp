@@ -83,7 +83,9 @@ namespace ui {
                 result.push_back(tag);
             }
         }
-
+        
+	std::sort(result.begin(), result.end());
+	
         return result;
     }
 
