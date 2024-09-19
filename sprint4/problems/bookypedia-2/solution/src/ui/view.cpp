@@ -245,46 +245,79 @@ namespace ui {
     }
 
     bool View::DeleteBook(std::istream& cmd_input) const
-    {//mess
+    {
         try
         {
             std::string title;
             std::getline(cmd_input, title);
 
             boost::algorithm::trim(title);
-
-            if (title.empty())
+		
+	    std::string book_id = "";
+	    
+            if (title == "")
             {
-                ShowBooks();
-            }
-
-            auto books = use_cases_.GetBooksWithName(title);
-
-            if (books.size() == 0)
-            {
-                throw std::invalid_argument("No book found to delete!");
-            }
-            else
-            {
-                if(books.size() > 1)
-                { 
-                    auto book_id = SelectBook(false, {});
-
-                    if (book_id.has_value())
-                    {
-                        use_cases_.DeleteBook(book_id.value());
-                    }
-                    else
-                    {
-                        throw std::invalid_argument("Chosen Invalid Book To Delete!");
-                    }
+                auto book_id_tmp = SelectBook(false, {});
+                
+                if(!book_id_tmp.has_value())
+                {
+                	return true;
                 }
                 else
                 {
-                    use_cases_.DeleteBook(books[0].book_id.ToString());
+                	book_id = book_id_tmp.value();
                 }
             }
+	    else
+	    {
+            	auto books = use_cases_.GetBooksWithName(title);
+	
+           	 if (books.size() == 0)
+           	 {
+            	    //throw std::invalid_argument("No book found to delete!");
+            	    return true;
+            	}
+            	else
+            	{
+              	  	if(books.size() > 1)
+              	  	{ 
+                  		std::vector<detail::BookInfo> book_info;
+    		     
+    		     		for(const domain::BookRepresentation book : books)
+    		     		{
+    		     			if(book.has_id)
+    		     			{
+    		     				detail::BookInfo tmp{book.title, use_cases_.GetAuthorName(book.author_id.ToString()), book.year, book.book_id.ToString()};
+    		     				book_info.push_back(tmp);
+    		     			}
+    		     			else
+    		     			{
+    		     				detail::BookInfo tmp{book.title, book.author_name, book.year, book.book_id.ToString()};
+    		     				book_info.push_back(tmp);
+    		     			}
+    		     	
+    		     		}
+    		     
+                    		auto tmp_book_id = SelectBook(true, book_info);
+                                        
+                    		if(tmp_book_id.has_value())
+                    		{	
+                    			book_id = tmp_book_id.value();
+                    		}
+                    		else
+                    		{
+                    	    		//throw std::invalid_argument("Chosen Invalid Book To Delete!");
+                   		}
 
+                     	   	use_cases_.DeleteBook(book_id);
+                    		return true;
+                	}
+               	else
+                	{
+                  		use_cases_.DeleteBook(books[0].book_id.ToString());
+               	}
+            	}
+	    }
         }
         catch (const std::exception& ex)
         {
