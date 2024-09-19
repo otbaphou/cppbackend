@@ -306,7 +306,7 @@ namespace ui {
                     		}
                     		else
                     		{
-                    	    		//throw std::invalid_argument("Chosen Invalid Book To Delete!");
+                    	    		return true;
                    		}
 
                      	   	use_cases_.DeleteBook(book_id);
