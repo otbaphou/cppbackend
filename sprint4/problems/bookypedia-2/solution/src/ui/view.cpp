@@ -185,7 +185,7 @@ namespace ui {
 
                     auto& tmp_books = use_cases_.GetBooksWithName(p.title);
 
-                    std::string current_id;
+                    std::string current_id = "";
 
                     if (tmp_books.size() > 1)
                     {
@@ -198,9 +198,12 @@ namespace ui {
                         }
                     }
 
-                    if(!current_id.empty())
+                    if(!current_id != "")
                     {
-                        use_cases_.SaveTags(current_id, ParseTags(tags));
+                        if(tags != "")
+                        {
+                            use_cases_.SaveTags(current_id, ParseTags(tags));
+                        }
                     }
                 }
 
@@ -619,6 +622,7 @@ namespace ui {
 
                 if (response.size() != 1 || response[0] != 'Y' && response[0] != 'y')
                 {
+                    output_ << "Failed to add book"sv << std::endl;
                     return std::nullopt;
                 }
 
