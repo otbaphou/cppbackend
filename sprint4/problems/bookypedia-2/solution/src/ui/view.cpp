@@ -198,13 +198,13 @@ namespace ui {
                         }
                     }
 
-                    if(current_id != "")
-                    {
-                        if(tags != "")
-                        {
-                            use_cases_.SaveTags(current_id, ParseTags(tags));
-                        }
-                    }
+                    //if(current_id != "")
+                    //{
+                    //    if(tags != "")
+                    //    {
+                    //        use_cases_.SaveTags(current_id, ParseTags(tags));
+                    //    }
+                    //}
                 }
 
                 return true;
