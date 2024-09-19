@@ -539,6 +539,7 @@ namespace ui {
 
             if (books.size() == 0)
             {
+            	 output_ << "Book not found\n";
                 return true;
             }
             else
