@@ -59,7 +59,12 @@ namespace app
 	{
 		books_.DeleteBook(book_id);
 	}
-
+	
+	const std::string UseCasesImpl::GetAuthorName(const std::string& id) const
+	{
+		return authors_.GetAuthorName(id);
+	}
+	
 	const std::string UseCasesImpl::GetAuthorId(const std::string& name) const
 	{
 		return authors_.GetAuthorId(name);

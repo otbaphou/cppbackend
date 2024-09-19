@@ -29,6 +29,7 @@ namespace app
 		const std::vector<domain::BookRepresentation> GetAuthorBooks(const std::string& author_id) const override;
 		const std::vector<domain::BookRepresentation> GetBooksWithName(const std::string& author_id) const override; 
 		const domain::BookRepresentation GetBookById(const std::string& book_id) const override;
+		const std::string GetAuthorName(const std::string& id) const override;
 		const std::string GetAuthorId(const std::string& name) const override;
 
 	private:

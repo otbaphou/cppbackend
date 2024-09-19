@@ -16,6 +16,7 @@ public:
     void Save(const domain::Author& author) override;
     const std::vector<domain::Author> Load() const override;
     const domain::Author LoadSingle(const std::string& id) const override;
+    const std::string GetAuthorName(const std::string& id) const override;
     const std::string GetAuthorId(const std::string& name) const override;
 
     void EditAuthor(const std::string& author_id, const std::string new_name) override;

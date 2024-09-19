@@ -137,7 +137,25 @@ namespace postgres {
 
 		return result;
 	}
+	
+	const std::string AuthorRepositoryImpl::GetAuthorName(const std::string& id) const
+	{
+		pqxx::read_transaction read_t(connection_);
 
+		std::string query_text = "SELECT id, name FROM authors WHERE id='";
+		query_text = query_text + id;
+		query_text = query_text + "';";
+
+		for (auto [id, name] : read_t.query<std::string, std::string>(query_text))
+		{
+			return name;
+		}
+
+		read_t.commit();
+
+		return "";
+	}
+	
 	const std::string AuthorRepositoryImpl::GetAuthorId(const std::string& name) const
 	{
 		pqxx::read_transaction read_t(connection_);

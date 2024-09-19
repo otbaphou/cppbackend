@@ -21,13 +21,24 @@ struct AddBookParams {
     int publication_year = 0;
 };
 
-struct AuthorInfo {
+struct AuthorInfo 
+{
+    AuthorInfo(const std::string& i, const std::string& n)
+    :id(i),
+    name(n){}
+    
     std::string id;
     std::string name;
 };
 
 struct BookInfo 
 {
+    BookInfo(const std::string& t, const std::string& n, int y, const std::string& i)
+    :title(t),
+    author_name(n),
+    publication_year(y),
+    id(i){}
+    
     std::string title;
     std::string author_name;
     int publication_year;
@@ -54,9 +65,9 @@ private:
 
     std::optional<detail::AddBookParams> GetBookParams(std::istream& cmd_input) const;
     std::optional<std::string> SelectAuthor(bool) const;
-    std::optional<std::string> SelectBook() const;
-    std::vector<detail::AuthorInfo> GetAuthors() const;
     std::vector<detail::BookInfo> GetBooks() const;    
+    std::optional<std::string> SelectBook(bool use_given_container, const std::vector<detail::BookInfo>& container) const;
+    std::vector<detail::AuthorInfo> GetAuthors() const;
     std::vector<std::string> GetTags(const std::string& book_id) const;
     //detail::BookInfo GetBook(const std::string id) const;
     std::vector<detail::BookInfo> GetAuthorBooks(const std::string& author_id) const;

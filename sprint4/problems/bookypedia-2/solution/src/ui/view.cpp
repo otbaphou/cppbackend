@@ -110,7 +110,8 @@ namespace ui {
 
     void PrintBookDetailed(std::ostream& out, const domain::BookRepresentation& book, const std::vector<std::string>& tags)
     {
-        out << "Title: " << book.title << "\nAuthor: " << book.author_name << "\nPublication year: " << book.year << "\nTags: " << std::endl;
+    
+        out << "Title: " << book.title << "\nAuthor: " << book.author_name << "\nPublication year: " << book.year << "\nTags: ";
 
         for (int i = 0; i < tags.size(); ++i)
         {
@@ -262,7 +263,7 @@ namespace ui {
             {
                 if(books.size() > 1)
                 { 
-                    auto book_id = SelectBook();
+                    auto book_id = SelectBook(false, {});
 
                     if (book_id.has_value())
                     {
@@ -468,7 +469,7 @@ namespace ui {
         {
             //ShowBooks();
 
-            auto book = SelectBook();
+            auto book = SelectBook(false, {});
 
             if (!book.has_value())
             {
@@ -499,7 +500,7 @@ namespace ui {
             {
                 if (books.size() > 1)
                 {
-                    if (const auto& val = SelectBook())
+                    if (const auto& val = SelectBook(false, {}))
                     {
                         if (val.has_value())
                         {
@@ -546,26 +547,91 @@ namespace ui {
     {
         try
         {
-            std::string title;
+            std::string title = "";
 
             std::getline(cmd_input, title);
-            std::vector<domain::BookRepresentation> books = use_cases_.GetBooksWithName(title);
-
-            if (!books.empty())
+            boost::algorithm::trim(title);
+    	     
+            std::string book_id = "";
+            
+            if (title != "")
             {
-                if (books.size() == 1)
+               //output_ << "Searching for: " << title << std::endl;
+            	std::vector<domain::BookRepresentation> books = use_cases_.GetBooksWithName(title);
+            
+            
+                if (books.size() > 1)
                 {
-                    PrintBookDetailed(output_, books[0], GetTags(books[0].book_id.ToString()));//BROKEN
+    		     //output_ << "Found multiple books!\n";
+    		     std::vector<detail::BookInfo> book_info;
+    		     
+    		     for(const domain::BookRepresentation book : books)
+    		     {
+    		     	if(book.has_id)
+    		     	{
+    		     		detail::BookInfo tmp{book.title, use_cases_.GetAuthorName(book.author_id.ToString()), book.year, book.book_id.ToString()};
+    		     		book_info.push_back(tmp);
+    		     	}
+    		     	else
+    		     	{
+    		     		detail::BookInfo tmp{book.title, book.author_name, book.year, book.book_id.ToString()};
+    		     		book_info.push_back(tmp);
+    		     	}
+    		     	
+    		     }
+    		     
+                    auto tmp_book_id = SelectBook(true, book_info);
+                                        
+                    if(tmp_book_id.has_value())
+                    {
+                    	book_id = tmp_book_id.value();
+                    }
+                    else
+                    {
+                    	return true;
+                    }
                 }
                 else
                 {
-                    auto book_id = SelectBook();
+		     if (books.size() == 1)
+                    {
+    			//output_ << "Found a single book!\n";
+                    	book_id = books[0].book_id.ToString();
+                    }
+                    else
+                    {
+    			//output_ << "Didn't find a book!\n";
+                    	return true;
+                    }
                 }
             }
+            else
+            {
+                    auto tmp_book_id = SelectBook(false, {});
+                    
+                    if(tmp_book_id.has_value())
+                    {
+                    	book_id = tmp_book_id.value();
+                    }
+                    else
+                    {
+                    	return true;
+                    }
+            }
+            auto the_book = use_cases_.GetBookById(book_id);
+            
+            if(the_book.has_id)
+            {
+            	the_book.author_name = use_cases_.GetAuthorName(the_book.author_id.ToString());
+            }
+            
+            PrintBookDetailed(output_, the_book, GetTags(book_id));
+            
+            return true;
         }
-        catch(...)
+        catch(std::exception& ex)
         {
-            //throw std::invalid_argument("Failed to show book!");
+            //output_ << "Failed to show a book: "s << ex.what(); //Remove
         }
 
         return true;
@@ -689,10 +755,11 @@ namespace ui {
 
         return authors[author_idx].id;
     }
-
-    std::optional<std::string> View::SelectBook() const 
+    
+    std::optional<std::string> View::SelectBook(bool use_given_container, const std::vector<detail::BookInfo>& container) const 
     {   
-        auto books = GetBooks();
+        auto books = use_given_container ? container : GetBooks();
+        
         PrintBooks(output_, books);
         output_ << "Enter the book # or empty line to cancel:" << std::endl;
 
@@ -767,3 +834,4 @@ namespace ui {
     }
 
 }  // namespace ui
+

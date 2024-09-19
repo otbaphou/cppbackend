@@ -21,7 +21,13 @@ public:
     void ShowInstructions() const;
 
 private:
-    struct ActionInfo {
+    struct ActionInfo 
+    {
+    	ActionInfo(Handler h, const std::string& a, const std::string& d)
+    	:handler(h),
+    	args(a),
+    	description(d){}
+    	
         Handler handler;
         std::string args;
         std::string description;
