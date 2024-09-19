@@ -180,7 +180,7 @@ namespace ui {
                     output_ << "Enter tags (comma separated):\n";
 
                     std::string tags = "";
-                    std::getline(cmd_input, tags);
+                    std::getline(input_, tags);
                     boost::algorithm::trim(tags);
 
                     auto& tmp_books = use_cases_.GetBooksWithName(p.title);
@@ -198,13 +198,13 @@ namespace ui {
                         }
                     }
 
-                    if(current_id != "")
-                    {
-                        if(tags != "")
-                        {
-                            use_cases_.SaveTags(current_id, ParseTags(tags));
-                        }
-                    }
+                    //if(current_id != "")
+                    //{
+                    //    if(tags != "")
+                    //    {
+                    //        use_cases_.SaveTags(current_id, ParseTags(tags));
+                    //    }
+                    //}
                 }
 
                 return true;
@@ -218,7 +218,7 @@ namespace ui {
     }
 
     bool View::DeleteBook(std::istream& cmd_input) const
-    {
+    {//mess
         try
         {
             std::string title;
@@ -569,7 +569,9 @@ namespace ui {
 
 
     std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input) const 
-    {
+    {    	 
+    	//cmd_input.sync();
+    
         detail::AddBookParams params;
 
         cmd_input >> params.publication_year;
@@ -577,11 +579,13 @@ namespace ui {
         std::getline(cmd_input, params.title);
 
         boost::algorithm::trim(params.title);
-
+        
+	//cmd_input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	
         output_ << "Enter author name or empty line to select from list:\n";
 
         std::string author = "";
-        std::getline(cmd_input, author);
+        std::getline(input_, author);
         boost::algorithm::trim(author);
 
         if (author == "")
@@ -610,7 +614,7 @@ namespace ui {
                 output_ << "No author found. Do you want to add " << author << " (y/n)?\n";
 
                 std::string response = "";
-                std::getline(cmd_input, response);
+                std::getline(input_, response);
                 boost::algorithm::trim(response);
 
                 if (response.size() != 1 || response[0] != 'Y' && response[0] != 'y')
@@ -723,7 +727,7 @@ namespace ui {
 
         for (const domain::BookRepresentation& book : use_cases_.GetAuthorBooks(author_id))
         {
-            books.emplace_back(book.title, book.author_name, book.year);
+            books.emplace_back(book.title, book.author_name, book.year, book.book_id.ToString());
         }
 
         return books;
