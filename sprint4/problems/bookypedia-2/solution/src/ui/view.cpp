@@ -198,13 +198,13 @@ namespace ui {
                         }
                     }
 
-                    //if(current_id != "")
-                    //{
-                    //    if(tags != "")
-                    //    {
-                    //        use_cases_.SaveTags(current_id, ParseTags(tags));
-                    //    }
-                    //}
+                    if(current_id != "")
+                    {
+                        if(tags != "")
+                        {
+                            use_cases_.SaveTags(current_id, ParseTags(tags));
+                        }
+                    }
                 }
 
                 return true;
@@ -580,11 +580,11 @@ namespace ui {
 
         output_ << "Enter author name or empty line to select from list:\n";
 
-        std::string author;
+        std::string author = "";
         std::getline(cmd_input, author);
         boost::algorithm::trim(author);
 
-        if (author.empty())
+        if (author == "")
         {
             auto author_id = SelectAuthor(true);
 
@@ -598,25 +598,18 @@ namespace ui {
         }
         else
         {
-            try
-            {
-                std::string author_id = use_cases_.GetAuthorId(author);
-                params.author_id = author_id;
+            std::string author_id = use_cases_.GetAuthorId(author);
 
-                if (author_id != "")
-                {
-                    return params;
-                }
-                else
-                {
-                    throw std::invalid_argument("Author not found.");
-                }
+            if (author_id != "")
+            {
+                params.author_id = author_id;
+                return params;
             }
-            catch (...)
+            else
             {
                 output_ << "No author found. Do you want to add " << author << " (y/n)?\n";
 
-                std::string response;
+                std::string response = "";
                 std::getline(cmd_input, response);
                 boost::algorithm::trim(response);
 
@@ -628,8 +621,8 @@ namespace ui {
 
                 use_cases_.AddAuthor(author);
 
-                std::string author_id = use_cases_.GetAuthorId(author);
-                params.author_id = author_id;
+                std::string new_author_id = use_cases_.GetAuthorId(author);
+                params.author_id = new_author_id;
                 return params;
             }
         }
