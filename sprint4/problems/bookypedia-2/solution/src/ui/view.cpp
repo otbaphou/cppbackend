@@ -495,7 +495,7 @@ namespace ui {
 	
 	//if(tag_str != "")
         //{
-        new_tags = ParseTags(tag_str);
+        auto new_tags = ParseTags(tag_str);
         //}
 
         return { book, new_tags };
