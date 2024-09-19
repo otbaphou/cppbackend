@@ -229,8 +229,12 @@ namespace postgres {
 
 		for (const std::string& tag : tags)
 		{
-			work.exec_params(R"(INSERT IGNORE INTO book_tags (id, tag) VALUES ($1, $2);)"_zv, book_id, tag);
+			work.exec_params(R"(INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);)"_zv, book_id, tag);
 		}
+		
+		//work.exec_params(R"(INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);)"_zv, book_id, "tag");
+		
+		work.commit();
 	}
 
 	//EDITING
@@ -264,7 +268,7 @@ namespace postgres {
 
 		for (const std::string& tag : tags)
 		{
-			work.exec_params(R"(INSERT IGNORE INTO book_tags (id, tag) VALUES ($1, $2);)"_zv, book_id, tag);
+			work.exec_params(R"(INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);)"_zv, book_id, tag);
 		}
 
 		work.commit();
@@ -312,7 +316,7 @@ namespace postgres {
 		pqxx::work work{ connection_ };
 		work.exec(R"(CREATE TABLE IF NOT EXISTS authors ( id UUID CONSTRAINT author_id_constraint PRIMARY KEY, name varchar(100) UNIQUE NOT NULL );)"_zv);
 		work.exec(R"(CREATE TABLE IF NOT EXISTS books ( id UUID CONSTRAINT book_id_constraint PRIMARY KEY, author_id UUID NOT NULL, title varchar(100) NOT NULL, publication_year integer);)"_zv);
-		work.exec(R"(CREATE TABLE IF NOT EXISTS book_tags ( book_id UUID CONSTRAINT book_t_id_constraint PRIMARY KEY, tag varchar(30) UNIQUE);)"_zv);
+		work.exec(R"(CREATE TABLE IF NOT EXISTS book_tags ( book_id UUID, tag varchar(30));)"_zv);
 
 		// ... создать другие таблицы
 
