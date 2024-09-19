@@ -518,6 +518,7 @@ namespace ui {
 
             if (!book.has_value())
             {
+            	 output_ << "Book not found\n";
                 return true;
             }
             else
