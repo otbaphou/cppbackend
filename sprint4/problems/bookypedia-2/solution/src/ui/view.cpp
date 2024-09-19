@@ -572,6 +572,7 @@ namespace ui {
                     	}
                     	else
                     	{
+            	 		output_ << "Book not found\n";
                     	    	return true;
                    	}
                 }
