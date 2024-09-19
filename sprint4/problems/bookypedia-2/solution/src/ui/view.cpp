@@ -219,12 +219,7 @@ namespace ui {
                     if(current_id != "")
                     {
                         if(tags != "")
-                        {
-                        	for(auto& tag : ParseTags(tags))
-                        	{
-                        		output_ << tag << '\n';
-                        	}
-                        	
+                        {                        	
                                use_cases_.SaveTags(current_id, ParseTags(tags));
                         }
                     }
