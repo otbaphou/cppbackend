@@ -111,20 +111,25 @@ namespace ui {
     void PrintBookDetailed(std::ostream& out, const domain::BookRepresentation& book, const std::vector<std::string>& tags)
     {
     
-        out << "Title: " << book.title << "\nAuthor: " << book.author_name << "\nPublication year: " << book.year << "\nTags: ";
-
-        for (int i = 0; i < tags.size(); ++i)
+        out << "Title: " << book.title << "\nAuthor: " << book.author_name << "\nPublication year: " << book.year << "\n;
+        
+        if(tags.size() > 0)
         {
-            out << tags[i];
+        	out << "Tags: ";
 
-            if (i != tags.size() - 1)
-            {
-                out << ", ";
-            }
-            else
-            {
-                out << "\n";
-            }
+        	for (int i = 0; i < tags.size(); ++i)
+        	{
+            		out << tags[i];
+
+            		if (i != tags.size() - 1)
+           		{
+           		     out << ", ";
+           		}
+           		else
+            		{
+			     out << "\n";
+            		}
+        	}
         }
     }
 
@@ -834,4 +839,3 @@ namespace ui {
     }
 
 }  // namespace ui
-
