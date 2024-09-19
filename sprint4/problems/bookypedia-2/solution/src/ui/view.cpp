@@ -53,9 +53,19 @@ namespace ui {
             {
                 if(!tag.empty())
                 {
-                    result.push_back(tag);
+            		if (tag[tag.size() - 1] == ' ')
+            		{
+            		    tag.pop_back();
+            		}
+
+            		if (std::find(result.begin(), result.end(), tag) == result.end())
+            		{
+                		result.push_back(tag);
+            		}
+            		
                     tag.clear();
                 }
+                continue;
             }
 
             tag.push_back(c);
@@ -194,15 +204,28 @@ namespace ui {
                             if (book.author_id.ToString() == p.author_id)
                             {
                                 current_id = book.book_id.ToString();
+                                break;
                             }
                         }
+                    }
+                    else
+                    {
+                    	if(tmp_books.size() == 1)
+                    	{
+                    		current_id = tmp_books[0].book_id.ToString();
+                    	}
                     }
 
                     if(current_id != "")
                     {
                         if(tags != "")
                         {
-                            use_cases_.SaveTags(current_id, ParseTags(tags));
+                        	for(auto& tag : ParseTags(tags))
+                        	{
+                        		output_ << tag << '\n';
+                        	}
+                        	
+                               use_cases_.SaveTags(current_id, ParseTags(tags));
                         }
                     }
                 }
@@ -212,6 +235,7 @@ namespace ui {
         }
         catch (const std::exception& ex)
         {
+            //output_ << "Failed to add book"sv << ex.what() << std::endl;
             output_ << "Failed to add book"sv << std::endl;
         }
         return true;
