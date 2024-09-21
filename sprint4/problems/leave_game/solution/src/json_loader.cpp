@@ -77,12 +77,12 @@ namespace json_loader
 		}
 	}
 
-	model::Game LoadGame(const std::filesystem::path& json_path, model::Players& pm)
+	model::Game LoadGame(const std::filesystem::path& json_path, model::Players& pm, db::ConnectionPool& connection_pool)
 	{
 		// Загрузить содержимое файла json_path, например, в виде строки
 		// Распарсить строку как JSON, используя boost::json::parse
 		// Загрузить модель игры из файла
-		model::Game game{pm};
+		model::Game game{pm, connection_pool };
 
 		std::ifstream file(json_path);
 
@@ -136,7 +136,7 @@ namespace json_loader
 			Id id{ std::string(map_data.at("id").as_string()) };
 
 			//Initializing map
-			model::Map map(id, std::string(map_data.at("name").as_string()), game.GetConnectionSignal()); //So many brackets omg
+			model::Map map(id, std::string(map_data.at("name").as_string()), game.GetPool()); //So many brackets omg
 
 			double dog_speed = -1;
 			int bag_capacity =-1;

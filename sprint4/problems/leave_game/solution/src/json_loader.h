@@ -15,6 +15,6 @@ namespace json_loader
 	void ParseBuildings(model::Map& map, json::object& parent_object);
 	void ParseOffices(model::Map& map, json::object& parent_object);
 
-	model::Game LoadGame(const std::filesystem::path& json_path, model::Players& pm);
+	model::Game LoadGame(const std::filesystem::path& json_path, model::Players& pm, db::ConnectionPool& connection_pool);
 
 }  // namespace json_loader

@@ -202,10 +202,10 @@ namespace model
 		using Buildings = std::vector<Building>;
 		using Offices = std::vector<Office>;
 
-		Map(Id id, std::string name, boost::signals2::signal<db::ConnectionPool::ConnectionWrapper&()>& sig) noexcept
+		Map(Id id, std::string name, db::ConnectionPool& pool) noexcept
 			: id_(std::move(id))
 			, name_(std::move(name))
-			, connection_signal(sig)
+			, connection_pool_(pool)
 		{}
 
 		const Id& GetId() const noexcept {
@@ -317,8 +317,7 @@ namespace model
 
 		void RetireDog(const std::string& username, int64_t score, int time_alive) const
 		{
-			auto wrap = std::move(std::forward<db::ConnectionPool::ConnectionWrapper>(*connection_signal()));
-			//pqxx::work work{ *wrap }; //TODO: Maybe try calling for a signal each time map is created instead of doing that every time I retire a dog..
+			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
 			//TODO: Remove Token
 			pqxx::work work{ *wrap };
 			work.exec_params(R"(INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4;)"_zv,
@@ -346,7 +345,7 @@ namespace model
 		std::deque<Coordinates> buffer_;
 		double afk_threshold_ = 60000.0;
 
-		boost::signals2::signal<db::ConnectionPool::ConnectionWrapper&()>& connection_signal;
+		db::ConnectionPool& connection_pool_;
 	};
 
 	enum Direction
@@ -606,6 +605,17 @@ namespace model
 			return token_to_player_;
 		}
 
+		void RemovePlayer(Player* pl)
+		{
+			for (auto& entry : token_to_player_)
+			{
+				if (pl == entry.second)
+				{
+					token_to_player_.erase(entry.first);
+				}
+			}
+		}
+
 		std::string GetToken() const
 		{
 			for (const auto& entry : token_to_player_)
@@ -629,8 +639,9 @@ namespace model
 	{
 	public:
 
-		Game(Players& pm)
-			:player_manager_(pm) {}
+		Game(Players& pm, db::ConnectionPool& pool)
+			:player_manager_(pm),
+			connection_pool_(pool){}
 
 		using Maps = std::vector<Map>;
 
@@ -713,9 +724,9 @@ namespace model
 			extra_data_.AddTable(id, table);
 		}
 
-		auto& GetConnectionSignal()
+		db::ConnectionPool& GetPool()
 		{
-			return connection_signal;
+			return connection_pool_;
 		}
 
 		void SetLootOnMap(const std::deque<Item>& items, const std::string& map_id);
@@ -729,7 +740,7 @@ namespace model
 		using MapIdHasher = util::TaggedHasher<Map::Id>;
 		using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
 
-		boost::signals2::signal<db::ConnectionPool::ConnectionWrapper&()> connection_signal;
+		db::ConnectionPool& connection_pool_;
 
 		std::vector<Map> maps_;
 		MapIdToIndex map_id_to_index_;
