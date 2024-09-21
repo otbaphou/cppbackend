@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 project(game_server CXX)
 set(CMAKE_CXX_STANDARD 20)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
 conan_basic_setup(TARGETS)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -24,6 +24,8 @@ add_library(game_server_lib STATIC
 	src/loot_generator.h
 	src/loot_generator.cpp
 	src/tagged.h
+	src/tagged_uuid.cpp
+	src/tagged_uuid.h
 	src/boost_json.cpp
 	src/json_loader.h
 	src/json_loader.cpp
@@ -35,10 +37,11 @@ add_library(game_server_lib STATIC
 	src/collision_detector.h
 	src/model_serialization.h
 	src/save_manager.h
+	src/DB_manager.h
 )
 
 target_include_directories(game_server_lib PUBLIC CONAN_PKG::boost)
-target_link_libraries(game_server_lib PUBLIC CONAN_PKG::boost Threads::Threads)
+target_link_libraries(game_server_lib PUBLIC CONAN_PKG::boost Threads::Threads CONAN_PKG::libpq CONAN_PKG::libpqxx)
 
 add_executable(game_server
 	src/main.cpp

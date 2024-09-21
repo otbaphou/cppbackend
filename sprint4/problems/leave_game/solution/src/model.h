@@ -7,15 +7,20 @@
 #include <chrono>
 #include <memory>
 #include <algorithm>
+#include <optional>
+#include <boost/signals2.hpp>
 
 #include "collision_detector.h"
 #include "loot_generator.h"
 #include "extra_data.h"
-#include "tagged.h"
+#include "tagged_uuid.h"
+#include "DB_manager.h"
 
 //REMOVE LATER
 //UPD: Or maybe not, because it runs the logging..
 #include "http_server.h"
+
+using pqxx::operator"" _zv;
 
 const std::string X_COORDINATE = "x";
 const std::string Y_COORDINATE = "y";
@@ -197,9 +202,10 @@ namespace model
 		using Buildings = std::vector<Building>;
 		using Offices = std::vector<Office>;
 
-		Map(Id id, std::string name) noexcept
+		Map(Id id, std::string name, boost::signals2::signal<db::ConnectionPool::ConnectionWrapper&()>& sig) noexcept
 			: id_(std::move(id))
 			, name_(std::move(name))
+			, connection_signal(sig)
 		{}
 
 		const Id& GetId() const noexcept {
@@ -249,6 +255,16 @@ namespace model
 		void SetBagCapacity(int capacity)
 		{
 			bag_capacity_ = capacity;
+		}	
+
+		void SetAFK(double threshold)
+		{
+			afk_threshold_ = threshold;
+		}
+
+		double GetAFK() const
+		{
+			return afk_threshold_;
 		}
 
 		Coordinates GetRandomSpot() const;
@@ -299,6 +315,17 @@ namespace model
 
 		void AddOffice(Office office);
 
+		void RetireDog(const std::string& username, int64_t score, int time_alive) const
+		{
+			auto wrap = std::move(std::forward<db::ConnectionPool::ConnectionWrapper>(*connection_signal()));
+			//pqxx::work work{ *wrap }; //TODO: Maybe try calling for a signal each time map is created instead of doing that every time I retire a dog..
+			//TODO: Remove Token
+			pqxx::work work{ *wrap };
+			work.exec_params(R"(INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4;)"_zv,
+				util::TaggedUUID<Id>::New().ToString(), username, score, time_alive);
+			work.commit();
+		}
+
 	private:
 		using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
@@ -317,6 +344,9 @@ namespace model
 		OfficeIdToIndex warehouse_id_to_index_;
 		Offices offices_; 
 		std::deque<Coordinates> buffer_;
+		double afk_threshold_ = 60000.0;
+
+		boost::signals2::signal<db::ConnectionPool::ConnectionWrapper&()>& connection_signal;
 	};
 
 	enum Direction
@@ -410,7 +440,8 @@ namespace model
 			:username_(username),
 			current_map_(maptr),
 			id_(id),
-			pet_(dog){}
+			pet_(dog),
+			birth_time(std::chrono::system_clock::now()){}
 
 		Player(Dog* dog, size_t id, std::string username, const Map* maptr, int64_t score, std::deque<Item> items)
 			:username_(username),
@@ -418,7 +449,8 @@ namespace model
 			bag_(items),
 			id_(id),
 			pet_(dog),
-			score_(score){}
+			score_(score),
+			birth_time(std::chrono::system_clock::now()){}
 
 		std::string GetName() const
 		{
@@ -470,8 +502,34 @@ namespace model
 		}
 
 		void Move(int ms)
+		{			
+			Coordinates old_pos = GetPos();
+
+			//Idle stuff
+			Velocity vel = pet_->GetVel();
+
+			pet_->Move(ms);	
+
+			Coordinates new_pos = GetPos();
+
+			if (old_pos.x == new_pos.x && old_pos.y == new_pos.y)
+			{
+				idle_time += ms;
+
+				if (idle_time >= current_map_->GetAFK())
+				{
+					Retire();
+				}
+			}
+			else
+			{
+				idle_time == 0;
+			}
+		}
+
+		void Retire() const
 		{
-			pet_->Move(ms);
+			current_map_->RetireDog(username_, score_, ( std::chrono::system_clock::now() - birth_time ).count());
 		}
 
 		void StoreItem(Item item);
@@ -507,6 +565,9 @@ namespace model
 		int64_t score_ = 0;
 
 		Dog* pet_;
+
+		int idle_time = 0;
+		std::chrono::system_clock::time_point birth_time;
 	};
 
 	class Players
@@ -618,6 +679,11 @@ namespace model
 			global_bag_capacity = capacity;
 		}
 
+		void SetAFK(double threshold)
+		{
+			afk_threshold = threshold * 1000;
+		}
+
 		void MoveAndCalcPickups(Map& map, int ms);
 
 		void ServerTick(int milliseconds);
@@ -647,15 +713,23 @@ namespace model
 			extra_data_.AddTable(id, table);
 		}
 
+		auto& GetConnectionSignal()
+		{
+			return connection_signal;
+		}
+
 		void SetLootOnMap(const std::deque<Item>& items, const std::string& map_id);
 
 	private:
 
 		double global_dog_speed_ = 1;
 		int global_bag_capacity = 3;
+		double afk_threshold = 60000.0;
 
 		using MapIdHasher = util::TaggedHasher<Map::Id>;
 		using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
+
+		boost::signals2::signal<db::ConnectionPool::ConnectionWrapper&()> connection_signal;
 
 		std::vector<Map> maps_;
 		MapIdToIndex map_id_to_index_;

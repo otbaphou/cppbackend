@@ -532,6 +532,81 @@ namespace http_handler
 			send(str_response);
 			return;
 		}
+
+		if (target == "/api/v1/game/records"sv || target == "/api/v1/game/records/"sv)
+		{
+			bool allow_get_head = false;
+			json::object response; //The response we send in case of error
+			http::status response_status;
+
+			if (req_type != "GET"sv && req_type != "HEAD"sv)
+			{
+				response.emplace("code", "invalidMethod");
+				response.emplace("message", "Invalid method");
+
+				response_status = http::status::method_not_allowed;
+
+				allow_get_head = true;
+			}
+			else
+			{
+				pqxx::connection konna{ "placeholder" };
+				pqxx::read_transaction read_t{ konna };
+
+				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
+
+				int max_iterations = 100;
+				int starting_point = 0;
+
+				size_t current = 0;
+
+				json::array record_response; //The response we send if everything's okay
+
+				for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
+				{
+					if (current < starting_point)
+					{
+						++current;
+						continue;
+					}
+					else
+					{
+						if (current < max_iterations)
+						{
+							++current;
+
+							json::object player_data;
+
+							player_data.emplace("name", name);
+							player_data.emplace("score", score);
+							player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 1000));
+
+							record_response.push_back(player_data);
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+				response_status = http::status::ok;
+				StringResponse str_response{ text_response(response_status, { json::serialize(record_response) }, ContentType::APPLICATION_JSON) };
+				send(str_response);
+				return;
+			}
+
+			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+			str_response.set(http::field::cache_control, "no-cache");
+
+			if (allow_get_head)
+			{
+				str_response.set(http::field::allow, "GET, HEAD"sv);
+			}
+
+			send(str_response);
+			return;
+		}
+
 		if (target == "/api/v1/game/player/action"sv || target == "/api/v1/game/player/action/"sv)
 		{
 			json::object response;

@@ -55,6 +55,8 @@ namespace model
 			map.SetBagCapacity(bag_capacity);
 		}
 
+		map.SetAFK(afk_threshold);
+
 		const size_t index = maps_.size();
 		if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {
 			throw std::invalid_argument("Map with id "s + *map.GetId() + " already exists"s);
@@ -135,6 +137,7 @@ namespace model
 
 	void Game::ServerTick(int milliseconds)
 	{
+
 		loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
 
 		if (gen_ptr != nullptr)
@@ -147,7 +150,7 @@ namespace model
 				int item_count = map.GetItemCount();
 				json::object logger_data;
 
-				//In case I ever need to debug this system
+				//In case I ever need to debug the system
 				//logger_data.emplace("Player Count", player_count);
 				//logger_data.emplace("Item Count", item_count);
 				//logger_data.emplace("Ticks (ms)", milliseconds);

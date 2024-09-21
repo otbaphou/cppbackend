@@ -113,6 +113,11 @@ namespace json_loader
 			game.SetGlobalCapacity(value.as_object().at("defaultBagCapacity").as_int64());
 		}
 
+		if (value.as_object().contains("dogRetirementTime"))
+		{
+			game.SetAFK(value.as_object().at("dogRetirementTime").as_double());
+		}
+
 		if (value.as_object().contains("lootGeneratorConfig"))
 		{
 			Data::MapExtras extras{ value.as_object().at("lootGeneratorConfig").as_object() };
@@ -131,7 +136,7 @@ namespace json_loader
 			Id id{ std::string(map_data.at("id").as_string()) };
 
 			//Initializing map
-			model::Map map(id, std::string(map_data.at("name").as_string()));
+			model::Map map(id, std::string(map_data.at("name").as_string()), game.GetConnectionSignal()); //So many brackets omg
 
 			double dog_speed = -1;
 			int bag_capacity =-1;

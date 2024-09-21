@@ -9,6 +9,7 @@
 #include <fstream>
 #include <optional>
 
+#include "DB_manager.h"
 #include "json_loader.h"
 #include "request_handler.h"
 #include "save_manager.h"
@@ -17,7 +18,9 @@ using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
 namespace http = boost::beast::http;
+using pqxx::operator"" _zv;
 
+//constexpr const char DB_URL_ENV_NAME[]{ "GAME_DB_URL" };
 
 namespace
 {
@@ -198,6 +201,7 @@ struct Args
 
 int main(int argc, const char* argv[])
 {
+
 	Args args;
 
 	try
@@ -222,7 +226,14 @@ int main(int argc, const char* argv[])
 
 	try
 	{
-
+		//Initializing from enviroment variable
+		const char* db_url = std::getenv("GAME_DB_URL");
+		//Checking if env. variable exists. Throwing error if it does not
+		if (!db_url)
+		{
+			throw std::runtime_error("GAME_DB_URL is not specified");
+		}
+		
 		// 1. Загружаем карту из файла и построить модель игры
 		model::Players player_manager_{args.randomize};
 		model::Game game = json_loader::LoadGame(args.config_file, player_manager_);
@@ -234,8 +245,30 @@ int main(int argc, const char* argv[])
 			save_manager.LoadState();
 		}
 
-		// 2. Инициализируем io_context
+		//Creating and initializing the connection pool
 		const unsigned num_threads = std::thread::hardware_concurrency();
+		db::ConnectionPool conn_pool
+		{ 
+			num_threads, [db_url] 
+			{ 
+				auto conn = std::make_shared<pqxx::connection>(db_url); 
+				/*conn->prepare("select_one", "SELECT 1;");*/ 
+				return conn; 
+			}
+		};//TODO: Make some sort of protection from overusing the connections in pool
+
+		//game.GetConnectionSignal().connect(conn_pool.GetConnection());
+
+		{
+			db::ConnectionPool::ConnectionWrapper wrap = conn_pool.GetConnection();
+			pqxx::connection& connection = *wrap;
+			pqxx::work work{ connection };
+			work.exec(R"(CREATE TABLE IF NOT EXISTS retired_players ( id UUID CONSTRAINT player_id_constraint PRIMARY KEY, name varchar(100) NOT NULL, score integer, play_time_ms integer );)"_zv);
+			work.exec(R"(CREATE INDEX IF NOT EXISTS retired_players_idx ON retired_players ( score DESC, play_time_ms, name );)"_zv);
+			work.commit();
+		}
+
+		// 2. Инициализируем io_context
 		net::io_context ioc(num_threads);
 
 		// 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
