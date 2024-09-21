@@ -473,7 +473,7 @@ namespace model
 	std::string Players::MakePlayer(std::string username, const Map* map)
 	{
 		Player player{ BirthDog(map), players_.size(), username, map };
-
+		player.SetManager(*this);
 		players_.push_back(std::move(player));
 
 		Player* ptr = &players_.back();

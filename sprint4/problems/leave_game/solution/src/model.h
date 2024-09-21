@@ -317,6 +317,7 @@ namespace model
 
 		void RetireDog(const std::string& username, int64_t score, int time_alive) const
 		{
+			time_alive = time_alive / 1000;
 			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
 			//TODO: Remove Token
 			pqxx::work work{ *wrap };
@@ -452,6 +453,25 @@ namespace model
 			pet_(dog),
 			score_(score),
 			birth_time(std::chrono::system_clock::now()) {}
+
+
+		//Needed to erase elements from players_ deque :(
+		Player& operator=(const Player& other) noexcept
+		{
+			if (this != &other) 
+			{
+				username_ = other.username_;
+				current_map_ = other.current_map_;
+				bag_ = other.bag_;
+				//id_ = other.id_;
+				score_ = other.score_;
+				pet_ = other.pet_;
+				idle_time = other.idle_time;
+				birth_time = other.birth_time;
+				player_manager_ = other.player_manager_;
+			}
+			return *this;
+		}
 
 		std::string GetName() const
 		{
@@ -612,6 +632,26 @@ namespace model
 
 		void RemovePlayer(Player* pl)
 		{
+			//1.
+			Dog* pointer_dog = pl->GetDog();
+			auto dog_it = std::find_if(dogs_.begin(), dogs_.end(), [pointer_dog](Dog& dog) { return &dog == pointer_dog; });
+
+			if (dog_it != dogs_.end())
+			{
+				dogs_.erase(dog_it);
+			}
+
+			//2.
+			auto& players_tmp = map_id_to_players_[*pl->GetCurrentMap()->GetId()];
+
+			auto it = std::find(players_tmp.begin(), players_tmp.end(), pl);
+
+			if (it != players_tmp.end())
+			{
+				players_tmp.erase(it);
+			}
+
+			//3.
 			for (auto& entry : token_to_player_) 
 			{
 				if (pl == entry.second) 
@@ -619,6 +659,14 @@ namespace model
 					token_to_player_.erase(entry.first);
 					break;
 				}
+			}
+
+			//4.
+			auto player_it = std::find_if(players_.begin(), players_.end(), [pl](const Player& player) { return &player == pl; });
+
+			if (player_it != players_.end())
+			{
+				players_.erase(player_it);
 			}
 		}
 
