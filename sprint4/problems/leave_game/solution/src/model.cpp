@@ -473,6 +473,7 @@ namespace model
 	std::string Players::MakePlayer(std::string username, const Map* map)
 	{
 		Player player{ BirthDog(map), players_.size(), username, map };
+
 		players_.push_back(std::move(player));
 
 		Player* ptr = &players_.back();
@@ -590,9 +591,10 @@ namespace model
 		return &dogs_.back();
 	}
 
-	void Players::InsertPlayer(const Player player, const std::string& token, const std::string& map_id)
+	void Players::InsertPlayer(Player& player, const std::string& token, const std::string& map_id)
 	{
-		players_.push_back(player);
+		player.SetManager(*this);
+		players_.push_back(std::move(player));
 
 		Player* player_ptr = &players_.back();
 
@@ -616,6 +618,12 @@ namespace model
 
 
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "collected item";
+	}
+
+	void Player::Retire()
+	{
+		current_map_->RetireDog(username_, score_, (std::chrono::system_clock::now() - birth_time).count());
+		player_manager_.get()->RemovePlayer(this);
 	}
 
 	//===Item===

@@ -93,10 +93,11 @@ namespace savesystem
 
 					input_archive >> player_repr;
 
-					const auto restored_player = player_repr.Restore(game_, pup);
-
 					std::string token;
 					input_archive >> token;
+
+					model::Player restored_player = player_repr.Restore(game_, pup);
+					restored_player.SetManager(player_manager);
 
 					player_manager.InsertPlayer(restored_player, token, map_id);
 				}

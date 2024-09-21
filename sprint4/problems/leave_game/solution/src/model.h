@@ -432,6 +432,8 @@ namespace model
 		const Map* current_map_;
 	};
 
+	class Players;
+
 	class Player
 	{
 	public:
@@ -440,7 +442,7 @@ namespace model
 			current_map_(maptr),
 			id_(id),
 			pet_(dog),
-			birth_time(std::chrono::system_clock::now()){}
+			birth_time(std::chrono::system_clock::now()) {}
 
 		Player(Dog* dog, size_t id, std::string username, const Map* maptr, int64_t score, std::deque<Item> items)
 			:username_(username),
@@ -449,7 +451,7 @@ namespace model
 			id_(id),
 			pet_(dog),
 			score_(score),
-			birth_time(std::chrono::system_clock::now()){}
+			birth_time(std::chrono::system_clock::now()) {}
 
 		std::string GetName() const
 		{
@@ -526,10 +528,7 @@ namespace model
 			}
 		}
 
-		void Retire() const
-		{
-			current_map_->RetireDog(username_, score_, ( std::chrono::system_clock::now() - birth_time ).count());
-		}
+		void Retire();
 
 		void StoreItem(Item item);
 
@@ -553,6 +552,11 @@ namespace model
 			return pet_;
 		}
 
+		void SetManager(Players& pm)
+		{
+			player_manager_ = std::make_shared<Players>(pm);
+		}
+
 	private:
 
 		std::string username_;
@@ -567,6 +571,8 @@ namespace model
 
 		int idle_time = 0;
 		std::chrono::system_clock::time_point birth_time;
+
+		std::shared_ptr<Players> player_manager_;
 	};
 
 	class Players
@@ -582,7 +588,6 @@ namespace model
 		Player* FindPlayerByToken(std::string token) const;
 
 		Dog* BirthDog(const Map* map);
-
 		Dog* FindDogByIdx(size_t idx);
 
 		const std::deque<Player*> GetPlayerList(std::string map_id) const
@@ -598,7 +603,7 @@ namespace model
 
 		Dog* InsertDog(const Dog& dog);
 
-		void InsertPlayer(const Player pl, const std::string& token, const std::string& map_id);
+		void InsertPlayer(Player& pl, const std::string& token, const std::string& map_id);
 
 		const std::unordered_map<std::string, Player*>& GetTokenToPlayerTable() const
 		{
@@ -607,11 +612,12 @@ namespace model
 
 		void RemovePlayer(Player* pl)
 		{
-			for (auto& entry : token_to_player_)
+			for (auto& entry : token_to_player_) 
 			{
-				if (pl == entry.second)
+				if (pl == entry.second) 
 				{
 					token_to_player_.erase(entry.first);
+					break;
 				}
 			}
 		}
@@ -633,6 +639,7 @@ namespace model
 		std::unordered_map<std::string, std::deque<Player*>> map_id_to_players_;
 		std::deque<Player> players_;
 		std::deque<Dog> dogs_;
+
 	};
 
 	class Game

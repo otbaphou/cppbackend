@@ -123,9 +123,7 @@ namespace serialization
 		{
 			const model::Map* the_map = game.FindMap(current_map_id_);
 
-			model::Player player{ lost_pup, id_, username_, the_map, score, bag_ };
-
-			return player;
+			return { lost_pup, id_, username_, the_map, score, bag_ };
 		}
 
 		template <typename Archive>
