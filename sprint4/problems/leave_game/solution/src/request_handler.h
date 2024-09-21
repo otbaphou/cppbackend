@@ -550,8 +550,9 @@ namespace http_handler
 			}
 			else
 			{
-				pqxx::connection konna{ "placeholder" };
-				pqxx::read_transaction read_t{ konna };
+				boost::signals2::signal<db::ConnectionPool::ConnectionWrapper& ()>& connection_signal = game.GetConnectionSignal();
+				auto wrap = std::move(std::forward<db::ConnectionPool::ConnectionWrapper>(*connection_signal()));
+				pqxx::read_transaction read_t{ *wrap };
 
 				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
 
