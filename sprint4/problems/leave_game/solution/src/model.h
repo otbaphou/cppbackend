@@ -495,6 +495,7 @@ namespace model
 
 		void SetVel(double vel_x, double vel_y)
 		{
+			idle_time = 0;
 			pet_->SetVel(vel_x, vel_y);
 		}
 
