@@ -196,7 +196,7 @@ namespace http_handler
 						else
 						{
 							game.ServerTick(ticks);
-							save_manager.Listen(ticks);
+							//save_manager.Listen(ticks);
 
 							response_status = http::status::ok;
 						}
