@@ -208,14 +208,6 @@ namespace http_handler
 
 						response_status = http::status::bad_request;
 					}
-					catch (...)
-					{
-						//TODO: Remove this
-						response.emplace("code", "holyShit");
-						response.emplace("message", "What the fuck even happened here??");
-
-						response_status = http::status::im_used;
-					}
 				}
 				else
 				{
