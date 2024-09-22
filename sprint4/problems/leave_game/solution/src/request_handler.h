@@ -324,7 +324,7 @@ namespace http_handler
 
 			if (std::string_view(target.begin(), target.begin() + 20) == "/api/v1/game/records"sv)
 			{
-				json::array response; //The response we send in case of error
+				json::array response;
 				http::status response_status;
 
 				db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
@@ -332,8 +332,8 @@ namespace http_handler
 
 				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
 
-				int max_iterations = 100; //33
-				int starting_point = 0; //28
+				int max_iterations = 100; 
+				int starting_point = 0;
 
 				auto iter = std::find(target.begin(), target.end(), '?');
 				auto iter_sec = std::find(target.begin(), target.end(), '&');
