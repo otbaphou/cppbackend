@@ -340,16 +340,28 @@ namespace http_handler
 
 				if (iter != target.end())
 				{
-
-					if (std::string_view(iter + 1, iter + 6) == "start="sv)
+					if (std::string_view(iter + 1, iter + 7) == "start="sv)
 					{
+						std::string tmp = "";
 
+						for (char c : std::string_view(iter + 7, iter_sec))
+						{
+							tmp.push_back(c);
+						}
+		
+						starting_point = std::stoi(tmp);
 					}
 
-
-					if (std::string_view(iter + 1, iter + 9) == "maxItems="sv)
+					if (std::string_view(iter_sec + 1, iter_sec + 10) == "maxItems="sv)
 					{
+						std::string tmp = "";
 
+						for (char c : std::string_view(iter_sec + 10, target.end()))
+						{
+							tmp.push_back(c);
+						}
+
+						max_iterations = std::stoi(tmp);
 					}
 				}
 
