@@ -508,7 +508,6 @@ namespace model
 		void Move(int ms)
 		{			
 			age += ms;
-
 			Coordinates old_pos = GetPos();
 
 			//Idle stuff
@@ -524,6 +523,7 @@ namespace model
 
 				if (idle_time >= current_map_->GetAFK())
 				{
+					age -= current_map_->GetAFK() - idle_time;
 					idle_time = current_map_->GetAFK();
 					Retire();
 				}
