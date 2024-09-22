@@ -137,8 +137,8 @@ namespace http_handler
 	}
 
 	template <typename Send>
-	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response, 
-	const auto& request, bool rest_api_ticks, savesystem::SaveManager& save_manager)
+	void HandleRequestAPI(Send&& send, model::Game& game, std::string_view target, const auto& text_response,
+		const auto& request, bool rest_api_ticks, savesystem::SaveManager& save_manager)
 	{
 		std::string_view req_type = request.method_string();
 
@@ -177,7 +177,7 @@ namespace http_handler
 			}
 			else
 			{
-				if(rest_api_ticks)
+				if (rest_api_ticks)
 				{
 					try
 					{
@@ -533,75 +533,60 @@ namespace http_handler
 
 		if (target == "/api/v1/game/records"sv || target == "/api/v1/game/records/"sv)
 		{
-			std::cerr << "CAUGHT RECORDS!!!\n\n\n\n\n";
-			bool allow_get_head = false;
-			json::object response; //The response we send in case of error
+			json::array response; //The response we send in case of error
 			http::status response_status;
 
-			if (req_type != "GET"sv && req_type != "HEAD"sv)
+			db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
+			pqxx::read_transaction read_t{ *wrap };
+
+			std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
+
+			int max_iterations = 100;
+			int starting_point = 0;
+
+			size_t current = 0;
+
+			if (max_iterations > 100)
 			{
-				response.emplace("code", "invalidMethod");
-				response.emplace("message", "Invalid method");
+				response_status = http::status::bad_request;
+				StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+				str_response.set(http::field::cache_control, "no-cache");
 
-				response_status = http::status::method_not_allowed;
-
-				allow_get_head = true;
-			}
-			else
-			{
-				db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
-				pqxx::read_transaction read_t{ *wrap };
-
-				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
-
-				int max_iterations = 100;
-				int starting_point = 0;
-
-				size_t current = 0;
-
-				json::array record_response; //The response we send if everything's okay
-
-				for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
-				{
-					if (current < starting_point)
-					{
-						++current;
-						continue;
-					}
-					else
-					{
-						if (current < max_iterations)
-						{
-							++current;
-
-							json::object player_data;
-
-							player_data.emplace("name", name);
-							player_data.emplace("score", score);
-							player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 10000));
-
-							record_response.push_back(player_data);
-						}
-						else
-						{
-							break;
-						}
-					}
-				}
-
-				response_status = http::status::ok;
-				StringResponse str_response{ text_response(response_status, { json::serialize(record_response) }, ContentType::APPLICATION_JSON) };
 				send(str_response);
 				return;
 			}
 
+			for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
+			{
+				if (current < starting_point)
+				{
+					++current;
+					continue;
+				}
+				else
+				{
+					if (current < max_iterations)
+					{
+						++current;
+
+						json::object player_data;
+
+						player_data.emplace("name", name);
+						player_data.emplace("score", score);
+						player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 10000));
+
+						response.push_back(player_data);
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			response_status = http::status::ok;
 			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 			str_response.set(http::field::cache_control, "no-cache");
-
-			if (allow_get_head)
-			{
-				str_response.set(http::field::allow, "GET, HEAD"sv);
-			}
 
 			send(str_response);
 			return;
@@ -787,12 +772,12 @@ namespace http_handler
 			{
 				//JSON object with map data
 				json::object response;
-				
+
 				if (req_type != "GET"sv && req_type != "HEAD"sv)
 				{
 					response.emplace("code", "invalidMethod");
 					response.emplace("message", "Invalid method");
-	
+
 					StringResponse str_response{ text_response(http::status::method_not_allowed, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 					str_response.set(http::field::cache_control, "no-cache");
 
@@ -804,12 +789,12 @@ namespace http_handler
 				{
 					using Id = util::Tagged<std::string, model::Map>;
 					Id id{ std::string(target.begin() + 13, target.end()) };
-	
+
 					const model::Map* maptr = game.FindMap(id);
-	
+
 					if (maptr != nullptr)
 					{
-						
+
 
 						//Initializing object using map id and name
 						response.emplace("id", *maptr->GetId());
@@ -834,7 +819,7 @@ namespace http_handler
 						response.emplace("offices", std::move(offices));
 
 						//Appending loot table
-					
+
 						response.emplace("lootTypes", game.GetLootTable(*id));
 
 						//Printing response
@@ -859,9 +844,9 @@ namespace http_handler
 				}
 			}
 		}
-		
 
-		
+
+
 		//Throwing error when URL starts with /api/ but doesn't correlate to any of the commands
 		json::object response;
 
