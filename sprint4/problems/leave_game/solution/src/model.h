@@ -517,6 +517,7 @@ namespace model
 
 			if (vel.x == 0 && vel.y == 0)
 			{
+				std::cerr << "NOT MOVING\n";
 				idle_time += ms;
 
 				if (idle_time >= current_map_->GetAFK())
@@ -527,7 +528,7 @@ namespace model
 			}
 			else
 			{
-				idle_time == 0;
+				idle_time = 0;
 			}
 		}
 
