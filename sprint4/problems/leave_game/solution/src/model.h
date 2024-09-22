@@ -317,19 +317,12 @@ namespace model
 
 		void RetireDog(const std::string& username, int64_t score, int64_t time_alive) const
 		{
-			try
-			{
 			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
 
 			pqxx::work work{ *wrap };
 			work.exec_params(R"(INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4;)"_zv,
 				util::TaggedUUID<Id>::New().ToString(), username, score, time_alive);
 			work.commit();
-			}
-			catch(...)
-			{
-				
-			}
 		}
 
 	private:
@@ -515,9 +508,7 @@ namespace model
 		}
 
 		void Move(int ms)
-		{		
-			pet_->Move(ms);
-			
+		{			
 			age_ms_ += ms;
 
 			Velocity vel = pet_->GetVel();
@@ -535,7 +526,8 @@ namespace model
 			else
 			{
 				idle_time = 0;
-			}	
+				pet_->Move(ms);	
+			}
 		}
 
 		void Retire(int64_t current_age);
@@ -618,12 +610,6 @@ namespace model
 
 		void RemovePlayer(Player* pl)
 		{
-			//token_to_player_.clear();
-			//players_.clear();
-			//Dog* pointer_dog = pl->GetDog();
-			//pl->~Player();
-			//dogs_.clear();
-
 			for (auto& entry : token_to_player_) 
 			{
 				if (pl == entry.second) 
@@ -632,38 +618,6 @@ namespace model
 					break;
 				}
 			}
-
-			//std::deque<Player*>& container = map_id_to_players_[*pl->GetCurrentMap()->GetId()];
-			//auto it = std::find(container.begin(), container.end(), pl);
-
-			//if (it != container.end())
-			//{
-			//	container.erase(it);
-			//}
-
-			//auto dog_it = std::find_if(dogs_.begin(), dogs_.end(), [pointer_dog](Dog& dog) { return &dog == pointer_dog; });
-
-			//if (dog_it != dogs_.end())
-			//{
-			//	dogs_.erase(dog_it);
-			//}
-
-			//std::cerr << "DELETED STUFF\n";
-			//auto player_it = std::find_if(players_.begin(), players_.end(), [pl](const Player& player) { return &player == pl; });
-
-			//if (player_it != players_.end())
-			//{
-			//	players_.erase(player_it);
-			//}
-		}
-
-		std::string GetToken() const
-		{
-			for (const auto& entry : token_to_player_)
-			{
-				return entry.first;
-			}
-			return "None";
 		}
 
 	private:

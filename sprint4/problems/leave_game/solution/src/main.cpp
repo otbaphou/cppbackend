@@ -242,10 +242,18 @@ int main(int argc, const char* argv[])
 			num_threads, [db_url]
 			{
 				auto conn = std::make_shared<pqxx::connection>(db_url);
-				/*conn->prepare("select_one", "SELECT 1;");*/
 				return conn;
 			}
-		};//TODO: Make some sort of protection from overusing the connections in pool
+		};
+
+		{
+			db::ConnectionPool::ConnectionWrapper wrap = conn_pool.GetConnection();
+			pqxx::connection& connection = *wrap;
+			pqxx::work work{ connection };
+			work.exec(R"(CREATE TABLE IF NOT EXISTS retired_players ( id UUID CONSTRAINT player_id_constraint PRIMARY KEY, name varchar(100) NOT NULL, score integer, play_time_ms integer );)"_zv);
+			work.exec(R"(CREATE INDEX IF NOT EXISTS retired_players_idx ON retired_players ( score DESC, play_time_ms, name );)"_zv);
+			work.commit();
+		}
 
 		// 1. Загружаем карту из файла и построить модель игры
 		model::Players player_manager_{args.randomize};
@@ -258,14 +266,7 @@ int main(int argc, const char* argv[])
 			save_manager.LoadState();
 		}
 
-		{
-			db::ConnectionPool::ConnectionWrapper wrap = conn_pool.GetConnection();
-			pqxx::connection& connection = *wrap;
-			pqxx::work work{ connection };
-			work.exec(R"(CREATE TABLE IF NOT EXISTS retired_players ( id UUID CONSTRAINT player_id_constraint PRIMARY KEY, name varchar(100) NOT NULL, score integer, play_time_ms integer );)"_zv);
-			work.exec(R"(CREATE INDEX IF NOT EXISTS retired_players_idx ON retired_players ( score DESC, play_time_ms, name );)"_zv);
-			work.commit();
-		}
+
 
 		// 2. Инициализируем io_context
 		net::io_context ioc(num_threads);

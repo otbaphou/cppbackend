@@ -370,12 +370,15 @@ namespace model
 		{
 			for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
 			{
-				if (road.get() != current_road_ && road.get()->IsVertical())
+				if (road != nullptr)
 				{
-					current_road_ = road.get();
+					if (road.get() != current_road_ && road.get()->IsVertical())
+					{
+						current_road_ = road.get();
 
-					MoveVertical(distance);
-					return;
+						MoveVertical(distance);
+						return;
+					}
 				}
 			}
 
@@ -426,12 +429,15 @@ namespace model
 
 			for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
 			{
-				if (road.get() != current_road_ && road.get()->IsHorizontal())
+				if (road != nullptr)
 				{
-					current_road_ = road.get();
+					if (road.get() != current_road_ && road.get()->IsHorizontal())
+					{
+						current_road_ = road.get();
 
-					MoveHorizontal(distance);
-					return;
+						MoveHorizontal(distance);
+						return;
+					}
 				}
 			}
 
