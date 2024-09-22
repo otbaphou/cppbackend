@@ -196,7 +196,7 @@ namespace http_handler
 						else
 						{
 							game.ServerTick(ticks);
-							//save_manager.Listen(ticks);
+							save_manager.Listen(ticks);
 
 							response_status = http::status::ok;
 						}
@@ -207,6 +207,14 @@ namespace http_handler
 						response.emplace("message", "Failed to parse tick request JSON");
 
 						response_status = http::status::bad_request;
+					}
+					catch (...)
+					{
+						//TODO: Remove this
+						response.emplace("code", "holyShit");
+						response.emplace("message", "What the fuck even happened here??");
+
+						response_status = http::status::im_used;
 					}
 				}
 				else

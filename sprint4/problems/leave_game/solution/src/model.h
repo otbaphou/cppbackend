@@ -317,9 +317,8 @@ namespace model
 
 		void RetireDog(const std::string& username, int64_t score, int64_t time_alive) const
 		{
-			time_alive = time_alive;
 			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
-			//TODO: Remove Token
+
 			pqxx::work work{ *wrap };
 			work.exec_params(R"(INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4;)"_zv,
 				util::TaggedUUID<Id>::New().ToString(), username, score, time_alive);
@@ -511,18 +510,11 @@ namespace model
 		void Move(int ms)
 		{			
 			age_ms_ += ms;
-			//Coordinates old_pos = GetPos();
 
-			//Idle stuff
 			Velocity vel = pet_->GetVel();
-
-			pet_->Move(ms);	
-
-			//Coordinates new_pos = GetPos();
 
 			if (vel.x == 0 && vel.y == 0)
 			{
-				//std::cerr << "NOT MOVING\n";
 				idle_time += ms;
 
 				if (idle_time >= current_map_->GetAFK())
@@ -533,8 +525,8 @@ namespace model
 			}
 			else
 			{
-				//std::cerr << "MOVING!\n";
 				idle_time = 0;
+				pet_->Move(ms);	
 			}
 		}
 
