@@ -624,12 +624,12 @@ namespace model
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "collected item";
 	}
 
-	void Player::Retire()
+	void Player::Retire(int64_t current_age)
 	{
 		if (!is_removed)
 		{
 			is_removed = true;
-			current_map_->RetireDog(username_, score_, (std::chrono::system_clock::now() - birth_time).count());
+			current_map_->RetireDog(username_, score_, current_age);
 			player_manager_.RemovePlayer(this);
 		}
 	}
