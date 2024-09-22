@@ -317,7 +317,7 @@ namespace model
 
 		void RetireDog(const std::string& username, int64_t score, int time_alive) const
 		{
-			time_alive = time_alive / 1000;
+			time_alive = time_alive;
 			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
 			//TODO: Remove Token
 			pqxx::work work{ *wrap };
@@ -507,6 +507,8 @@ namespace model
 
 		void Move(int ms)
 		{			
+			age += ms;
+
 			Coordinates old_pos = GetPos();
 
 			//Idle stuff
@@ -569,6 +571,7 @@ namespace model
 		Dog* pet_;
 
 		int idle_time = 0;
+		int64_t age = 0;
 		std::chrono::system_clock::time_point birth_time;
 
 		Players& player_manager_;

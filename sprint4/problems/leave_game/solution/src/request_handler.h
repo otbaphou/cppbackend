@@ -310,88 +310,88 @@ namespace http_handler
 			send(str_response);
 			return;
 		}
-		
+
 		if (target.size() >= 20)
 		{
-		
-		if (std::string_view(target.begin(), target.begin() + 20) == "/api/v1/game/records"sv)
-		{
-			json::array response; //The response we send in case of error
-			http::status response_status;
 
-			db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
-			pqxx::read_transaction read_t{ *wrap };
-
-			std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
-
-			int max_iterations = 100;
-			int starting_point = 0;
-
-			auto iter = std::find(target.begin(), target.end(), '?');
-			auto iter_sec = std::find(target.begin(), target.end(), '&');
-			
-			if(iter != target.end())
+			if (std::string_view(target.begin(), target.begin() + 20) == "/api/v1/game/records"sv)
 			{
-				
-				if(std::string_view(iter+1, iter + 6) == "start="sv)
-				{
-					
-				}
-				
-				
-				if(std::string_view(iter+1, iter + 9) == "maxItems="sv)
-				{
-				
-				}
-			}
-	
-			size_t current = 0;
+				json::array response; //The response we send in case of error
+				http::status response_status;
 
-			if (max_iterations > 100)
-			{
-				response_status = http::status::bad_request;
+				db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
+				pqxx::read_transaction read_t{ *wrap };
+
+				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
+
+				int max_iterations = 100;
+				int starting_point = 0;
+
+				auto iter = std::find(target.begin(), target.end(), '?');
+				auto iter_sec = std::find(target.begin(), target.end(), '&');
+
+				if (iter != target.end())
+				{
+
+					if (std::string_view(iter + 1, iter + 6) == "start="sv)
+					{
+
+					}
+
+
+					if (std::string_view(iter + 1, iter + 9) == "maxItems="sv)
+					{
+
+					}
+				}
+
+				size_t current = 0;
+
+				if (max_iterations > 100)
+				{
+					response_status = http::status::bad_request;
+					StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
+					str_response.set(http::field::cache_control, "no-cache");
+
+					send(str_response);
+					return;
+				}
+
+				for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
+				{
+					if (current < starting_point)
+					{
+						++current;
+						continue;
+					}
+					else
+					{
+						if (current < max_iterations)
+						{
+							++current;
+
+							json::object player_data;
+
+							player_data.emplace("name", name);
+							player_data.emplace("score", score);
+							player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 1000));
+
+							response.push_back(player_data);
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+
+				response_status = http::status::ok;
 				StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
 				str_response.set(http::field::cache_control, "no-cache");
 
 				send(str_response);
 				return;
 			}
-
-			for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
-			{
-				if (current < starting_point)
-				{
-					++current;
-					continue;
-				}
-				else
-				{
-					if (current < max_iterations)
-					{
-						++current;
-
-						json::object player_data;
-
-						player_data.emplace("name", name);
-						player_data.emplace("score", score);
-						player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 10000));
-
-						response.push_back(player_data);
-					}
-					else
-					{
-						break;
-					}
-				}
-			}
-
-			response_status = http::status::ok;
-			StringResponse str_response{ text_response(response_status, { json::serialize(response) }, ContentType::APPLICATION_JSON) };
-			str_response.set(http::field::cache_control, "no-cache");
-
-			send(str_response);
-			return;
-		}
 		}
 
 		if (target == "/api/v1/game/players"sv || target == "/api/v1/game/players/"sv)
@@ -873,16 +873,16 @@ namespace http_handler
 		json::object response;
 
 		std::string body_r = "";
-		
-		for(char c : target)
+
+		for (char c : target)
 		{
 			body_r.push_back(c);
 		}
-		
+
 		response.emplace("request", body_r);
 		response.emplace("code", "badRequest");
 		response.emplace("message", "Bad request");
-		
+
 
 		send(text_response(http::status::ok, { json::serialize(response) }, ContentType::APPLICATION_JSON));
 		return;
