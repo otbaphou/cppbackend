@@ -472,8 +472,7 @@ namespace model
 
 	std::string Players::MakePlayer(std::string username, const Map* map)
 	{
-		Player player{ BirthDog(map), players_.size(), username, map };
-		player.SetManager(*this);
+		Player player{ BirthDog(map), players_.size(), username, map, *this};
 		players_.push_back(std::move(player));
 
 		Player* ptr = &players_.back();
@@ -563,7 +562,10 @@ namespace model
 	{
 		for (Player* player : map_id_to_players_[id])
 		{
-			player->Move(ms);
+			if (player != nullptr)
+			{
+				player->Move(ms);
+			}
 		}
 	}
 
@@ -575,9 +577,12 @@ namespace model
 		{
 			for (Player* player : map_id_to_players_.at(id))
 			{
-				if (player->GetItemCount() < player->GetCurrentMap()->GetBagCapacity())
+				if(player != nullptr)
 				{
-					result.push_back(player->GetPos());
+					if (player->GetItemCount() < player->GetCurrentMap()->GetBagCapacity())
+					{
+						result.push_back(player->GetPos());
+					}
 				}
 			}
 		}
@@ -593,7 +598,6 @@ namespace model
 
 	void Players::InsertPlayer(Player& player, const std::string& token, const std::string& map_id)
 	{
-		player.SetManager(*this);
 		players_.push_back(std::move(player));
 
 		Player* player_ptr = &players_.back();
@@ -622,8 +626,12 @@ namespace model
 
 	void Player::Retire()
 	{
-		current_map_->RetireDog(username_, score_, (std::chrono::system_clock::now() - birth_time).count());
-		player_manager_.get()->RemovePlayer(this);
+		if (!is_removed)
+		{
+			is_removed = true;
+			current_map_->RetireDog(username_, score_, (std::chrono::system_clock::now() - birth_time).count());
+			player_manager_.RemovePlayer(this);
+		}
 	}
 
 	//===Item===

@@ -119,11 +119,11 @@ namespace serialization
 			bag_(player.PeekInTheBag()),
 			score(player.GetScore()){}
 
-		[[nodiscard]] model::Player Restore(model::Game& game, model::Dog* lost_pup) const
+		[[nodiscard]] model::Player Restore(model::Game& game, model::Dog* lost_pup, model::Players& pm) const
 		{
 			const model::Map* the_map = game.FindMap(current_map_id_);
 
-			return { lost_pup, id_, username_, the_map, score, bag_ };
+			return { lost_pup, id_, username_, the_map, score, bag_, pm };
 		}
 
 		template <typename Archive>

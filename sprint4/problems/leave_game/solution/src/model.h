@@ -438,40 +438,23 @@ namespace model
 	class Player
 	{
 	public:
-		Player(Dog* dog, size_t id, std::string username, const Map* maptr)
+		Player(Dog* dog, size_t id, std::string username, const Map* maptr, Players& pm)
 			:username_(username),
 			current_map_(maptr),
 			id_(id),
 			pet_(dog),
-			birth_time(std::chrono::system_clock::now()) {}
+			birth_time(std::chrono::system_clock::now()),
+			player_manager_(pm){}
 
-		Player(Dog* dog, size_t id, std::string username, const Map* maptr, int64_t score, std::deque<Item> items)
+		Player(Dog* dog, size_t id, std::string username, const Map* maptr, int64_t score, std::deque<Item> items, Players& pm)
 			:username_(username),
 			current_map_(maptr),
 			bag_(items),
 			id_(id),
 			pet_(dog),
 			score_(score),
-			birth_time(std::chrono::system_clock::now()) {}
-
-
-		//Needed to erase elements from players_ deque :(
-		Player& operator=(const Player& other) noexcept
-		{
-			if (this != &other) 
-			{
-				username_ = other.username_;
-				current_map_ = other.current_map_;
-				bag_ = other.bag_;
-				//id_ = other.id_;
-				score_ = other.score_;
-				pet_ = other.pet_;
-				idle_time = other.idle_time;
-				birth_time = other.birth_time;
-				player_manager_ = other.player_manager_;
-			}
-			return *this;
-		}
+			birth_time(std::chrono::system_clock::now()),
+			player_manager_(pm){}
 
 		std::string GetName() const
 		{
@@ -572,11 +555,6 @@ namespace model
 			return pet_;
 		}
 
-		void SetManager(Players& pm)
-		{
-			player_manager_ = std::make_shared<Players>(pm);
-		}
-
 	private:
 
 		std::string username_;
@@ -592,7 +570,8 @@ namespace model
 		int idle_time = 0;
 		std::chrono::system_clock::time_point birth_time;
 
-		std::shared_ptr<Players> player_manager_;
+		Players& player_manager_;
+		bool is_removed = false;
 	};
 
 	class Players
@@ -632,26 +611,12 @@ namespace model
 
 		void RemovePlayer(Player* pl)
 		{
-			//1.
-			Dog* pointer_dog = pl->GetDog();
-			auto dog_it = std::find_if(dogs_.begin(), dogs_.end(), [pointer_dog](Dog& dog) { return &dog == pointer_dog; });
+			//token_to_player_.clear();
+			//players_.clear();
+			//Dog* pointer_dog = pl->GetDog();
+			//pl->~Player();
+			//dogs_.clear();
 
-			if (dog_it != dogs_.end())
-			{
-				dogs_.erase(dog_it);
-			}
-
-			//2.
-			auto& players_tmp = map_id_to_players_[*pl->GetCurrentMap()->GetId()];
-
-			auto it = std::find(players_tmp.begin(), players_tmp.end(), pl);
-
-			if (it != players_tmp.end())
-			{
-				players_tmp.erase(it);
-			}
-
-			//3.
 			for (auto& entry : token_to_player_) 
 			{
 				if (pl == entry.second) 
@@ -661,13 +626,28 @@ namespace model
 				}
 			}
 
-			//4.
-			auto player_it = std::find_if(players_.begin(), players_.end(), [pl](const Player& player) { return &player == pl; });
+			//std::deque<Player*>& container = map_id_to_players_[*pl->GetCurrentMap()->GetId()];
+			//auto it = std::find(container.begin(), container.end(), pl);
 
-			if (player_it != players_.end())
-			{
-				players_.erase(player_it);
-			}
+			//if (it != container.end())
+			//{
+			//	container.erase(it);
+			//}
+
+			//auto dog_it = std::find_if(dogs_.begin(), dogs_.end(), [pointer_dog](Dog& dog) { return &dog == pointer_dog; });
+
+			//if (dog_it != dogs_.end())
+			//{
+			//	dogs_.erase(dog_it);
+			//}
+
+			//std::cerr << "DELETED STUFF\n";
+			//auto player_it = std::find_if(players_.begin(), players_.end(), [pl](const Player& player) { return &player == pl; });
+
+			//if (player_it != players_.end())
+			//{
+			//	players_.erase(player_it);
+			//}
 		}
 
 		std::string GetToken() const
