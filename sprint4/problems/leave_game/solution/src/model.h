@@ -515,8 +515,10 @@ namespace model
 		}
 
 		void Move(int ms)
-		{			
-			/*age_ms_ += ms;
+		{		
+			pet_->Move(ms);
+			
+			age_ms_ += ms;
 
 			Velocity vel = pet_->GetVel();
 
@@ -532,9 +534,8 @@ namespace model
 			}
 			else
 			{
-				idle_time = 0;*/
-			//}
-			pet_->Move(ms);	
+				idle_time = 0;
+			}	
 		}
 
 		void Retire(int64_t current_age);
