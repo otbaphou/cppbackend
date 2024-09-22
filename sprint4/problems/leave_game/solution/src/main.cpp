@@ -239,7 +239,7 @@ int main(int argc, const char* argv[])
 		//Creating and initializing the connection pool
 		db::ConnectionPool conn_pool
 		{
-			num_threads * 100, [db_url]
+			num_threads, [db_url]
 			{
 				auto conn = std::make_shared<pqxx::connection>(db_url);
 				/*conn->prepare("select_one", "SELECT 1;");*/
