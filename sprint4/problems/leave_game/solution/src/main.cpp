@@ -263,7 +263,7 @@ int main(int argc, const char* argv[])
 			pqxx::connection& connection = *wrap;
 			pqxx::work work{ connection };
 			work.exec(R"(CREATE TABLE IF NOT EXISTS retired_players ( id UUID CONSTRAINT player_id_constraint PRIMARY KEY, name varchar(100) NOT NULL, score integer, play_time_ms integer );)"_zv);
-			work.exec(R"(CREATE INDEX retired_players_idx ON retired_players ( score DESC, play_time_ms, name );)"_zv);
+			work.exec(R"(CREATE INDEX IF NOT EXISTS retired_players_idx ON retired_players ( score DESC, play_time_ms, name );)"_zv);
 			work.commit();
 		}
 
