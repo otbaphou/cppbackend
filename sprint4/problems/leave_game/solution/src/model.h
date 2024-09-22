@@ -528,6 +528,7 @@ namespace model
 			}
 			else
 			{
+				//std::cerr << "MOVING!\n";
 				idle_time = 0;
 			}
 		}

@@ -379,7 +379,7 @@ namespace model
 				}
 			}
 
-			velocity_ = { 0,0 };
+			//velocity_ = { 0,0 };
 			if (desired_point < y1)
 			{
 				position_.y = y1;
@@ -435,7 +435,7 @@ namespace model
 				}
 			}
 
-			velocity_ = { 0,0 };
+			//velocity_ = { 0,0 };
 			if (desired_point < x1)
 			{
 				position_.x = x1;
