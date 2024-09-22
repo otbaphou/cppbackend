@@ -522,6 +522,7 @@ namespace model
 
 				if (idle_time >= current_map_->GetAFK())
 				{
+					idle_time = current_map_->GetAFK();
 					Retire();
 				}
 			}
