@@ -315,7 +315,7 @@ namespace model
 
 		void AddOffice(Office office);
 
-		void RetireDog(const std::string& username, int64_t score, int time_alive) const
+		void RetireDog(const std::string& username, int64_t score, int64_t time_alive) const
 		{
 			time_alive = time_alive;
 			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
@@ -443,7 +443,6 @@ namespace model
 			current_map_(maptr),
 			id_(id),
 			pet_(dog),
-			birth_time(std::chrono::system_clock::now()),
 			player_manager_(pm){}
 
 		Player(Dog* dog, size_t id, std::string username, const Map* maptr, int64_t score, std::deque<Item> items, Players& pm)
@@ -453,7 +452,6 @@ namespace model
 			id_(id),
 			pet_(dog),
 			score_(score),
-			birth_time(std::chrono::system_clock::now()),
 			player_manager_(pm){}
 
 		std::string GetName() const
@@ -507,7 +505,7 @@ namespace model
 
 		void Move(int ms)
 		{			
-			age += ms;
+			age_ms_ += ms;
 			Coordinates old_pos = GetPos();
 
 			//Idle stuff
@@ -523,9 +521,8 @@ namespace model
 
 				if (idle_time >= current_map_->GetAFK())
 				{
-					age -= current_map_->GetAFK() - idle_time;
-					idle_time = current_map_->GetAFK();
-					Retire();
+					age_ms_ -= idle_time - current_map_->GetAFK();
+					Retire(age_ms_);
 				}
 			}
 			else
@@ -534,7 +531,7 @@ namespace model
 			}
 		}
 
-		void Retire();
+		void Retire(int64_t current_age);
 
 		void StoreItem(Item item);
 
@@ -571,8 +568,7 @@ namespace model
 		Dog* pet_;
 
 		int idle_time = 0;
-		int64_t age = 0;
-		std::chrono::system_clock::time_point birth_time;
+		int64_t age_ms_ = 0;
 
 		Players& player_manager_;
 		bool is_removed = false;
