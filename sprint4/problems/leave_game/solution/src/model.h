@@ -506,16 +506,16 @@ namespace model
 		void Move(int ms)
 		{			
 			age_ms_ += ms;
-			Coordinates old_pos = GetPos();
+			//Coordinates old_pos = GetPos();
 
 			//Idle stuff
 			Velocity vel = pet_->GetVel();
 
 			pet_->Move(ms);	
 
-			Coordinates new_pos = GetPos();
+			//Coordinates new_pos = GetPos();
 
-			if (old_pos.x == new_pos.x && old_pos.y == new_pos.y)
+			if (vel.x == 0 && vel.y == 0)
 			{
 				idle_time += ms;
 
