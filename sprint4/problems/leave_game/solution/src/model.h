@@ -413,9 +413,9 @@ namespace model
 			return current_map_->GetRoadsAtPoint({ pos_x, pos_y });
 		}
 
-		void MoveVertical(double distance);
-
-		void MoveHorizontal(double distance);
+		void MoveVertical(double distance, int iteration); 
+		
+		void MoveHorizontal(double distance, int iteration);
 
 		void Move(double ms);
 
