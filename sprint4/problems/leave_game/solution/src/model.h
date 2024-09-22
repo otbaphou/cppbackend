@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <set>
 #include <unordered_map>
 #include <vector>
 #include <deque>
@@ -174,11 +175,6 @@ namespace model
 		double y;
 	};
 
-	struct Depot
-	{
-		//To Be Made Later
-	};
-
 	struct Item
 	{
 		Item() = default;
@@ -232,16 +228,7 @@ namespace model
 			roads_.emplace_back(road);
 		}
 
-		const Road& FindRoad(Point start, Point end) const
-		{
-			for (const Road& road : roads_)
-			{
-				if (road.GetStart() == start && road.GetEnd() == end)
-				{
-					return road;
-				}
-			}
-		}
+		const Road& FindRoad(Point start, Point end) const;
 
 		void AddBuilding(const Building& building) {
 			buildings_.emplace_back(building);
@@ -298,7 +285,7 @@ namespace model
 			return items_;
 		}
 
-		Item GetItemByIdx(int idx)
+		Item GetItemByIdx(int idx) const
 		{
 			return items_[idx];
 		}
@@ -315,15 +302,7 @@ namespace model
 
 		void AddOffice(Office office);
 
-		void RetireDog(const std::string& username, int64_t score, int64_t time_alive) const
-		{
-			db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
-
-			pqxx::work work{ *wrap };
-			work.exec_params(R"(INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4;)"_zv,
-				util::TaggedUUID<Id>::New().ToString(), username, score, time_alive);
-			work.commit();
-		}
+		void RetireDog(const std::string& username, int64_t score, int64_t time_alive) const;
 
 	private:
 		using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -492,47 +471,20 @@ namespace model
 			return pet_->GetDir();
 		}
 
-		void SetVel(double vel_x, double vel_y)
-		{
-			if (vel_x != 0 && vel_y != 0)
-			{
-				idle_time = 0;
-			}
-
-			pet_->SetVel(vel_x, vel_y);
-		}
+		void SetVel(double vel_x, double vel_y);
 
 		void SetDir(Direction dir)
 		{
 			pet_->SetDir(dir);
 		}
 
-		void Move(int ms)
-		{			
-			age_ms_ += ms;
-
-			Velocity vel = pet_->GetVel();
-
-			if (vel.x == 0 && vel.y == 0)
-			{
-				idle_time += ms;
-
-				if (idle_time >= current_map_->GetAFK())
-				{
-					age_ms_ -= idle_time - current_map_->GetAFK();
-					Retire(age_ms_);
-				}
-			}
-			else
-			{
-				idle_time = 0;
-				pet_->Move(ms);	
-			}
-		}
+		void Move(int ms);
 
 		void Retire(int64_t current_age);
 
-		void StoreItem(Item item);
+		void StoreItem(const Item& item);
+
+		void Depot();
 
 		const std::deque<Item> PeekInTheBag() const
 		{
@@ -608,17 +560,7 @@ namespace model
 			return token_to_player_;
 		}
 
-		void RemovePlayer(Player* pl)
-		{
-			for (auto& entry : token_to_player_) 
-			{
-				if (pl == entry.second) 
-				{
-					token_to_player_.erase(entry.first);
-					break;
-				}
-			}
-		}
+		void RemovePlayer(Player* pl);
 
 	private:
 
@@ -647,14 +589,7 @@ namespace model
 			return maps_;
 		}
 
-		const Map* FindMap(const Map::Id& id) const noexcept
-		{
-			if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end())
-			{
-				return &maps_.at(it->second);
-			}
-			return nullptr;
-		}
+		const Map* FindMap(const Map::Id& id) const noexcept;
 
 		std::string SpawnPlayer(std::string username, const Map* map)
 		{

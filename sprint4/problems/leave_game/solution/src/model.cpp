@@ -115,39 +115,56 @@ namespace model
 		auto events = collision_detector::FindGatherEvents(provider);
 
 		//Items to remove
-		std::vector<int> removed_ids;
+		std::set<int> removed_ids;
 
 		for (collision_detector::GatheringEvent& loot_event : events)
 		{
 			int item_id = loot_event.item_id;
-			removed_ids.push_back(item_id);
+			removed_ids.insert(item_id);
 
 			player_manager_.FindPlayerByIdx(loot_event.gatherer_id)->StoreItem(map.GetItemByIdx(item_id));
 		}
 
-		//Sorting removed ids by descention so it won't cause any problems on removal
-		std::sort(removed_ids.begin(), removed_ids.end(), [](int i1, int i2) { return i1 > i2; });
-
-		for (int id : removed_ids)
+		for (auto iter = removed_ids.rbegin(); iter != removed_ids.rend(); ++iter)
 		{
-			map.RemoveItem(id);
+			map.RemoveItem(*iter);
 		} //Wonder if I forgot anything..
 
+		for(auto& player : player_manager_.GetPlayerList(map_id))
+		{
+			Coordinates player_pos = player->GetPos();
+
+			for (auto& office : map.GetOffices())
+			{
+				Point office_pos_int = office.GetPosition();
+
+				double w = std::abs(player_pos.x - office_pos_int.x);
+				double h = std::abs(player_pos.y - office_pos_int.y);
+
+				double res = std::sqrt(std::pow(w, 2) + std::pow(h, 2));
+
+				if (res <= 0.55)
+				{
+					player->Depot();
+					break;
+				}
+			}
+		}
 	}
 
 	void Game::ServerTick(int milliseconds)
 	{
-//TODO: Fix loot gen
-		//loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
+		loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
 
-		//if (gen_ptr != nullptr)
-		//{
+		if (gen_ptr != nullptr)
+		{
 			for (Map& map : maps_)
 			{
 				MoveAndCalcPickups(map, milliseconds);
 
-				//unsigned player_count = GetPlayerCount(*map.GetId());
-				//int item_count = map.GetItemCount();
+				unsigned player_count = GetPlayerCount(*map.GetId());
+				int item_count = map.GetItemCount();
+				
 				//json::object logger_data;
 
 				//In case I ever need to debug the system
@@ -157,9 +174,9 @@ namespace model
 
 				//BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "items";
 
-				//map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, item_count, player_count), extra_data_);
+				map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, item_count, player_count), extra_data_);
 			}
-		//}
+		}
 	}
 
 	void Game::SetLootOnMap(const std::deque<Item>& items, const std::string& map_id)
@@ -171,6 +188,15 @@ namespace model
 				map.SetItems(items);
 			}
 		}
+	}
+
+	const Map* Game::FindMap(const Map::Id& id) const noexcept
+	{
+		if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end())
+		{
+			return &maps_.at(it->second);
+		}
+		return nullptr;
 	}
 
 	//===Map===	
@@ -318,6 +344,27 @@ namespace model
 		return spot;
 	}
 
+	const Road& Map::FindRoad(Point start, Point end) const
+	{
+		for (const Road& road : roads_)
+		{
+			if (road.GetStart() == start && road.GetEnd() == end)
+			{
+				return road;
+			}
+		}
+	}
+
+	void Map::RetireDog(const std::string& username, int64_t score, int64_t time_alive) const
+	{
+		db::ConnectionPool::ConnectionWrapper wrap = connection_pool_.GetConnection();
+
+		pqxx::work work{ *wrap };
+		work.exec_params(R"(INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time_ms=$4;)"_zv,
+			util::TaggedUUID<Id>::New().ToString(), username, score, time_alive);
+		work.commit();
+	}
+
 	//===Dog===
 	Dog::Dog(Coordinates coords, const Map* map)
 		:position_(coords)
@@ -369,18 +416,18 @@ namespace model
 		if (desired_point < y1 || desired_point > y2)
 		{
 			for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-			{//1
+			{
 				if (road != nullptr)
 				{
 					if (road.get() != current_road_ && road.get()->IsVertical())
-					{//2
-						current_road_ = road.get(); //3
+					{
+						current_road_ = road.get();
 
-						MoveVertical(distance, ++iteration); //4
-						return; //5
-					}//~2
+						MoveVertical(distance, ++iteration);
+						return;
+					}
 				}
-			}//~1
+			}
 
 			velocity_ = { 0,0 };
 			if (desired_point < y1)
@@ -426,20 +473,19 @@ namespace model
 
 		if (desired_point < x1 || desired_point > x2)
 		{
-//TODO: Remove debug marks
 			for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-			{//1
+			{
 				if (road != nullptr)
 				{
 					if (road.get() != current_road_ && road.get()->IsHorizontal())
-					{//2
-						current_road_ = road.get(); //3
+					{
+						current_road_ = road.get();
 
-						MoveHorizontal(distance, ++iteration); //4
-						return; //5
-					}//2~
+						MoveHorizontal(distance, ++iteration);
+						return;
+					}
 				}
-			}//~1
+			}
 
 			velocity_ = { 0,0 };
 			if (desired_point < x1)
@@ -537,6 +583,7 @@ namespace model
 			spot.x = p.x;
 			spot.y = p.y;
 		}
+
 		Dog pup{ spot, map };
 		dogs_.push_back(std::move(pup));
 		return &dogs_.back();
@@ -610,11 +657,23 @@ namespace model
 
 		token_to_player_.emplace(token, player_ptr);
 		map_id_to_players_[map_id].push_back(player_ptr);
+	}		
+	
+	void Players::RemovePlayer(Player* pl)
+	{
+		for (auto& entry : token_to_player_)
+		{
+			if (pl == entry.second)
+			{
+				token_to_player_.erase(entry.first);
+				break;
+			}
+		}
 	}
 
 	//===Player===
 	
-	void Player::StoreItem(Item item)
+	void Player::StoreItem(const Item& item)
 	{
 		bag_.push_back(item);
 
@@ -630,6 +689,16 @@ namespace model
 		BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "collected item";
 	}
 
+	void Player::Depot()
+	{
+		for (Item& item : bag_)
+		{
+			score_ += item.value;
+		}
+
+		bag_.clear();
+	}
+
 	void Player::Retire(int64_t current_age)
 	{
 		if (!is_removed)
@@ -637,6 +706,38 @@ namespace model
 			is_removed = true;
 			current_map_->RetireDog(username_, score_, current_age);
 			player_manager_.RemovePlayer(this);
+		}
+	}
+	void Player::SetVel(double vel_x, double vel_y)
+	{
+		if (vel_x != 0 && vel_y != 0)
+		{
+			idle_time = 0;
+		}
+
+		pet_->SetVel(vel_x, vel_y);
+	}
+
+	void Player::Move(int ms)
+	{
+		age_ms_ += ms;
+
+		Velocity vel = pet_->GetVel();
+
+		if (vel.x == 0 && vel.y == 0)
+		{
+			idle_time += ms;
+
+			if (idle_time >= current_map_->GetAFK())
+			{
+				age_ms_ -= idle_time - current_map_->GetAFK();
+				Retire(age_ms_);
+			}
+		}
+		else
+		{
+			idle_time = 0;
+			pet_->Move(ms);
 		}
 	}
 
