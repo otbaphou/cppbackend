@@ -332,8 +332,8 @@ namespace http_handler
 
 				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
 
-				int max_iterations = 100;
-				int starting_point = 0;
+				int max_iterations = 100; //33
+				int starting_point = 0; //28
 
 				auto iter = std::find(target.begin(), target.end(), '?');
 				auto iter_sec = std::find(target.begin(), target.end(), '&');
@@ -348,7 +348,7 @@ namespace http_handler
 						{
 							tmp.push_back(c);
 						}
-		
+
 						starting_point = std::stoi(tmp);
 					}
 
@@ -377,11 +377,11 @@ namespace http_handler
 					return;
 				}
 
-				for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
+				for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text)) //32
 				{
-					if (current < starting_point)
+					if (starting_point > 0)
 					{
-						++current;
+						--starting_point;
 						continue;
 					}
 					else
