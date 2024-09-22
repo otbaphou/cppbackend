@@ -533,6 +533,7 @@ namespace http_handler
 
 		if (target == "/api/v1/game/records"sv || target == "/api/v1/game/records/"sv)
 		{
+			std::cerr << "CAUGHT RECORDS!!!\n\n\n\n\n";
 			bool allow_get_head = false;
 			json::object response; //The response we send in case of error
 			http::status response_status;
@@ -548,10 +549,10 @@ namespace http_handler
 			}
 			else
 			{
-				//db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
-				//pqxx::read_transaction read_t{ *wrap };
+				db::ConnectionPool::ConnectionWrapper wrap = game.GetPool().GetConnection();
+				pqxx::read_transaction read_t{ *wrap };
 
-				//std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
+				std::string query_text = "SELECT id, name, score, play_time_ms FROM retired_players ORDER BY score DESC, play_time_ms, name;";
 
 				int max_iterations = 100;
 				int starting_point = 0;
@@ -560,33 +561,34 @@ namespace http_handler
 
 				json::array record_response; //The response we send if everything's okay
 
-				//for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
-				//{
-				//	if (current < starting_point)
-				//	{
-				//		++current;
-				//		continue;
-				//	}
-				//	else
-				//	{
-				//		if (current < max_iterations)
-				//		{
-				//			++current;
+				for (auto [id, name, score, play_time_ms] : read_t.query<std::string, std::string, int, int>(query_text))
+				{
+					if (current < starting_point)
+					{
+						++current;
+						continue;
+					}
+					else
+					{
+						if (current < max_iterations)
+						{
+							++current;
 
-				//			json::object player_data;
+							json::object player_data;
 
-				//			player_data.emplace("name", name);
-				//			player_data.emplace("score", score);
-				//			player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 1000));
+							player_data.emplace("name", name);
+							player_data.emplace("score", score);
+							player_data.emplace("playTime", (static_cast<double>(play_time_ms) / 10000));
 
-				//			record_response.push_back(player_data);
-				//		}
-				//		else
-				//		{
-				//			break;
-				//		}
-				//	}
-				//}
+							record_response.push_back(player_data);
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+
 				response_status = http::status::ok;
 				StringResponse str_response{ text_response(response_status, { json::serialize(record_response) }, ContentType::APPLICATION_JSON) };
 				send(str_response);
