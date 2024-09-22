@@ -853,7 +853,7 @@ namespace http_handler
 		response.emplace("code", "badRequest");
 		response.emplace("message", "Bad request");
 
-		send(text_response(http::status::bad_request, { json::serialize(response) }, ContentType::APPLICATION_JSON));
+		send(text_response(http::status::im_used, { json::serialize(response) }, ContentType::APPLICATION_JSON));
 		return;
 	}
 
