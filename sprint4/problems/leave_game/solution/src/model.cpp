@@ -137,18 +137,18 @@ namespace model
 
 	void Game::ServerTick(int milliseconds)
 	{
+//TODO: Fix loot gen
+		//loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
 
-		loot_gen::LootGenerator* gen_ptr = extra_data_.GetLootGenerator();
-
-		if (gen_ptr != nullptr)
-		{
+		//if (gen_ptr != nullptr)
+		//{
 			for (Map& map : maps_)
 			{
 				MoveAndCalcPickups(map, milliseconds);
 
-				unsigned player_count = GetPlayerCount(*map.GetId());
-				int item_count = map.GetItemCount();
-				json::object logger_data;
+				//unsigned player_count = GetPlayerCount(*map.GetId());
+				//int item_count = map.GetItemCount();
+				//json::object logger_data;
 
 				//In case I ever need to debug the system
 				//logger_data.emplace("Player Count", player_count);
@@ -157,9 +157,9 @@ namespace model
 
 				//BOOST_LOG_TRIVIAL(info) << logging::add_value(timestamp, pt::microsec_clock::local_time()) << logging::add_value(additional_data, logger_data) << "items";
 
-				map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, item_count, player_count), extra_data_);
+				//map.GenerateItems(gen_ptr->Generate(std::chrono::milliseconds{ milliseconds }, item_count, player_count), extra_data_);
 			}
-		}
+		//}
 	}
 
 	void Game::SetLootOnMap(const std::deque<Item>& items, const std::string& map_id)
@@ -340,9 +340,9 @@ namespace model
 	direction_(dir),
 	current_map_(map){}
 
-	void Dog::MoveVertical(double distance)
+	void Dog::MoveVertical(double distance, int iteration)
 	{
-		if (distance == 0)
+		if (distance == 0 || iteration > 2)
 			return;
 
 		Point start = current_road_->GetStart();
@@ -369,18 +369,18 @@ namespace model
 		if (desired_point < y1 || desired_point > y2)
 		{
 			for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-			{
+			{//1
 				if (road != nullptr)
 				{
 					if (road.get() != current_road_ && road.get()->IsVertical())
-					{
-						current_road_ = road.get();
+					{//2
+						current_road_ = road.get(); //3
 
-						MoveVertical(distance);
-						return;
-					}
+						MoveVertical(distance, ++iteration); //4
+						return; //5
+					}//~2
 				}
-			}
+			}//~1
 
 			velocity_ = { 0,0 };
 			if (desired_point < y1)
@@ -398,9 +398,9 @@ namespace model
 		return;
 	}
 
-	void Dog::MoveHorizontal(double distance)
+	void Dog::MoveHorizontal(double distance, int iteration)
 	{
-		if (distance == 0)
+		if (distance == 0 || iteration > 2)
 			return;
 
 		Point start = current_road_->GetStart();
@@ -426,20 +426,20 @@ namespace model
 
 		if (desired_point < x1 || desired_point > x2)
 		{
-
+//TODO: Remove debug marks
 			for (std::shared_ptr<Road> road : GetRoadsByPos(position_))
-			{
+			{//1
 				if (road != nullptr)
 				{
 					if (road.get() != current_road_ && road.get()->IsHorizontal())
-					{
-						current_road_ = road.get();
+					{//2
+						current_road_ = road.get(); //3
 
-						MoveHorizontal(distance);
-						return;
-					}
+						MoveHorizontal(distance, ++iteration); //4
+						return; //5
+					}//2~
 				}
-			}
+			}//~1
 
 			velocity_ = { 0,0 };
 			if (desired_point < x1)
@@ -465,12 +465,12 @@ namespace model
 
 		if (is_vertical)
 		{
-			MoveVertical(distance * velocity_.y);
+			MoveVertical(distance * velocity_.y, 0);
 		}
 
 		if (is_horizontal)
 		{
-			MoveHorizontal(distance * velocity_.x);
+			MoveHorizontal(distance * velocity_.x, 0);
 		}
 	}
 
