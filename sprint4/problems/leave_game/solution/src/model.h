@@ -526,7 +526,7 @@ namespace model
 			else
 			{
 				idle_time = 0;
-				pet_->Move(ms);	
+				//pet_->Move(ms);	
 			}
 		}
 
