@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   sprint_1:
-    #runs-on: self-hosted
     runs-on: ubuntu-22.04
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
@@ -81,7 +80,6 @@ jobs:
           junit_files: ${{ github.workspace }}/*.xml
 
   sprint_2:
-    #runs-on: self-hosted
     runs-on: ubuntu-22.04
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
@@ -144,7 +142,6 @@ jobs:
           ./command_line/run.sh
 
   sprint_3:
-    #runs-on: self-hosted
     runs-on: ubuntu-22.04
     steps:
 
