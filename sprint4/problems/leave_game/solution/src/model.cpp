@@ -486,7 +486,7 @@ namespace model
 
 	void Player::Depot()
 	{
-		score_ = std::accumulate(bag_.begin(), bag_.end(), 0, [](int total, const Item& item) { return total + item.value; });
+		score_ = std::accumulate(bag_.begin(), bag_.end(), score_, [](int total, const Item& item) { return total + item.value; });
 
 		bag_.clear();
 	}
