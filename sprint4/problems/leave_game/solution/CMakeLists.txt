@@ -36,6 +36,8 @@ add_library(game_server_lib STATIC
 	src/collision_detector.cpp
 	src/collision_detector.h
 	src/model_serialization.h
+	src/model_core.cpp
+	src/model_core.h
 	src/save_manager.h
 	src/DB_manager.h
 )

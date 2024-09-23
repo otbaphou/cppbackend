@@ -1,3 +1,5 @@
+#pragma once;
+
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
 
